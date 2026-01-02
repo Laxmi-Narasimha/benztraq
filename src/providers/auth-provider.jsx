@@ -1,223 +1,205 @@
-'use client';
-
 /**
- * Authentication Context Provider
+ * Auth Provider - BENZTRAQ
  * 
- * Provides authentication state and user information throughout the application.
- * Follows the Context + Provider pattern for clean dependency injection.
+ * Provides authentication context using custom JWT tokens.
+ * Handles login, logout, and session management.
  * 
  * @module providers/auth-provider
  */
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { USER_ROLES, MANAGER_ROLES } from '@/lib/constants';
+'use client';
+
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+
+const AuthContext = createContext({
+    user: null,
+    profile: null, // Alias for backwards compatibility
+    isLoading: true,
+    isAuthenticated: false,
+    permissions: {},
+    signIn: async () => ({ success: false }),
+    signOut: async () => { },
+    hasPermission: () => false,
+    refreshSession: async () => { },
+    isManager: false,
+});
 
 /**
- * @typedef {Object} UserProfile
- * @property {string} user_id - User's UUID
- * @property {string} full_name - User's full name
- * @property {'vp' | 'director' | 'asm'} role - User's role
- * @property {string | null} region_id - Associated region ID (for ASM)
- * @property {boolean} is_active - Whether user is active
- */
-
-/**
- * @typedef {Object} AuthContextValue
- * @property {import('@supabase/supabase-js').User | null} user - Supabase user object
- * @property {UserProfile | null} profile - User's profile data
- * @property {boolean} isLoading - Whether auth state is being loaded
- * @property {boolean} isAuthenticated - Whether user is authenticated
- * @property {boolean} isManager - Whether user has manager privileges
- * @property {Function} signIn - Sign in function
- * @property {Function} signOut - Sign out function
- * @property {Function} refreshProfile - Refresh user profile
- */
-
-const AuthContext = createContext(undefined);
-
-/**
- * Hook to access authentication context.
- * 
- * @returns {AuthContextValue}
- * @throws {Error} If used outside of AuthProvider
+ * Custom hook to access auth context
+ * @returns {Object} Auth context value
  */
 export function useAuth() {
     const context = useContext(AuthContext);
-
-    if (context === undefined) {
+    if (!context) {
         throw new Error('useAuth must be used within an AuthProvider');
     }
-
     return context;
 }
 
 /**
- * Authentication provider component.
- * Manages auth state and provides it to child components.
- * 
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components
+ * Auth Provider Component
  */
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
-    const [profile, setProfile] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    const supabase = createClient();
+    const [permissions, setPermissions] = useState({});
+    const router = useRouter();
+    const pathname = usePathname();
 
     /**
-     * Fetches the user's profile from the database.
+     * Check session on mount and refresh - fetch fresh permissions from server
      */
-    const fetchProfile = useCallback(async (userId) => {
-        if (!supabase) return null;
-
+    const refreshSession = useCallback(async () => {
         try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('user_id', userId)
-                .single();
-
-            if (error) {
-                console.error('Error fetching profile:', error);
-                return null;
+            // First check localStorage for cached user (quick UI)
+            const cachedUser = localStorage.getItem('benztraq_user');
+            if (cachedUser && isLoading) {
+                const parsed = JSON.parse(cachedUser);
+                setUser(parsed);
+                setPermissions(parsed.permissions || {});
             }
 
-            return data;
+            // Then verify with server and get fresh permissions
+            const response = await fetch('/api/auth/session');
+            const data = await response.json();
+
+            if (data.authenticated && data.user) {
+                setUser(data.user);
+                setPermissions(data.user.permissions || {});
+                localStorage.setItem('benztraq_user', JSON.stringify(data.user));
+            } else {
+                // Clear stale data
+                setUser(null);
+                setPermissions({});
+                localStorage.removeItem('benztraq_user');
+            }
         } catch (error) {
-            console.error('Error in fetchProfile:', error);
-            return null;
+            console.error('Session refresh error:', error);
+            // Don't clear user on network error to allow offline access
+        } finally {
+            setIsLoading(false);
         }
-    }, [supabase]);
+    }, [isLoading]);
+
+    // Initial session check
+    useEffect(() => {
+        refreshSession();
+    }, []);
+
+    // Refresh permissions on route change (real-time updates)
+    useEffect(() => {
+        if (!isLoading && user) {
+            // Quietly refresh session to get updated permissions
+            fetch('/api/auth/session')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.authenticated && data.user) {
+                        setUser(data.user);
+                        setPermissions(data.user.permissions || {});
+                        localStorage.setItem('benztraq_user', JSON.stringify(data.user));
+                    }
+                })
+                .catch(console.error);
+        }
+    }, [pathname]);
 
     /**
-     * Refreshes the current user's profile.
-     */
-    const refreshProfile = useCallback(async () => {
-        if (user) {
-            const profileData = await fetchProfile(user.id);
-            setProfile(profileData);
-        }
-    }, [user, fetchProfile]);
-
-    /**
-     * Signs in a user with email and password.
+     * Sign in with email and password
      */
     const signIn = useCallback(async (email, password) => {
-        if (!supabase) {
-            return { success: false, error: 'Supabase not initialized' };
-        }
-
-        setIsLoading(true);
-
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
             });
 
-            if (error) {
-                return { success: false, error: error.message };
-            }
+            const data = await response.json();
 
-            return { success: true, user: data.user };
+            if (response.ok && data.success) {
+                setUser(data.user);
+                setPermissions(data.user.permissions || {});
+                localStorage.setItem('benztraq_user', JSON.stringify(data.user));
+                return { success: true, user: data.user };
+            } else {
+                return { success: false, error: data.error || 'Login failed' };
+            }
         } catch (error) {
-            return { success: false, error: 'An unexpected error occurred' };
-        } finally {
-            setIsLoading(false);
+            console.error('Sign in error:', error);
+            return { success: false, error: 'An error occurred during sign in' };
         }
-    }, [supabase]);
+    }, []);
 
     /**
-     * Signs out the current user.
+     * Sign out
      */
     const signOut = useCallback(async () => {
-        if (!supabase) {
-            return { success: false, error: 'Supabase not initialized' };
-        }
-
-        setIsLoading(true);
-
         try {
-            const { error } = await supabase.auth.signOut();
-
-            if (error) {
-                console.error('Sign out error:', error);
-                return { success: false, error: error.message };
-            }
-
-            setUser(null);
-            setProfile(null);
-
-            return { success: true };
+            await fetch('/api/auth/logout', { method: 'POST' });
         } catch (error) {
-            return { success: false, error: 'An unexpected error occurred' };
+            console.error('Sign out error:', error);
         } finally {
-            setIsLoading(false);
+            setUser(null);
+            setPermissions({});
+            localStorage.removeItem('benztraq_user');
+            router.push('/login');
         }
-    }, [supabase]);
+    }, [router]);
 
-    // Initialize auth state on mount
-    useEffect(() => {
-        if (!supabase) {
-            setIsLoading(false);
-            return;
-        }
+    /**
+     * Check if user has a specific permission
+     */
+    const hasPermission = useCallback((resource, action = 'read') => {
+        if (!permissions[resource]) return false;
+        return permissions[resource][action] === true;
+    }, [permissions]);
 
-        const initializeAuth = async () => {
-            setIsLoading(true);
+    /**
+     * Get permission scope for a resource
+     */
+    const getScope = useCallback((resource) => {
+        return permissions[resource]?.scope || 'none';
+    }, [permissions]);
 
-            try {
-                // Get current session
-                const { data: { session } } = await supabase.auth.getSession();
+    // Role helpers
+    const isDeveloper = user?.role === 'developer';
+    const isDirector = user?.role === 'director';
+    const isHeadOfSales = user?.role === 'head_of_sales';
+    const isASM = user?.role === 'asm';
+    const isManager = isDeveloper || isDirector || isHeadOfSales;
 
-                if (session?.user) {
-                    setUser(session.user);
-                    const profileData = await fetchProfile(session.user.id);
-                    setProfile(profileData);
-                }
-            } catch (error) {
-                console.error('Auth initialization error:', error);
-            } finally {
-                setIsLoading(false);
-            }
+    // Create profile object for backwards compatibility with sidebar
+    const profile = useMemo(() => {
+        if (!user) return null;
+        return {
+            id: user.id,
+            user_id: user.id,
+            full_name: user.fullName,
+            fullName: user.fullName,
+            email: user.email,
+            // Pass actual role name for proper RBAC checks
+            role: user.role,
+            designation: user.designation,
         };
-
-        initializeAuth();
-
-        // Subscribe to auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (event === 'SIGNED_IN' && session?.user) {
-                    setUser(session.user);
-                    const profileData = await fetchProfile(session.user.id);
-                    setProfile(profileData);
-                } else if (event === 'SIGNED_OUT') {
-                    setUser(null);
-                    setProfile(null);
-                }
-            }
-        );
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, [supabase, fetchProfile]);
-
-    // Derived state
-    const isAuthenticated = !!user && !!profile;
-    const isManager = profile ? MANAGER_ROLES.includes(profile.role) : false;
+    }, [user]);
 
     const value = {
         user,
-        profile,
+        profile, // Backwards compatibility
         isLoading,
-        isAuthenticated,
-        isManager,
+        isAuthenticated: !!user,
+        permissions,
         signIn,
         signOut,
-        refreshProfile,
+        hasPermission,
+        getScope,
+        refreshSession,
+        isDeveloper,
+        isDirector,
+        isHeadOfSales,
+        isASM,
+        isManager,
     };
 
     return (
@@ -226,3 +208,6 @@ export function AuthProvider({ children }) {
         </AuthContext.Provider>
     );
 }
+
+export default AuthProvider;
+

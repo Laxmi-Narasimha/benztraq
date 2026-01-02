@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Sales Performance Tracker | Manufacturing Dashboard",
-  description: "Premium internal web application for tracking sales performance, quotations, and sales orders for manufacturing operations.",
-  keywords: ["sales", "performance", "dashboard", "manufacturing", "quotations", "sales orders"],
+  title: "BENZTRAQ | Sales Performance Dashboard",
+  description: "Premium internal application for tracking sales performance, quotations, and sales orders.",
+  keywords: ["benztraq", "sales", "performance", "dashboard", "quotations", "sales orders"],
 };
 
 export default function RootLayout({ children }) {

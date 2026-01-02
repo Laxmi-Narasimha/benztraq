@@ -2,30 +2,33 @@
  * Documents API Route
  * 
  * Handles CRUD operations for documents (quotations, sales orders, invoices).
+ * Uses custom JWT session for authentication.
  * 
  * @module app/api/documents/route
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { documentCreateSchema, validateWithSchema } from '@/lib/schemas';
+import { getCurrentUser } from '@/lib/utils/session';
 
 /**
  * GET /api/documents
  * Fetch documents with optional filters.
+ * ASM: Only their own documents
+ * Head of Sales+: All documents
  */
 export async function GET(request) {
     try {
-        const supabase = await createClient();
+        const currentUser = await getCurrentUser();
 
-        // Get current user
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
+        if (!currentUser) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
                 { status: 401 }
             );
         }
+
+        const supabase = createAdminClient();
 
         // Parse query parameters
         const { searchParams } = new URL(request.url);
@@ -42,13 +45,18 @@ export async function GET(request) {
         let query = supabase
             .from('documents')
             .select(`
-        *,
-        customer:customers(id, name),
-        region:regions(id, name),
-        salesperson:profiles!documents_salesperson_user_id_fkey(user_id, full_name)
-      `)
+                *,
+                customer:customers(id, name),
+                region:regions(id, name),
+                salesperson:profiles!documents_salesperson_user_id_fkey(user_id, full_name)
+            `)
             .order('doc_date', { ascending: false })
             .range(offset, offset + limit - 1);
+
+        // RBAC: ASM can only see their own documents
+        if (currentUser.role === 'asm') {
+            query = query.eq('salesperson_user_id', currentUser.id);
+        }
 
         // Apply filters
         if (docType) {
@@ -75,13 +83,13 @@ export async function GET(request) {
         if (error) {
             console.error('Error fetching documents:', error);
             return NextResponse.json(
-                { error: 'Failed to fetch documents' },
+                { error: 'Failed to fetch documents', details: error.message },
                 { status: 500 }
             );
         }
 
         return NextResponse.json({
-            documents: data,
+            documents: data || [],
             count,
             limit,
             offset,
@@ -89,7 +97,7 @@ export async function GET(request) {
     } catch (error) {
         console.error('Unexpected error:', error);
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: 'Internal server error', details: error.message },
             { status: 500 }
         );
     }
@@ -98,39 +106,66 @@ export async function GET(request) {
 /**
  * POST /api/documents
  * Create a new document with line items.
+ * Uses custom JWT session auth.
  */
 export async function POST(request) {
     try {
-        const supabase = await createClient();
+        // Get current user from custom session
+        const currentUser = await getCurrentUser();
 
-        // Get current user
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
+        if (!currentUser) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
+                { error: 'Unauthorized - Please log in again' },
                 { status: 401 }
             );
         }
 
-        // Parse and validate request body
+        const supabase = createAdminClient();
         const body = await request.json();
-        const validation = validateWithSchema(documentCreateSchema, body);
 
-        if (!validation.success) {
+        // Extract fields from the simplified form
+        const {
+            doc_type,
+            customer_name,
+            product_name,
+            quantity,
+            uom,
+            unit_price,
+            total_value,
+            notes,
+            doc_date,
+            line_items,
+        } = body;
+
+        // Validate required fields
+        if (!doc_type || !customer_name || !product_name) {
             return NextResponse.json(
-                { error: 'Validation failed', details: validation.errors },
+                { error: 'Missing required fields: doc_type, customer_name, product_name' },
                 { status: 400 }
             );
         }
 
-        const { line_items, ...documentData } = validation.data;
+        // Generate document number
+        const docPrefix = doc_type === 'quotation' ? 'QT' : 'SO';
+        const timestamp = Date.now().toString().slice(-8);
+        const docNumber = `${docPrefix}-${timestamp}`;
 
         // Insert document
         const { data: document, error: docError } = await supabase
             .from('documents')
             .insert({
-                ...documentData,
-                created_by: user.id,
+                doc_type,
+                doc_number: docNumber,
+                doc_date: doc_date || new Date().toISOString().split('T')[0],
+                customer_name_raw: customer_name,
+                product_name: product_name,
+                quantity: quantity || 1,
+                uom: uom || 'pcs',
+                unit_price: unit_price || 0,
+                total_value: total_value || (quantity * unit_price) || 0,
+                notes: notes || null,
+                salesperson_user_id: currentUser.id,
+                created_by: currentUser.id,
             })
             .select()
             .single();
@@ -138,30 +173,30 @@ export async function POST(request) {
         if (docError) {
             console.error('Error creating document:', docError);
             return NextResponse.json(
-                { error: 'Failed to create document' },
+                { error: 'Failed to create document', details: docError.message },
                 { status: 500 }
             );
         }
 
-        // Insert line items
-        const lineItemsWithDocId = line_items.map((line) => ({
-            ...line,
-            document_id: document.id,
-            product_name_raw: line.product_name_raw || line.product_name,
-        }));
+        // Insert line items if provided
+        if (line_items && line_items.length > 0) {
+            const lineItemsWithDocId = line_items.map((line) => ({
+                document_id: document.id,
+                product_name: line.product_name || product_name,
+                product_name_raw: line.product_name_raw || line.product_name || product_name,
+                quantity: line.quantity || quantity || 1,
+                uom: line.uom || uom || 'pcs',
+                unit_price: line.unit_price || unit_price || 0,
+            }));
 
-        const { error: linesError } = await supabase
-            .from('document_lines')
-            .insert(lineItemsWithDocId);
+            const { error: linesError } = await supabase
+                .from('document_lines')
+                .insert(lineItemsWithDocId);
 
-        if (linesError) {
-            console.error('Error creating line items:', linesError);
-            // Rollback document creation
-            await supabase.from('documents').delete().eq('id', document.id);
-            return NextResponse.json(
-                { error: 'Failed to create line items' },
-                { status: 500 }
-            );
+            if (linesError) {
+                console.error('Error creating line items:', linesError);
+                // Don't fail the whole request, document was created
+            }
         }
 
         return NextResponse.json({
@@ -171,7 +206,7 @@ export async function POST(request) {
     } catch (error) {
         console.error('Unexpected error:', error);
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: 'Internal server error', details: error.message },
             { status: 500 }
         );
     }

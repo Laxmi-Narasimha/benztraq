@@ -32,6 +32,7 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
+    Shield,
 } from 'lucide-react';
 import { formatInitials } from '@/lib/utils/formatting';
 import { useState } from 'react';
@@ -50,6 +51,7 @@ const IconMap = {
     Target,
     BarChart3,
     Settings,
+    Shield,
 };
 
 /**
@@ -114,9 +116,9 @@ export function Sidebar({ collapsed = false, onToggle }) {
                         </div>
                         <div>
                             <h1 className="text-sm font-semibold text-sidebar-foreground">
-                                SalesTracker
+                                BENZTRAQ
                             </h1>
-                            <p className="text-xs text-muted-foreground">Performance Hub</p>
+                            <p className="text-xs text-muted-foreground">Sales Hub</p>
                         </div>
                     </div>
                 )}
