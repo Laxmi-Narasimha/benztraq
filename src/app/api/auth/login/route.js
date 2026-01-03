@@ -26,34 +26,34 @@ export async function POST(request) {
 
         const supabase = createAdminClient();
 
-        // Find user profile by email
+        // Find user profile by email (fetch profile first, then role)
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select(`
-        user_id,
-        full_name,
-        email,
-        password_hash,
-        is_active,
-        role_id,
-        region_id,
-        designation,
-        roles (
-          id,
-          name,
-          display_name,
-          level
-        )
-      `)
+            .select('user_id, full_name, email, password_hash, is_active, role_id, region_id, designation')
             .eq('email', email.toLowerCase().trim())
             .single();
 
         if (profileError || !profile) {
+            console.error('Profile lookup error:', profileError);
             return NextResponse.json(
                 { error: 'Invalid email or password' },
                 { status: 401 }
             );
         }
+
+        // Fetch role separately
+        let roleData = null;
+        if (profile.role_id) {
+            const { data: role } = await supabase
+                .from('roles')
+                .select('id, name, display_name, level')
+                .eq('id', profile.role_id)
+                .single();
+            roleData = role;
+        }
+
+        // Attach role to profile
+        profile.roles = roleData;
 
         if (!profile.is_active) {
             return NextResponse.json(
