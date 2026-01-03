@@ -17,7 +17,10 @@ export async function POST(request) {
     try {
         const { email, password } = await request.json();
 
+        console.log('[Auth] Login attempt starting for:', email);
+
         if (!email || !password) {
+            console.log('[Auth] Missing credentials');
             return NextResponse.json(
                 { error: 'Email and password are required' },
                 { status: 400 }
@@ -27,19 +30,22 @@ export async function POST(request) {
         const supabase = createAdminClient();
 
         // Find user profile by email (fetch profile first, then role)
+        // Using ilike for case-insensitive matching
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('user_id, full_name, email, password_hash, is_active, role_id, region_id, designation')
-            .eq('email', email.toLowerCase().trim())
+            .ilike('email', email.trim())
             .single();
 
         if (profileError || !profile) {
-            console.error('Profile lookup error:', profileError);
+            console.error('[Auth] Profile lookup failed:', profileError);
             return NextResponse.json(
                 { error: 'Invalid email or password' },
                 { status: 401 }
             );
         }
+
+        console.log('[Auth] Profile found:', profile.user_id);
 
         // Fetch role separately
         let roleData = null;
@@ -56,6 +62,7 @@ export async function POST(request) {
         profile.roles = roleData;
 
         if (!profile.is_active) {
+            console.warn('[Auth] Inactive account attempted login:', profile.email);
             return NextResponse.json(
                 { error: 'Account is inactive. Please contact administrator.' },
                 { status: 403 }
@@ -80,6 +87,8 @@ export async function POST(request) {
                     .eq('user_id', profile.user_id);
             }
         }
+
+        console.log('[Auth] Password validation result:', passwordValid);
 
         if (!passwordValid) {
             return NextResponse.json(
@@ -139,6 +148,8 @@ export async function POST(request) {
         // Set session cookie
         await setSessionCookie(token);
 
+        console.log('[Auth] Login successful for:', profile.email);
+
         return NextResponse.json({
             success: true,
             user: {
@@ -155,7 +166,7 @@ export async function POST(request) {
         });
 
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('[Auth] Login error exception:', error);
         return NextResponse.json(
             { error: 'An error occurred during login' },
             { status: 500 }
