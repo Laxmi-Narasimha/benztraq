@@ -1,23 +1,23 @@
 /**
- * Ergopack Layout
+ * Ergopack Layout - Black & White Theme
  * 
  * Layout for Ergopack India CRM module.
- * Dark themed with dedicated navigation.
+ * Premium black & white design.
  * 
  * @module app/ergopack/layout
  */
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { cn } from '@/lib/utils';
 import {
-    Loader2, Building2, Users, LayoutDashboard,
-    LogOut, ArrowLeft, Plus, Phone, Mail
+    Loader2, Building2, LayoutDashboard,
+    LogOut, ArrowLeft, Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,6 +30,20 @@ export default function ErgopackLayout({ children }) {
     const { user, isLoading, isAuthenticated, signOut } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
+    const [userCompanies, setUserCompanies] = useState([]);
+
+    // Get user's allowed companies from localStorage
+    useEffect(() => {
+        const cachedUser = localStorage.getItem('benztraq_user');
+        if (cachedUser) {
+            try {
+                const parsed = JSON.parse(cachedUser);
+                setUserCompanies(parsed.companies || []);
+            } catch (e) {
+                setUserCompanies([]);
+            }
+        }
+    }, [user]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -39,10 +53,10 @@ export default function ErgopackLayout({ children }) {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-900">
+            <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mx-auto mb-4" />
-                    <p className="text-slate-400">Loading Ergopack...</p>
+                    <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
+                    <p className="text-zinc-500">Loading...</p>
                 </div>
             </div>
         );
@@ -52,18 +66,21 @@ export default function ErgopackLayout({ children }) {
         return null;
     }
 
+    // Check if user can access Benz Packaging (has 'benz' in companies)
+    const canAccessBenz = userCompanies.includes('benz');
+
     return (
-        <div className="min-h-screen bg-slate-900 flex">
+        <div className="min-h-screen bg-black flex">
             {/* Sidebar */}
-            <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
+            <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col">
                 {/* Header */}
-                <div className="h-16 px-4 border-b border-slate-700 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center">
-                        <Building2 className="w-6 h-6 text-white" />
+                <div className="h-16 px-4 border-b border-zinc-800 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-black" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-white">ERGOPACK</h1>
-                        <p className="text-xs text-slate-400">Outreach CRM</p>
+                        <h1 className="text-lg font-light tracking-wide text-white">ERGOPACK</h1>
+                        <p className="text-xs text-zinc-500">Outreach CRM</p>
                     </div>
                 </div>
 
@@ -78,10 +95,10 @@ export default function ErgopackLayout({ children }) {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-light transition-colors',
                                     isActive
-                                        ? 'bg-emerald-600/20 text-emerald-400'
-                                        : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                                        ? 'bg-white text-black'
+                                        : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                                 )}
                             >
                                 <item.icon className="w-5 h-5" />
@@ -92,7 +109,7 @@ export default function ErgopackLayout({ children }) {
 
                     {/* Add Contact Button */}
                     <Link href="/ergopack/contacts/new">
-                        <Button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button className="w-full mt-4 bg-white text-black hover:bg-zinc-200 font-light">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Contact
                         </Button>
@@ -100,25 +117,27 @@ export default function ErgopackLayout({ children }) {
                 </nav>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-slate-700">
-                    {/* Switch to Benz */}
-                    <Link href="/dashboard">
-                        <Button
-                            variant="outline"
-                            className="w-full mb-3 border-slate-600 text-slate-400 hover:bg-slate-700 hover:text-white"
-                        >
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Benz Packaging
-                        </Button>
-                    </Link>
+                <div className="p-4 border-t border-zinc-800">
+                    {/* Switch to Benz - Only show if user has access */}
+                    {canAccessBenz && (
+                        <Link href="/dashboard">
+                            <Button
+                                variant="outline"
+                                className="w-full mb-3 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white font-light"
+                            >
+                                <ArrowLeft className="w-4 h-4 mr-2" />
+                                Benz Packaging
+                            </Button>
+                        </Link>
+                    )}
 
                     {/* User Info */}
                     <div className="flex items-center justify-between">
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-white truncate">
+                            <p className="text-sm font-light text-white truncate">
                                 {user?.fullName || 'User'}
                             </p>
-                            <p className="text-xs text-slate-500 truncate">
+                            <p className="text-xs text-zinc-600 truncate">
                                 {user?.email}
                             </p>
                         </div>
@@ -126,7 +145,7 @@ export default function ErgopackLayout({ children }) {
                             variant="ghost"
                             size="icon"
                             onClick={signOut}
-                            className="text-slate-400 hover:text-white hover:bg-slate-700"
+                            className="text-zinc-500 hover:text-white hover:bg-zinc-800"
                         >
                             <LogOut className="w-4 h-4" />
                         </Button>
@@ -135,7 +154,7 @@ export default function ErgopackLayout({ children }) {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1 overflow-auto bg-black">
                 {children}
             </main>
         </div>

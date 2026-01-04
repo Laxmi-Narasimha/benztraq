@@ -173,6 +173,7 @@ export async function POST(request) {
                 roleLevel: profile.roles?.level,
                 designation: profile.designation,
                 organization: profile.organization,
+                companies: profile.companies || [],  // Add companies array
                 permissions: permissionsMap,
                 needsPasswordChange: !profile.password_hash,
             }
