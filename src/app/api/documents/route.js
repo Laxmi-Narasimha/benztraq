@@ -213,6 +213,18 @@ export async function POST(request) {
             }
         }
 
+        // AUTO-UPDATE: If this is a Sales Order converting a Quotation, mark Quotation as WON
+        if (body.original_quotation_id && doc_type === 'sales_order') {
+            const { error: updateError } = await supabase
+                .from('documents')
+                .update({ status: 'won' })
+                .eq('id', body.original_quotation_id);
+
+            if (updateError) {
+                console.error('Failed to update original quotation status:', updateError);
+            }
+        }
+
         return NextResponse.json({
             success: true,
             document: document,

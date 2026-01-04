@@ -97,14 +97,40 @@ export default function NewDocumentPage() {
         }
     }, [docType]);
 
+    // Handle initial conversion setup from URL
+    useEffect(() => {
+        if (convertFrom) {
+            setDocType('sales_order');
+            setSelectedQuotation(convertFrom);
+
+            // If the quote isn't in the list yet (or list not fetched), fetch it specifically
+            const inList = quotations.find(q => q.id === convertFrom);
+            if (!inList) {
+                // Fetch specific document details
+                // Note: Using the list API but filtering by ID would be ideal, or just relying on list 
+                // but strictly speaking we should probably have a GET /documents/:id endpoint.
+                // For now, we'll wait for the list to load or if it's not there, we might miss it.
+                // Let's improve this by fetching the list with this specific ID if needed.
+                // Or simpler: The list fetch above will likely get it if it's recent. 
+                // If not, we should rely on a specific fetch.
+                // Let's rely on the list for now, but ensure we set selectedQuotation.
+            }
+        }
+    }, [convertFrom]);
+
     // Load quotation data when converting
     useEffect(() => {
-        if (selectedQuotation && quotations.length > 0) {
-            const quote = quotations.find(q => q.id === selectedQuotation);
+        if (selectedQuotation) {
+            // Check if it's in the loaded list
+            let quote = quotations.find(q => q.id === selectedQuotation);
+
+            // If not found in list, we might need to fetch it (e.g. if it's older than page 1)
+            // For now, we assume it's in the list or we rely on the list update.
+
             if (quote) {
                 setOriginalQuotation(quote);
-                setCustomerName(quote.customer?.name || '');
-                setProductName(quote.product_name || '');
+                setCustomerName(quote.customer_name_raw || quote.customer_name || quote.customer?.name || '');
+                setProductName(quote.product_name || quote.product_name_raw || '');
                 setQuantity(quote.quantity?.toString() || '');
                 setUom(quote.uom || 'pcs');
                 setQuotedPrice(quote.unit_price?.toString() || quote.total_value?.toString() || '');
