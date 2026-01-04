@@ -48,7 +48,7 @@ export async function GET(request) {
             effectiveUserIds = [user.id];
         }
 
-        // Build Document Query
+        // Build Document Query - Fetch ALL types to separate later
         let query = supabase
             .from('documents')
             .select(`
@@ -59,7 +59,7 @@ export async function GET(request) {
                 status,
                 salesperson_user_id
             `)
-            .eq('doc_type', 'sales_order') // Only interested in Sales for Revenue Chart
+            .in('doc_type', ['quotation', 'sales_order'])
             .gte('doc_date', dateFrom)
             .lte('doc_date', dateTo);
 
@@ -95,7 +95,7 @@ export async function GET(request) {
             end: endOfMonth(new Date(dateTo))
         });
 
-        // 1. Revenue Chart Data
+        // 1. Trend & Comparison Data
         const chartData = months.map(date => {
             const monthKey = format(date, 'MMM yyyy');
             const monthStart = startOfMonth(date);
@@ -104,44 +104,71 @@ export async function GET(request) {
             // Base object
             const point = { name: monthKey, date: date.toISOString() };
 
-            // For each selected user (or all if empty/manager view)
+            // Helper to aggregate based on filter
+            const aggregateMetrics = (filteredDocs) => {
+                let revenue = 0;
+                let orders_count = 0;
+                let quotes_value = 0;
+                let quotes_count = 0;
+
+                filteredDocs.forEach(d => {
+                    if (d.doc_type === 'sales_order') {
+                        // Revenue = Total Value of non-cancelled orders
+                        if (d.status !== 'cancelled') {
+                            revenue += (d.total_value || 0);
+                            orders_count++;
+                        }
+                    } else if (d.doc_type === 'quotation') {
+                        quotes_value += (d.total_value || 0);
+                        quotes_count++;
+                    }
+                });
+                return { revenue, orders_count, quotes_value, quotes_count };
+            };
+
+            // Calculate for each user (Comparison View Keys)
             if (effectiveUserIds.length > 0) {
                 effectiveUserIds.forEach(uid => {
-                    // Revenue
                     const userDocs = docs.filter(d =>
                         d.salesperson_user_id === uid &&
                         isWithinInterval(new Date(d.doc_date), { start: monthStart, end: monthEnd })
                     );
-                    const rev = userDocs.reduce((sum, d) => sum + (d.total_value || 0), 0);
 
-                    // Target (Monthly Prorated)
+                    const metrics = aggregateMetrics(userDocs);
+
+                    // Assign specific keys for this user
+                    point[`revenue_${uid}`] = metrics.revenue;
+                    point[`orders_${uid}`] = metrics.orders_count;
+                    point[`quotes_val_${uid}`] = metrics.quotes_value;
+                    point[`quotes_${uid}`] = metrics.quotes_count;
+
+                    // Target
                     const year = date.getFullYear();
                     const targetRec = targetsData?.find(t => t.salesperson_user_id === uid && t.year === year);
-                    const monthlyTarget = targetRec ? targetRec.annual_target / 12 : 0;
-
-                    // Add to point
-                    // Key format: "revenue_<uid>" or just "value" if single?
-                    // To make Recharts happy with dynamic keys:
-                    point[uid] = rev;
-                    point[`target_${uid}`] = monthlyTarget;
+                    point[`target_${uid}`] = targetRec ? targetRec.annual_target / 12 : 0;
                 });
-            } else {
-                // Aggregate ALL (Manager "All Team" view)
-                const monthDocs = docs.filter(d =>
-                    isWithinInterval(new Date(d.doc_date), { start: monthStart, end: monthEnd })
-                );
-                const totalRev = monthDocs.reduce((sum, d) => sum + (d.total_value || 0), 0);
-
-                // Sum of all targets for accessible users? 
-                // Needs logic. For now, sum of ALL found targets for that year.
-                const year = date.getFullYear();
-                const totalTarget = targetsData
-                    ?.filter(t => t.year === year)
-                    .reduce((sum, t) => sum + (Number(t.annual_target) / 12), 0) || 0;
-
-                point['revenue'] = totalRev;
-                point['target'] = totalTarget;
             }
+
+            // Always calculate Aggregate (Trend View Keys)
+            const monthDocs = docs.filter(d =>
+                isWithinInterval(new Date(d.doc_date), { start: monthStart, end: monthEnd })
+            );
+
+            // If filtering by user, monthDocs is ALREADY filtered by the query above
+            const totalMetrics = aggregateMetrics(monthDocs);
+
+            point['revenue'] = totalMetrics.revenue;
+            point['orders'] = totalMetrics.orders_count;
+            point['quotations'] = totalMetrics.quotes_count; // Count
+            point['quotations_value'] = totalMetrics.quotes_value; // Value
+            point['conversion'] = totalMetrics.quotes_count > 0
+                ? Math.round((totalMetrics.orders_count / totalMetrics.quotes_count) * 100)
+                : 0;
+
+            // Aggregate Target
+            const year = date.getFullYear();
+            const relevantTargets = targetsData?.filter(t => t.year === year) || [];
+            point['target'] = relevantTargets.reduce((sum, t) => sum + (Number(t.annual_target) / 12), 0);
 
             return point;
         });
