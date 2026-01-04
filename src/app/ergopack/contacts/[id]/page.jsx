@@ -12,6 +12,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +56,7 @@ const ACTIVITY_ICONS = {
 export default function ContactDetailPage({ params }) {
     const { id } = use(params);
     const router = useRouter();
+    const { user } = useAuth();
 
     const [contact, setContact] = useState(null);
     const [activities, setActivities] = useState([]);
@@ -68,12 +70,14 @@ export default function ContactDetailPage({ params }) {
         description: '',
     });
 
-    // Mark contact as seen when opened (for NEW badge tracking)
+    // Mark contact as seen when opened (for NEW badge tracking - per user)
     useEffect(() => {
-        const seen = JSON.parse(localStorage.getItem('ergopack_seen_contacts') || '{}');
+        if (!user?.id) return; // Wait for user to load
+        const seenKey = `ergopack_seen_${user.id}`;
+        const seen = JSON.parse(localStorage.getItem(seenKey) || '{}');
         seen[id] = Date.now();
-        localStorage.setItem('ergopack_seen_contacts', JSON.stringify(seen));
-    }, [id]);
+        localStorage.setItem(seenKey, JSON.stringify(seen));
+    }, [id, user?.id]);
 
     useEffect(() => {
         fetchContact();
@@ -354,8 +358,8 @@ export default function ContactDetailPage({ params }) {
                                                 key={t.value}
                                                 onClick={() => setNewActivity({ ...newActivity, activityType: t.value })}
                                                 className={`px-3 py-1.5 rounded text-xs transition-colors ${newActivity.activityType === t.value
-                                                        ? 'bg-white text-black'
-                                                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                                                    ? 'bg-white text-black'
+                                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                                                     }`}
                                             >
                                                 {t.label}

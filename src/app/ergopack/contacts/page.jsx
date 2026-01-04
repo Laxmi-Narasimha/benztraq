@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useAuth } from '@/providers/auth-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,12 +46,16 @@ const ACTIVITY_ICONS = {
 export default function ContactsListPage() {
     const searchParams = useSearchParams();
     const initialStatus = searchParams.get('status') || 'all';
+    const { user } = useAuth();
 
     const [contacts, setContacts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState(initialStatus);
     const [stats, setStats] = useState(null);
+
+    // Per-user localStorage key for activity seen tracking
+    const getSeenKey = () => `ergopack_seen_${user?.id || 'guest'}`;
 
     const fetchContacts = useCallback(async () => {
         setIsLoading(true);
@@ -260,8 +265,8 @@ export default function ContactsListPage() {
                                                 <td className="p-4">
                                                     {contact.latest_activity ? (() => {
                                                         const ActivityIcon = getActivityIcon(contact.latest_activity.activity_type);
-                                                        // Check if user has seen this contact since last activity
-                                                        const seenContacts = JSON.parse(localStorage.getItem('ergopack_seen_contacts') || '{}');
+                                                        // Check if THIS USER has seen this contact since last activity
+                                                        const seenContacts = JSON.parse(localStorage.getItem(getSeenKey()) || '{}');
                                                         const lastSeen = seenContacts[contact.id] || 0;
                                                         const activityTime = new Date(contact.latest_activity.created_at).getTime();
                                                         const isNew = activityTime > lastSeen;
