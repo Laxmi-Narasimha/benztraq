@@ -179,6 +179,19 @@ export function Sidebar({ collapsed = false, onToggle }) {
 
             {/* User Profile */}
             <div className="border-t border-sidebar-border p-4">
+                {/* Switch to Ergopack - For directors/developers only */}
+                {profile && ['director', 'developer'].includes(profile.role) && !collapsed && (
+                    <Link href="/ergopack">
+                        <Button
+                            variant="outline"
+                            className="w-full mb-3 border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                        >
+                            <Package className="w-4 h-4 mr-2" />
+                            Switch to Ergopack
+                        </Button>
+                    </Link>
+                )}
+
                 {profile && (
                     <div
                         className={cn(

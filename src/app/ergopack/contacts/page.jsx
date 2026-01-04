@@ -258,22 +258,28 @@ export default function ContactsListPage() {
 
                                                 {/* Activity - Latest activity with icon */}
                                                 <td className="p-4">
-                                                    {contact.latest_activity ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="flex items-center gap-1.5 bg-zinc-800 px-2 py-1 rounded text-xs">
-                                                                <ActivityIcon className="w-3 h-3 text-zinc-400" />
-                                                                <span className="text-zinc-300 capitalize">
+                                                    {contact.latest_activity ? (() => {
+                                                        const ActivityIcon = getActivityIcon(contact.latest_activity.activity_type);
+                                                        // Check if user has seen this contact since last activity
+                                                        const seenContacts = JSON.parse(localStorage.getItem('ergopack_seen_contacts') || '{}');
+                                                        const lastSeen = seenContacts[contact.id] || 0;
+                                                        const activityTime = new Date(contact.latest_activity.created_at).getTime();
+                                                        const isNew = activityTime > lastSeen;
+
+                                                        return (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-zinc-400 text-sm capitalize flex items-center gap-1.5">
+                                                                    <ActivityIcon className="w-3 h-3" />
                                                                     {contact.latest_activity.activity_type?.replace('_', ' ')}
                                                                 </span>
+                                                                {isNew && (
+                                                                    <span className="text-[10px] uppercase tracking-wider text-white bg-white/10 px-1.5 py-0.5 rounded">
+                                                                        new
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                            {/* New activity indicator - show if activity is from today */}
-                                                            {new Date(contact.latest_activity.created_at).toDateString() === new Date().toDateString() && (
-                                                                <Badge className="bg-white text-black text-[10px] px-1.5 py-0">
-                                                                    NEW
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    ) : (
+                                                        );
+                                                    })() : (
                                                         <span className="text-zinc-600 text-sm">-</span>
                                                     )}
                                                 </td>

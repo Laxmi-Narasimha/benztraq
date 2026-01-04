@@ -123,7 +123,7 @@ export default function ErgopackLayout({ children }) {
                         <Link href="/dashboard">
                             <Button
                                 variant="outline"
-                                className="w-full mb-3 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white font-light h-11"
+                                className="w-full mb-3 border-white/30 text-white hover:bg-white hover:text-black transition-all font-light h-11"
                             >
                                 <Building2 className="w-4 h-4 mr-2" />
                                 Switch to Benz Packaging
