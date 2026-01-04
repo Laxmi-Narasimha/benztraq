@@ -103,30 +103,43 @@ export default function NewDocumentPage() {
             setDocType('sales_order');
             setSelectedQuotation(convertFrom);
 
-            // If the quote isn't in the list yet (or list not fetched), fetch it specifically
-            const inList = quotations.find(q => q.id === convertFrom);
-            if (!inList) {
-                // Fetch specific document details
-                // Note: Using the list API but filtering by ID would be ideal, or just relying on list 
-                // but strictly speaking we should probably have a GET /documents/:id endpoint.
-                // For now, we'll wait for the list to load or if it's not there, we might miss it.
-                // Let's improve this by fetching the list with this specific ID if needed.
-                // Or simpler: The list fetch above will likely get it if it's recent. 
-                // If not, we should rely on a specific fetch.
-                // Let's rely on the list for now, but ensure we set selectedQuotation.
-            }
+            // Fetch specific document details directly to ensure we have it
+            // even if it's not in the loaded list (pagination/filtering)
+            fetch(`/api/documents?id=${convertFrom}`) // Note: API needs to support ID filtering or we filter client side if API returns array
+                .then(res => res.json())
+                .then(data => {
+                    // API currently returns { documents: [...] }
+                    const docs = data.documents || [];
+                    const exactMatch = docs.find(d => d.id === convertFrom);
+                    if (exactMatch) {
+                        // Add to quotations list if not present, to make Select work happy
+                        setQuotations(prev => {
+                            if (!prev.find(p => p.id === exactMatch.id)) {
+                                return [...prev, exactMatch];
+                            }
+                            return prev;
+                        });
+                        // Trigger population
+                        setOriginalQuotation(exactMatch);
+                        setCustomerName(exactMatch.customer_name_raw || exactMatch.customer_name || exactMatch.customer?.name || '');
+                        setProductName(exactMatch.product_name || exactMatch.product_name_raw || '');
+                        setQuantity(exactMatch.quantity?.toString() || '');
+                        setUom(exactMatch.uom || 'pcs');
+                        setQuotedPrice(exactMatch.unit_price?.toString() || exactMatch.total_value?.toString() || '');
+                        setFinalPrice(exactMatch.unit_price?.toString() || exactMatch.total_value?.toString() || '');
+                    }
+                })
+                .catch(err => console.error("Failed to fetch conversion source:", err));
         }
     }, [convertFrom]);
 
-    // Load quotation data when converting
+    // Load quotation data when specific selection changes (from dropdown)
     useEffect(() => {
-        if (selectedQuotation) {
-            // Check if it's in the loaded list
-            let quote = quotations.find(q => q.id === selectedQuotation);
-
-            // If not found in list, we might need to fetch it (e.g. if it's older than page 1)
-            // For now, we assume it's in the list or we rely on the list update.
-
+        // Only run this if we are selecting manually from list, 
+        // OR if the convertFrom logic didn't already handle it effectively.
+        // It's safe to run again.
+        if (selectedQuotation && quotations.length > 0) {
+            const quote = quotations.find(q => q.id === selectedQuotation);
             if (quote) {
                 setOriginalQuotation(quote);
                 setCustomerName(quote.customer_name_raw || quote.customer_name || quote.customer?.name || '');

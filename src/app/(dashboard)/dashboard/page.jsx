@@ -414,7 +414,7 @@ export default function DashboardPage() {
                     const byPerson = {};
                     docs.forEach(doc => {
                         const personId = doc.salesperson_user_id || 'unknown';
-                        const personName = doc.salesperson?.full_name || 'Unknown';
+                        const personName = doc.salesperson_name || doc.salesperson?.full_name || 'Unknown';
                         if (!byPerson[personId]) {
                             byPerson[personId] = {
                                 id: personId,

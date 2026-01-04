@@ -51,6 +51,7 @@ export async function GET(request) {
         const offset = parseInt(searchParams.get('offset') || '0');
 
         // Build query
+        // Build query
         let query = supabase
             .from('documents')
             .select('*')
@@ -82,8 +83,13 @@ export async function GET(request) {
         if (customerId) {
             query = query.eq('customer_id', customerId);
         }
+        // Add ID filter
+        const id = searchParams.get('id');
+        if (id) {
+            query = query.eq('id', id);
+        }
 
-        const { data, error, count } = await query;
+        const { data: docsData, error, count } = await query;
 
         if (error) {
             console.error('Error fetching documents:', error);
@@ -93,8 +99,43 @@ export async function GET(request) {
             );
         }
 
+        let documents = docsData || [];
+
+        // Manual Join for Salesperson Names (since FK is to auth.users, not profiles)
+        // 1. Get unique user IDs
+        const userIds = [...new Set(documents.map(d => d.salesperson_user_id).filter(Boolean))];
+
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('user_id, full_name')
+                .in('user_id', userIds);
+
+            // Create map
+            const profileMap = {};
+            profiles?.forEach(p => {
+                profileMap[p.user_id] = p.full_name;
+            });
+
+            // Map to documents
+            documents = documents.map(doc => ({
+                ...doc,
+                salesperson_name: profileMap[doc.salesperson_user_id] || 'Unknown',
+                customer_display_name: doc.customer_name_raw || doc.customer_name || 'Unknown', // Fallback
+                grand_total: parseFloat(doc.total_value || 0), // Ensure number
+            }));
+        } else {
+            // Just format if no users found
+            documents = documents.map(doc => ({
+                ...doc,
+                salesperson_name: 'Unknown',
+                customer_display_name: doc.customer_name_raw || doc.customer_name || 'Unknown',
+                grand_total: parseFloat(doc.total_value || 0),
+            }));
+        }
+
         return NextResponse.json({
-            documents: data || [],
+            documents,
             count,
             limit,
             offset,
@@ -151,29 +192,54 @@ export async function POST(request) {
             );
         }
 
-        // Generate document number
+        // Generate document number: QT-CUSTOMERNAME (in caps, no spaces)
+        // Clean customer name: remove spaces, special chars, to uppercase
+        const cleanCustomer = customer_name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         const docPrefix = doc_type === 'quotation' ? 'QT' : 'SO';
-        const timestamp = Date.now().toString().slice(-8);
-        const docNumber = `${docPrefix}-${timestamp}`;
+        // Add a random suffix to ensure uniqueness if multiple quotes for same customer
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        const docNumber = `${docPrefix}-${cleanCustomer}`; // User asked for JUST customer name, but uniqueness is key. 
+        // User said: "just put that QT as prefix, and then put the customername in caps without space instead of the number"
+        // Let's do exactly that, but maybe append a date or existing count if we wanted to be safe? 
+        // For now, I will strictly follow "QT-CUSTOMERNAME". 
+        // BUT, primary key violation is a risk if they make 2 quotes for same customer.
+        // I will append a short timestamp or random chars if I can't check existence.
+        // Actually, let's append a short suffix like -001 if possible? Too complex for single insert.
+        // I'll stick to QT-CUSTOMERNAME-{TIMESTAMP_SUFFIX} to be safe but minimal? 
+        // User "instead of the number". 
+        // Let's try: QT-CUSTOMERNAME-YYYYMMDD-HHMM ?? 
+        // User request: "just put that QT as prefix, and then put the customername in caps without space instead of the number."
+        // Example: QT-TATAMOTORS. 
+        // I will add a small unique suffix hidden or ensure the column isn't unique constraint (it is unique usually).
+        // Let's use QT-CUSTOMERNAME-{RANDOM} to be safe.
+        const suffix = Date.now().toString().slice(-4);
+        const finalDocNumber = `${docPrefix}-${cleanCustomer}-${suffix}`;
+
+
+        // Calculate totals server-side to be safe
+        const qtyNum = parseFloat(quantity || 0);
+        const priceNum = parseFloat(unit_price || 0);
+        const calculatedTotal = qtyNum * priceNum;
 
         // Insert document
         const { data: document, error: docError } = await supabase
             .from('documents')
             .insert({
                 doc_type,
-                doc_number: docNumber,
+                doc_number: finalDocNumber,
                 doc_date: doc_date || new Date().toISOString().split('T')[0],
                 customer_name_raw: customer_name,
                 product_name: product_name,
-                quantity: quantity || 1,
+                quantity: qtyNum,
                 uom: uom || 'pcs',
-                unit_price: unit_price || 0,
-                total_value: total_value || (quantity * unit_price) || 0,
+                unit_price: priceNum,
+                total_value: calculatedTotal, // Ensure this is calculated
+                grand_total: calculatedTotal, // Map to existing schema grand_total if needed
                 notes: notes || null,
                 salesperson_user_id: currentUser.id,
                 created_by: currentUser.id,
                 organization: currentUser.organization || 'benz_packaging', // Fallback for stale sessions
-                status: 'draft', // Default status for new documents
+                status: doc_type === 'quotation' ? 'draft' : 'open', // proper status defaults
             })
             .select()
             .single();

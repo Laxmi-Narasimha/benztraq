@@ -142,7 +142,7 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
                         <TableCell className="font-medium">{doc.doc_number || 'N/A'}</TableCell>
                         <TableCell>{formatDate(doc.doc_date)}</TableCell>
                         <TableCell>{doc.customer}</TableCell>
-                        <TableCell>{doc.salesperson}</TableCell>
+                        <TableCell>{doc.salesperson_name || doc.salesperson || 'Unknown'}</TableCell>
                         <TableCell className="text-right font-medium">
                             {formatCurrency(doc.grand_total, { compact: true })}
                         </TableCell>
