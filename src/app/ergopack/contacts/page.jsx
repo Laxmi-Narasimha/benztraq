@@ -24,14 +24,12 @@ import {
 
 const STATUS_OPTIONS = [
     { value: 'all', label: 'All Status' },
-    { value: 'new', label: 'New' },
+    { value: 'open', label: 'Open' },
     { value: 'contacted', label: 'Contacted' },
-    { value: 'interested', label: 'Interested' },
-    { value: 'negotiating', label: 'Negotiating' },
     { value: 'proposal_sent', label: 'Proposal Sent' },
-    { value: 'won', label: 'Won' },
+    { value: 'deal_done', label: 'Deal Done' },
     { value: 'lost', label: 'Lost' },
-    { value: 'dormant', label: 'Dormant' },
+    { value: 'not_serviceable', label: 'Not Serviceable' },
 ];
 
 const ACTIVITY_ICONS = {
@@ -103,16 +101,17 @@ export default function ContactsListPage() {
 
     const getStatusBadgeStyle = (status) => {
         const styles = {
-            new: 'bg-zinc-700 text-white',
-            contacted: 'bg-zinc-600 text-white',
-            interested: 'bg-zinc-500 text-white',
-            negotiating: 'bg-zinc-400 text-black',
-            proposal_sent: 'bg-zinc-300 text-black',
-            won: 'bg-white text-black',
-            lost: 'bg-zinc-800 text-zinc-400',
-            dormant: 'bg-zinc-900 text-zinc-500 border border-zinc-700',
+            open: 'bg-blue-100 text-blue-800 border-blue-200',
+            new: 'bg-blue-100 text-blue-800 border-blue-200',
+            contacted: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+            proposal_sent: 'bg-amber-100 text-amber-800 border-amber-200',
+            deal_done: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            won: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            lost: 'bg-red-100 text-red-800 border-red-200',
+            not_serviceable: 'bg-slate-100 text-slate-600 border-slate-200',
+            dormant: 'bg-slate-100 text-slate-600 border-slate-200',
         };
-        return styles[status] || 'bg-zinc-700 text-white';
+        return styles[status] || 'bg-slate-100 text-slate-700 border-slate-200';
     };
 
     const getActivityIcon = (type) => {
@@ -120,15 +119,15 @@ export default function ContactsListPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black p-8 space-y-6">
+        <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-light tracking-wide text-white flex items-center gap-3">
-                        <Building2 className="w-7 h-7 text-white" />
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900 flex items-center gap-3">
+                        <Building2 className="w-7 h-7 text-slate-700" />
                         All Contacts
                     </h1>
-                    <p className="text-zinc-500 mt-1">
+                    <p className="text-slate-500 mt-1">
                         {stats?.total || 0} total contacts
                     </p>
                 </div>
@@ -137,12 +136,12 @@ export default function ContactsListPage() {
                         variant="outline"
                         onClick={fetchContacts}
                         disabled={isLoading}
-                        className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                        className="border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     >
                         <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                     </Button>
                     <Link href="/ergopack/contacts/new">
-                        <Button className="bg-white text-black hover:bg-zinc-200">
+                        <Button className="bg-slate-900 text-white hover:bg-slate-800">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Contact
                         </Button>
@@ -151,25 +150,25 @@ export default function ContactsListPage() {
             </div>
 
             {/* Filters */}
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-white border-slate-200 shadow-sm">
                 <CardContent className="pt-6">
                     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
                                 placeholder="Search company, person..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-black border-zinc-700 text-white placeholder:text-zinc-600"
+                                className="pl-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
                             />
                         </div>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-full md:w-48 bg-black border-zinc-700 text-white">
+                            <SelectTrigger className="w-full md:w-48 bg-white border-slate-200 text-slate-900 focus:border-slate-400">
                                 <SelectValue placeholder="Filter by status" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-700">
+                            <SelectContent className="bg-white border-slate-200">
                                 {STATUS_OPTIONS.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value} className="text-white focus:bg-zinc-800">
+                                    <SelectItem key={opt.value} value={opt.value} className="text-slate-900 focus:bg-slate-100">
                                         {opt.label}
                                     </SelectItem>
                                 ))}
@@ -180,23 +179,23 @@ export default function ContactsListPage() {
             </Card>
 
             {/* Contacts Table */}
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-white border-slate-200 shadow-sm">
                 <CardContent className="p-0">
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-12 text-zinc-500">
+                        <div className="flex items-center justify-center py-12 text-slate-500">
                             <RefreshCw className="w-5 h-5 animate-spin mr-2" />
                             Loading contacts...
                         </div>
                     ) : filteredContacts.length === 0 ? (
                         <div className="text-center py-12">
-                            <Building2 className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                            <p className="text-zinc-500 mb-4">
+                            <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                            <p className="text-slate-500 mb-4">
                                 {searchQuery || statusFilter !== 'all'
                                     ? 'No contacts match your filters'
                                     : 'No contacts yet'}
                             </p>
                             <Link href="/ergopack/contacts/new">
-                                <Button className="bg-white text-black hover:bg-zinc-200">
+                                <Button className="bg-slate-900 text-white hover:bg-slate-800">
                                     <Plus className="w-4 h-4 mr-2" />
                                     Add First Contact
                                 </Button>

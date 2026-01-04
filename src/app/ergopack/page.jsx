@@ -1,8 +1,10 @@
 /**
- * Ergopack Dashboard - Black & White Interactive
+ * Ergopack Dashboard - Premium Light Theme
  * 
- * Overview page with all status cards as clickable filters.
- * Premium black & white design.
+ * Overview page with status cards as clickable filters.
+ * Premium light theme with slate grays and clean design.
+ * 
+ * New Stages: Open, Contacted, Proposal Sent, Deal Done, Lost, Not Serviceable
  * 
  * @module app/ergopack/page
  */
@@ -15,21 +17,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-    Building2, Clock, Phone, TrendingUp, FileText, MessageSquare,
-    CheckCircle, XCircle, Pause, Plus, ArrowRight, RefreshCw, Users
+    Building2, Clock, Phone, FileText, CheckCircle, XCircle,
+    Plus, ArrowRight, RefreshCw, Users, Ban, TrendingUp
 } from 'lucide-react';
 
-// All status options matching the form
+// Updated status cards matching new stages
 const STATUS_CARDS = [
-    { key: 'total', label: 'Total', icon: Building2 },
-    { key: 'new', label: 'New', icon: Clock },
-    { key: 'contacted', label: 'Contacted', icon: Phone },
-    { key: 'interested', label: 'Interested', icon: TrendingUp },
-    { key: 'negotiating', label: 'Negotiating', icon: MessageSquare },
-    { key: 'proposal_sent', label: 'Proposal Sent', icon: FileText },
-    { key: 'won', label: 'Won', icon: CheckCircle },
-    { key: 'lost', label: 'Lost', icon: XCircle },
-    { key: 'dormant', label: 'Dormant', icon: Pause },
+    { key: 'total', label: 'Total', icon: Building2, color: 'bg-slate-100 text-slate-900' },
+    { key: 'open', label: 'Open', icon: Clock, color: 'bg-blue-50 text-blue-700' },
+    { key: 'contacted', label: 'Contacted', icon: Phone, color: 'bg-indigo-50 text-indigo-700' },
+    { key: 'proposal_sent', label: 'Proposal Sent', icon: FileText, color: 'bg-amber-50 text-amber-700' },
+    { key: 'deal_done', label: 'Deal Done', icon: CheckCircle, color: 'bg-emerald-50 text-emerald-700' },
+    { key: 'lost', label: 'Lost', icon: XCircle, color: 'bg-red-50 text-red-700' },
+    { key: 'not_serviceable', label: 'Not Serviceable', icon: Ban, color: 'bg-slate-100 text-slate-500' },
 ];
 
 export default function ErgopackDashboard() {
@@ -64,38 +64,42 @@ export default function ErgopackDashboard() {
 
     const getStatusBadgeStyle = (status) => {
         const styles = {
-            new: 'bg-zinc-700 text-white',
-            contacted: 'bg-zinc-600 text-white',
-            interested: 'bg-zinc-500 text-white',
-            negotiating: 'bg-zinc-400 text-black',
-            proposal_sent: 'bg-zinc-300 text-black',
-            won: 'bg-white text-black',
-            lost: 'bg-zinc-800 text-zinc-400',
-            dormant: 'bg-zinc-900 text-zinc-500 border border-zinc-700',
+            open: 'bg-blue-100 text-blue-800 border-blue-200',
+            contacted: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+            proposal_sent: 'bg-amber-100 text-amber-800 border-amber-200',
+            deal_done: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            lost: 'bg-red-100 text-red-800 border-red-200',
+            not_serviceable: 'bg-slate-100 text-slate-600 border-slate-200',
         };
-        return styles[status] || 'bg-zinc-700 text-white';
+        return styles[status] || 'bg-slate-100 text-slate-700 border-slate-200';
     };
 
+    // Calculate conversion metrics
+    const wonCount = stats?.deal_done || 0;
+    const lostCount = stats?.lost || 0;
+    const totalClosed = wonCount + lostCount;
+    const winRate = totalClosed > 0 ? Math.round((wonCount / totalClosed) * 100) : 0;
+
     return (
-        <div className="min-h-screen bg-black p-8 space-y-8">
+        <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-light tracking-wide text-white">Dashboard</h1>
-                    <p className="text-zinc-500 mt-1">Track your company outreach</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
+                    <p className="text-slate-500 mt-1">Track your company outreach</p>
                 </div>
                 <div className="flex gap-3">
                     <Button
                         variant="outline"
                         onClick={fetchData}
                         disabled={isLoading}
-                        className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                        className="border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     >
                         <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                         Refresh
                     </Button>
                     <Link href="/ergopack/contacts/new">
-                        <Button className="bg-white text-black hover:bg-zinc-200">
+                        <Button className="bg-slate-900 text-white hover:bg-slate-800">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Contact
                         </Button>
@@ -103,87 +107,93 @@ export default function ErgopackDashboard() {
                 </div>
             </div>
 
-            {/* Stats Grid - All statuses, clickable */}
-            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
-                {STATUS_CARDS.map((stat) => {
-                    const value = getStatValue(stat.key);
-                    const isClickable = stat.key !== 'total' && value > 0;
-
-                    const CardWrapper = isClickable ? Link : 'div';
-                    const cardProps = isClickable ? { href: `/ergopack/contacts?status=${stat.key}` } : {};
-
-                    return (
-                        <CardWrapper key={stat.key} {...cardProps}>
-                            <Card className={`bg-zinc-900 border-zinc-800 transition-all ${isClickable ? 'cursor-pointer hover:bg-zinc-800 hover:border-zinc-600' : ''
-                                } ${stat.key === 'total' ? 'col-span-1 md:col-span-1' : ''}`}>
-                                <CardContent className="pt-4 pb-3 px-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <stat.icon className="w-4 h-4 text-zinc-500" />
-                                    </div>
-                                    <p className="text-2xl font-light text-white">{value}</p>
-                                    <p className="text-xs text-zinc-500 mt-1 truncate">{stat.label}</p>
-                                </CardContent>
-                            </Card>
-                        </CardWrapper>
-                    );
-                })}
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+                {STATUS_CARDS.map(({ key, label, icon: Icon, color }) => (
+                    <Link
+                        key={key}
+                        href={key === 'total' ? '/ergopack/contacts' : `/ergopack/contacts?status=${key}`}
+                    >
+                        <Card className="bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
+                            <CardContent className="p-4">
+                                <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center mb-3`}>
+                                    <Icon className="w-4 h-4" />
+                                </div>
+                                <div className="text-2xl font-bold text-slate-900 mb-1">
+                                    {getStatValue(key)}
+                                </div>
+                                <div className="text-xs text-slate-500 font-medium">
+                                    {label}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                ))}
             </div>
 
-            {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Contacts - Larger */}
-                <Card className="bg-zinc-900 border-zinc-800 lg:col-span-2">
-                    <CardHeader className="flex flex-row items-center justify-between pb-4">
-                        <div>
-                            <CardTitle className="text-white font-light text-lg">Recent Activity</CardTitle>
-                            <CardDescription className="text-zinc-500">
-                                Latest updates to your contacts
-                            </CardDescription>
+                {/* Recent Activity */}
+                <Card className="lg:col-span-2 bg-white border-slate-200 shadow-sm">
+                    <CardHeader className="border-b border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg font-semibold text-slate-900">Recent Activity</CardTitle>
+                                <CardDescription className="text-slate-500">Latest updates to your contacts</CardDescription>
+                            </div>
+                            <Link href="/ergopack/contacts">
+                                <Button variant="ghost" className="text-slate-600 hover:text-slate-900 text-sm">
+                                    View All
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Button>
+                            </Link>
                         </div>
-                        <Link href="/ergopack/contacts">
-                            <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-800">
-                                View All
-                                <ArrowRight className="w-4 h-4 ml-2" />
-                            </Button>
-                        </Link>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-0">
                         {isLoading ? (
-                            <div className="text-center py-8 text-zinc-500">Loading...</div>
+                            <div className="p-8 text-center text-slate-400">Loading...</div>
                         ) : recentContacts.length === 0 ? (
-                            <div className="text-center py-12">
-                                <Building2 className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                                <p className="text-zinc-500 mb-4">No contacts yet</p>
+                            <div className="p-8 text-center">
+                                <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                <p className="text-slate-500">No contacts yet</p>
                                 <Link href="/ergopack/contacts/new">
-                                    <Button className="bg-white text-black hover:bg-zinc-200">
+                                    <Button className="mt-4 bg-slate-900 text-white hover:bg-slate-800">
                                         <Plus className="w-4 h-4 mr-2" />
                                         Add First Contact
                                     </Button>
                                 </Link>
                             </div>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="divide-y divide-slate-100">
                                 {recentContacts.map((contact) => (
                                     <Link
                                         key={contact.id}
                                         href={`/ergopack/contacts/${contact.id}`}
-                                        className="flex items-center justify-between p-4 bg-zinc-800/30 rounded-lg hover:bg-zinc-800/60 transition-colors group"
+                                        className="block"
                                     >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-white truncate group-hover:text-white">
-                                                {contact.company_name}
-                                            </p>
-                                            <p className="text-sm text-zinc-500 truncate">
-                                                {contact.contact_person || 'No contact person'}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-3 ml-4 flex-shrink-0">
-                                            <Badge className={getStatusBadgeStyle(contact.status)}>
-                                                {contact.status?.replace('_', ' ')}
-                                            </Badge>
-                                            <span className="text-xs text-zinc-600 hidden sm:block">
-                                                {new Date(contact.updated_at).toLocaleDateString()}
-                                            </span>
+                                        <div className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                                                    <Building2 className="w-5 h-5 text-slate-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{contact.company_name}</p>
+                                                    <p className="text-sm text-slate-500">
+                                                        {contact.contact_person || 'No contact person'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <Badge className={`${getStatusBadgeStyle(contact.status)} border`}>
+                                                    {contact.status?.replace('_', ' ')}
+                                                </Badge>
+                                                <span className="text-xs text-slate-400">
+                                                    {new Date(contact.updated_at).toLocaleDateString('en-IN', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric'
+                                                    })}
+                                                </span>
+                                            </div>
                                         </div>
                                     </Link>
                                 ))}
@@ -192,63 +202,59 @@ export default function ErgopackDashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Quick Actions & Summary */}
+                {/* Sidebar */}
                 <div className="space-y-6">
-                    {/* Quick Actions - Clean text links */}
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-white font-light">Quick Actions</CardTitle>
+                    {/* Quick Actions */}
+                    <Card className="bg-white border-slate-200 shadow-sm">
+                        <CardHeader className="pb-3 border-b border-slate-100">
+                            <CardTitle className="text-base font-semibold text-slate-900">Quick Actions</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                            <Link href="/ergopack/contacts/new" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
-                                <Plus className="w-4 h-4" />
-                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">Add New Contact</span>
+                        <CardContent className="pt-4 space-y-2">
+                            <Link href="/ergopack/contacts/new" className="block">
+                                <Button variant="ghost" className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                                    <Plus className="w-4 h-4 mr-3" />
+                                    Add New Contact
+                                </Button>
                             </Link>
-                            <Link href="/ergopack/contacts?status=new" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
-                                <Clock className="w-4 h-4" />
-                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">New Leads</span>
-                                {(stats?.new || 0) > 0 && <span className="text-xs text-zinc-600">({stats.new})</span>}
+                            <Link href="/ergopack/contacts?status=open" className="block">
+                                <Button variant="ghost" className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                                    <Clock className="w-4 h-4 mr-3" />
+                                    Open Leads
+                                </Button>
                             </Link>
-                            <Link href="/ergopack/contacts?status=interested" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
-                                <TrendingUp className="w-4 h-4" />
-                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">Interested</span>
-                                {(stats?.interested || 0) > 0 && <span className="text-xs text-zinc-600">({stats.interested})</span>}
+                            <Link href="/ergopack/contacts?status=contacted" className="block">
+                                <Button variant="ghost" className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                                    <Phone className="w-4 h-4 mr-3" />
+                                    Contacted
+                                </Button>
                             </Link>
-                            <Link href="/ergopack/contacts?status=proposal_sent" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
-                                <FileText className="w-4 h-4" />
-                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">Proposals Sent</span>
-                                {(stats?.proposal_sent || 0) > 0 && <span className="text-xs text-zinc-600">({stats.proposal_sent})</span>}
+                            <Link href="/ergopack/contacts?status=proposal_sent" className="block">
+                                <Button variant="ghost" className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                                    <FileText className="w-4 h-4 mr-3" />
+                                    Proposals Sent
+                                </Button>
                             </Link>
                         </CardContent>
                     </Card>
 
                     {/* Conversion Stats */}
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-white font-light">Conversion</CardTitle>
+                    <Card className="bg-white border-slate-200 shadow-sm">
+                        <CardHeader className="pb-3 border-b border-slate-100">
+                            <CardTitle className="text-base font-semibold text-slate-900">Conversion</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
+                        <CardContent className="pt-4 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-slate-600 text-sm">Deal Done</span>
+                                <span className="font-semibold text-emerald-600">{wonCount}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-slate-600 text-sm">Lost</span>
+                                <span className="font-semibold text-red-600">{lostCount}</span>
+                            </div>
+                            <div className="border-t border-slate-100 pt-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-zinc-500 text-sm">Won</span>
-                                    <span className="text-2xl font-light text-white">{stats?.won || 0}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-zinc-500 text-sm">Lost</span>
-                                    <span className="text-2xl font-light text-zinc-600">{stats?.lost || 0}</span>
-                                </div>
-                                <div className="h-px bg-zinc-800 my-3" />
-                                <div className="flex items-center justify-between">
-                                    <span className="text-zinc-500 text-sm">Win Rate</span>
-                                    <span className="text-xl font-light text-white">
-                                        {(() => {
-                                            const won = stats?.won || 0;
-                                            const lost = stats?.lost || 0;
-                                            const decided = won + lost;
-                                            if (decided === 0) return '-';
-                                            return `${Math.round((won / decided) * 100)}%`;
-                                        })()}
-                                    </span>
+                                    <span className="text-slate-900 font-medium">Win Rate</span>
+                                    <span className="text-xl font-bold text-slate-900">{winRate}%</span>
                                 </div>
                             </div>
                         </CardContent>

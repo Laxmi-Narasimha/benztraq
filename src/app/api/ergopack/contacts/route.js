@@ -91,14 +91,12 @@ export async function GET(request) {
 
         const stats = {
             total: allContacts?.length || 0,
-            new: allContacts?.filter(c => c.status === 'new').length || 0,
+            open: allContacts?.filter(c => c.status === 'open' || c.status === 'new').length || 0,
             contacted: allContacts?.filter(c => c.status === 'contacted').length || 0,
-            interested: allContacts?.filter(c => c.status === 'interested').length || 0,
-            negotiating: allContacts?.filter(c => c.status === 'negotiating').length || 0,
             proposal_sent: allContacts?.filter(c => c.status === 'proposal_sent').length || 0,
-            won: allContacts?.filter(c => c.status === 'won').length || 0,
+            deal_done: allContacts?.filter(c => c.status === 'deal_done' || c.status === 'won').length || 0,
             lost: allContacts?.filter(c => c.status === 'lost').length || 0,
-            dormant: allContacts?.filter(c => c.status === 'dormant').length || 0,
+            not_serviceable: allContacts?.filter(c => c.status === 'not_serviceable' || c.status === 'dormant').length || 0,
         };
 
         return NextResponse.json({ contacts: contactsWithActivity, stats });
@@ -146,7 +144,7 @@ export async function POST(request) {
                 source: source || null,
                 notes: notes || null,
                 priority: priority || 'medium',
-                status: status || 'new',
+                status: status || 'open',
                 created_by: user.id,
                 updated_by: user.id,
             })

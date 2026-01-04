@@ -1,8 +1,10 @@
 /**
- * New Contact Page - Simplified Lead Entry
+ * New Contact Page - Premium Light Theme
  * 
- * Clean, minimal form with black & white theme.
- * Only essential fields: Company, Contact Person, Email, Status
+ * Clean, modern form with light theme and premium aesthetics.
+ * Fields: Company, Contact Person, Phone, Email, City, Designation, 
+ * Product Interest, Additional Notes, Suggested Model, Status
+ * All fields optional except Company Name.
  * 
  * @module app/ergopack/contacts/new/page
  */
@@ -15,22 +17,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Building2, Save, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { Building2, Save, ArrowLeft, AlertCircle, Loader2, User, Phone, Mail, MapPin, Briefcase, Package, FileText } from 'lucide-react';
 import Link from 'next/link';
 
+// Stages matching dashboard (from Image 4)
 const STATUS_OPTIONS = [
-    { value: 'new', label: 'New Lead' },
+    { value: 'open', label: 'Open' },
     { value: 'contacted', label: 'Contacted' },
-    { value: 'interested', label: 'Interested' },
-    { value: 'meeting_scheduled', label: 'Meeting Scheduled' },
     { value: 'proposal_sent', label: 'Proposal Sent' },
-    { value: 'negotiating', label: 'Negotiating' },
-    { value: 'won', label: 'Won / Converted' },
+    { value: 'deal_done', label: 'Deal Done' },
     { value: 'lost', label: 'Lost' },
-    { value: 'on_hold', label: 'On Hold' },
-    { value: 'other', label: 'Other' },
+    { value: 'not_serviceable', label: 'Not Serviceable' },
+];
+
+// Suggested Models dropdown
+const MODEL_OPTIONS = [
+    { value: '', label: 'Select Model (Optional)' },
+    { value: 'Ergopack 726X-li', label: 'Ergopack 726X-li' },
+    { value: 'Ergopack GO', label: 'Ergopack GO' },
+    { value: 'Ergopack 700', label: 'Ergopack 700' },
+    { value: 'Other', label: 'Other' },
 ];
 
 export default function NewContactPage() {
@@ -41,8 +50,14 @@ export default function NewContactPage() {
     const [formData, setFormData] = useState({
         companyName: '',
         contactPerson: '',
+        phone: '',
         email: '',
-        status: 'new',
+        city: '',
+        designation: '',
+        productInterest: '',
+        additionalNotes: '',
+        suggestedModel: '',
+        status: 'open',
     });
 
     const handleChange = (field, value) => {
@@ -76,96 +91,194 @@ export default function NewContactPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black">
-            <div className="p-8 max-w-xl mx-auto">
+        <div className="min-h-screen bg-slate-50">
+            <div className="p-6 md:p-8 max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <Link href="/ergopack/contacts">
-                        <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full w-10 h-10 p-0">
+                        <Button variant="ghost" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full w-10 h-10 p-0">
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-light tracking-wide text-white flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-                                <Building2 className="w-5 h-5 text-black" />
+                        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
+                                <Building2 className="w-5 h-5 text-white" />
                             </div>
-                            New Lead
+                            Add New Lead
                         </h1>
-                        <p className="text-zinc-500 mt-1 ml-[52px] text-sm">Add a new company</p>
+                        <p className="text-slate-500 mt-1 ml-[52px] text-sm">Enter lead details below</p>
                     </div>
                 </div>
 
                 {error && (
-                    <Alert className="mb-6 border-zinc-700 bg-zinc-900">
-                        <AlertCircle className="w-4 h-4 text-white" />
-                        <AlertDescription className="text-white">{error}</AlertDescription>
+                    <Alert className="mb-6 border-red-200 bg-red-50">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <AlertDescription className="text-red-800">{error}</AlertDescription>
                     </Alert>
                 )}
 
                 <form onSubmit={handleSubmit}>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg text-white font-light">Lead Details</CardTitle>
-                            <CardDescription className="text-zinc-500">
-                                Enter the basic information
+                    <Card className="bg-white border-slate-200 shadow-sm">
+                        <CardHeader className="pb-4 border-b border-slate-100">
+                            <CardTitle className="text-lg text-slate-900 font-medium">Lead Information</CardTitle>
+                            <CardDescription className="text-slate-500">
+                                All fields are optional except Company Name
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-5">
-                            {/* Company Name - Required */}
+                        <CardContent className="pt-6 space-y-6">
+                            {/* Row 1: Company Name */}
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">
-                                    Company Name <span className="text-white">*</span>
+                                <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                    <Building2 className="w-4 h-4 text-slate-400" />
+                                    Company Name <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                     value={formData.companyName}
                                     onChange={(e) => handleChange('companyName', e.target.value)}
-                                    placeholder="ABC Packaging Pvt Ltd"
+                                    placeholder="e.g. ABC Packaging Pvt Ltd"
                                     required
-                                    className="h-12 bg-black border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white"
+                                    className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-slate-400"
                                 />
                             </div>
 
-                            {/* Contact Person - Optional */}
+                            {/* Row 2: Contact Person + Phone */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                        <User className="w-4 h-4 text-slate-400" />
+                                        Contact Person
+                                    </Label>
+                                    <Input
+                                        value={formData.contactPerson}
+                                        onChange={(e) => handleChange('contactPerson', e.target.value)}
+                                        placeholder="Full name of contact"
+                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                        <Phone className="w-4 h-4 text-slate-400" />
+                                        Phone
+                                    </Label>
+                                    <Input
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={(e) => handleChange('phone', e.target.value)}
+                                        placeholder="+91 98765 43210"
+                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Row 3: Email + City */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-slate-400" />
+                                        Email
+                                    </Label>
+                                    <Input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => handleChange('email', e.target.value)}
+                                        placeholder="contact@company.com"
+                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-slate-400" />
+                                        City
+                                    </Label>
+                                    <Input
+                                        value={formData.city}
+                                        onChange={(e) => handleChange('city', e.target.value)}
+                                        placeholder="e.g. Mumbai, Delhi"
+                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Row 4: Designation + Suggested Model */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                        <Briefcase className="w-4 h-4 text-slate-400" />
+                                        Designation
+                                    </Label>
+                                    <Input
+                                        value={formData.designation}
+                                        onChange={(e) => handleChange('designation', e.target.value)}
+                                        placeholder="e.g. Purchase Manager"
+                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                        <Package className="w-4 h-4 text-slate-400" />
+                                        Suggested Model
+                                    </Label>
+                                    <Select value={formData.suggestedModel} onValueChange={(v) => handleChange('suggestedModel', v)}>
+                                        <SelectTrigger className="h-11 bg-white border-slate-200 text-slate-900 focus:border-slate-400">
+                                            <SelectValue placeholder="Select Model" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-slate-200">
+                                            {MODEL_OPTIONS.slice(1).map((opt) => (
+                                                <SelectItem
+                                                    key={opt.value}
+                                                    value={opt.value}
+                                                    className="text-slate-900 focus:bg-slate-100"
+                                                >
+                                                    {opt.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* Row 5: Product Interest */}
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">
-                                    Contact Person <span className="text-zinc-600 text-xs normal-case">(optional)</span>
+                                <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-slate-400" />
+                                    Product Interest / Requirement
                                 </Label>
                                 <Input
-                                    value={formData.contactPerson}
-                                    onChange={(e) => handleChange('contactPerson', e.target.value)}
-                                    placeholder="John Doe"
-                                    className="h-12 bg-black border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white"
+                                    value={formData.productInterest}
+                                    onChange={(e) => handleChange('productInterest', e.target.value)}
+                                    placeholder="Brief 4-5 words on what they're looking for"
+                                    className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
                                 />
                             </div>
 
-                            {/* Email - Optional */}
+                            {/* Row 6: Additional Notes */}
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">
-                                    Email <span className="text-zinc-600 text-xs normal-case">(optional)</span>
+                                <Label className="text-slate-700 text-sm font-medium">
+                                    Additional Notes
                                 </Label>
-                                <Input
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={(e) => handleChange('email', e.target.value)}
-                                    placeholder="contact@company.com"
-                                    className="h-12 bg-black border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white"
+                                <Textarea
+                                    value={formData.additionalNotes}
+                                    onChange={(e) => handleChange('additionalNotes', e.target.value)}
+                                    placeholder="Any additional details, links, or context..."
+                                    rows={3}
+                                    className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 resize-none"
                                 />
                             </div>
 
-                            {/* Status */}
+                            {/* Row 7: Status */}
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Status</Label>
+                                <Label className="text-slate-700 text-sm font-medium">Stage</Label>
                                 <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
-                                    <SelectTrigger className="h-12 bg-black border-zinc-700 text-white focus:border-white">
+                                    <SelectTrigger className="h-11 bg-white border-slate-200 text-slate-900 focus:border-slate-400">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-700">
+                                    <SelectContent className="bg-white border-slate-200">
                                         {STATUS_OPTIONS.map((opt) => (
                                             <SelectItem
                                                 key={opt.value}
                                                 value={opt.value}
-                                                className="text-white focus:bg-zinc-800 focus:text-white"
+                                                className="text-slate-900 focus:bg-slate-100"
                                             >
                                                 {opt.label}
                                             </SelectItem>
@@ -175,12 +288,12 @@ export default function NewContactPage() {
                             </div>
 
                             {/* Submit Buttons */}
-                            <div className="flex gap-3 pt-6">
+                            <div className="flex gap-3 pt-4 border-t border-slate-100">
                                 <Link href="/ergopack/contacts" className="flex-1">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="w-full h-12 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                                        className="w-full h-11 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                     >
                                         Cancel
                                     </Button>
@@ -188,7 +301,7 @@ export default function NewContactPage() {
                                 <Button
                                     type="submit"
                                     disabled={isSubmitting || !formData.companyName.trim()}
-                                    className="flex-1 h-12 bg-white text-black hover:bg-zinc-200 font-light tracking-wide disabled:opacity-30"
+                                    className="flex-1 h-11 bg-slate-900 text-white hover:bg-slate-800 font-medium disabled:opacity-40"
                                 >
                                     {isSubmitting ? (
                                         <>
