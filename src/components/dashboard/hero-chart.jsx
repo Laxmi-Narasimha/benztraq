@@ -27,10 +27,9 @@ import {
 } from 'lucide-react';
 
 const METRICS = {
-    REVENUE: { label: 'Revenue', key: 'revenue', color: '#111827', icon: TrendingUp },    // Slate-900 (Deep Black/Indigo)
-    QUOTATIONS: { label: 'Quotations', key: 'quotations', color: '#d97706', icon: FileText }, // Amber-600 (Muted Gold)
-    ORDERS: { label: 'Orders', key: 'orders', color: '#059669', icon: ShoppingCart },     // Emerald-600
-    CONVERSION: { label: 'Conversion', key: 'conversion', color: '#7c3aed', icon: Target }, // Violet-600 
+    REVENUE: { label: 'Revenue (Orders)', key: 'revenue', color: '#111827', icon: TrendingUp },    // Slate-900
+    QUOTED_VALUE: { label: 'Quoted Value', key: 'quotations_value', color: '#d97706', icon: FileText }, // Amber-600
+    CONVERSION: { label: 'Conversion Rate', key: 'conversion', color: '#7c3aed', icon: Target }, // Violet-600 
 };
 
 const VIEW_MODES = {
@@ -51,7 +50,7 @@ const CustomTooltip = ({ active, payload, label, metric, userMap }) => {
                         let name = entry.name;
 
                         // Formatting
-                        if (metric === 'revenue' || metric === 'quotations_value' || isTarget) {
+                        if (metric === 'revenue' || metric === 'quotations_value' || isTarget || metric.includes('val')) {
                             value = formatCurrency(value);
                         } else if (metric === 'conversion') {
                             value = `${value}%`;
@@ -97,17 +96,15 @@ export function HeroChart({ data, userMap, className }) {
 
     const getCurrentMetricKey = () => {
         if (activeMetric === 'REVENUE') return 'revenue';
-        if (activeMetric === 'QUOTATIONS') return 'quotations'; // Count
-        if (activeMetric === 'ORDERS') return 'orders';
+        if (activeMetric === 'QUOTED_VALUE') return 'quotations_value';
         if (activeMetric === 'CONVERSION') return 'conversion';
         return 'revenue';
     };
 
     const getComparisonKey = (uid) => {
         if (activeMetric === 'REVENUE') return `revenue_${uid}`;
-        if (activeMetric === 'QUOTATIONS') return `quotes_${uid}`;
-        if (activeMetric === 'ORDERS') return `orders_${uid}`;
-        if (activeMetric === 'CONVERSION') return null; // No comparison for rate yet, simpler to just hide
+        if (activeMetric === 'QUOTED_VALUE') return `quotes_val_${uid}`;
+        if (activeMetric === 'CONVERSION') return null;
         return `revenue_${uid}`;
     };
 
@@ -137,7 +134,7 @@ export function HeroChart({ data, userMap, className }) {
                         </div>
                         <div className="flex items-baseline gap-3">
                             <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-                                {(activeMetric === 'REVENUE') ? formatCurrency(totalValue) :
+                                {(activeMetric === 'REVENUE' || activeMetric === 'QUOTED_VALUE') ? formatCurrency(totalValue) :
                                     (activeMetric === 'CONVERSION') ? `${Math.round(avgValue)}%` :
                                         totalValue.toLocaleString()}
                             </h2>
@@ -182,7 +179,7 @@ export function HeroChart({ data, userMap, className }) {
                                             : "text-slate-500 hover:text-slate-700 hover:bg-slate-100/50"
                                     )}
                                 >
-                                    Team Trend
+                                    Team Trend (Combined)
                                 </button>
                                 <button
                                     onClick={() => setViewMode(VIEW_MODES.COMPARE)}
@@ -225,7 +222,7 @@ export function HeroChart({ data, userMap, className }) {
                                     tickLine={false}
                                     tick={{ fill: '#64748b', fontSize: 12 }}
                                     tickFormatter={(v) => {
-                                        if (activeMetric === 'REVENUE') return `₹${v / 1000}k`;
+                                        if (activeMetric === 'REVENUE' || activeMetric === 'QUOTED_VALUE') return `₹${v / 1000}k`;
                                         if (activeMetric === 'CONVERSION') return `${v}%`;
                                         return v;
                                     }}

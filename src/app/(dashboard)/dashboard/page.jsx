@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/auth-provider';
 import { DashboardFilters } from '@/components/dashboard/dashboard-filters';
 import { HeroChart } from '@/components/dashboard/hero-chart';
+import { FunnelChart, ProductList } from '@/components/dashboard/insights';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Trophy, Users, ArrowUpRight, ArrowDownRight, Activity, Calendar } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatting';
@@ -56,8 +57,8 @@ function TopPerformers({ data }) {
                 <div key={user.uid || index} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors group">
                     <div className="flex items-center gap-4">
                         <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-xs ${index === 0 ? 'bg-amber-100 text-amber-700' :
-                                index === 1 ? 'bg-slate-200 text-slate-700' :
-                                    index === 2 ? 'bg-orange-100 text-orange-800' : 'bg-slate-50 text-slate-500'
+                            index === 1 ? 'bg-slate-200 text-slate-700' :
+                                index === 2 ? 'bg-orange-100 text-orange-800' : 'bg-slate-50 text-slate-500'
                             }`}>
                             {index + 1}
                         </div>
@@ -119,24 +120,20 @@ export default function DashboardPage() {
     // Role Logic
     const isManager = profile?.role === 'vp' || profile?.role === 'director' || profile?.role === 'head_of_sales';
 
-    // Calculate Summary Metrics from Chart Data (TrendData)
+    // Calculate Summary Metrics from Chart Data
+    // We strictly use the aggregated fields from the trend data
     const summary = stats?.revenueTrend?.reduce((acc, curr) => ({
         revenue: acc.revenue + (curr.revenue || 0),
+        quotations_value: acc.quotations_value + (curr.quotations_value || 0),
         orders: acc.orders + (curr.orders || 0),
         quotations: acc.quotations + (curr.quotations || 0),
-        quotes_value: acc.quotes_value + (curr.quotations_value || 0),
-    }), { revenue: 0, orders: 0, quotations: 0, quotes_value: 0 }) || { revenue: 0, orders: 0, quotations: 0, quotes_value: 0 };
+    }), { revenue: 0, quotations_value: 0, orders: 0, quotations: 0 }) || { revenue: 0, quotations_value: 0, orders: 0, quotations: 0 };
 
     const conversionRate = summary.quotations > 0
         ? Math.round((summary.orders / summary.quotations) * 100)
         : 0;
 
     // Leaderboard Data Calculation
-    // We need to aggregate by user from the *comparison* keys in chartData if enabled, 
-    // BUT looking at the API response, we might not have explicitly "per user total" list.
-    // However, the chartData contains `revenue_UID`, `orders_UID` etc. for each month.
-    // We can aggregate these to build the leaderboard.
-
     const leaderboardData = [];
     if (stats?.userMap) {
         Object.entries(stats.userMap).forEach(([uid, name]) => {
@@ -160,46 +157,58 @@ export default function DashboardPage() {
         });
     }
 
+    // Prepare Insight Data
+    // Funnel: Quotes vs Orders (Count)
+    const funnelData = [
+        { name: 'Quotations', value: summary.quotations },
+        { name: 'Orders', value: summary.orders, conversion: conversionRate }
+    ];
+
+    // Placeholder Product Data (Ideally API would return this, hardcoding for now if missing or mocking)
+    // Assuming API adds it, or we fallback to empty
+    const productData = stats?.topProducts || [];
+
     return (
-        <div className="space-y-8 p-8 max-w-[1600px] mx-auto bg-white/50 min-h-screen">
+        <div className="space-y-6 p-6 max-w-[1800px] mx-auto bg-slate-50/50 min-h-screen">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                        Good morning, {profile?.full_name?.split(' ')[0] || 'Team'}
+                        Overview
                     </h1>
-                    <p className="text-slate-500">
-                        {isManager ? "Here's what's happening across your team." : "Here's your personal performance overview."}
+                    <p className="text-sm text-slate-500">
+                        {isManager ? "Performance across your sales team." : "Your personal performance metrics."}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
                     <DashboardFilters
                         onChange={(newFilters) => setFilters(prev => ({ ...prev, ...newFilters }))}
                         showUserSelect={isManager}
+                        defaultDateRange={{ from: subMonths(new Date(), 6), to: endOfMonth(new Date()) }}
                     />
                 </div>
             </div>
 
-            {/* KPI Cards */}
+            {/* Row 1: KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <MetricCard
-                    title="Total Revenue"
+                    title="Revenue"
                     value={formatCurrency(summary.revenue)}
-                    subtext="Confirmed Sales Orders"
+                    subtext={`${summary.orders} confirmed orders`}
                     icon={Activity}
                     trend="12.5%"
-                    trendUp={true} // TODO: Calculate real trend
+                    trendUp={true}
                 />
                 <MetricCard
-                    title="Quotations"
-                    value={summary.quotations}
-                    subtext={formatCurrency(summary.quotes_value)}
-                    icon={Calendar} // Using generic icon
+                    title="Quoted Value"
+                    value={formatCurrency(summary.quotations_value)}
+                    subtext={`${summary.quotations} active quotes`}
+                    icon={Calendar}
                 />
                 <MetricCard
-                    title="Active Orders"
-                    value={summary.orders}
-                    subtext="Processed in period"
+                    title="Avg Order Value"
+                    value={summary.orders > 0 ? formatCurrency(summary.revenue / summary.orders, { compact: true }) : '₹0'}
+                    subtext="Per confirmed order"
                     icon={Users}
                 />
                 <MetricCard
@@ -212,50 +221,55 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* Hero Chart - Centerpiece */}
+            {/* Row 2: Hero Chart (Dominant) */}
             <HeroChart
                 data={stats?.revenueTrend || []}
                 userMap={stats?.userMap}
-                className="col-span-1 border-slate-200/60 shadow-none"
+                className="col-span-1 border-slate-200/60 shadow-sm bg-white"
             />
 
-            {/* Bottom Row: Leaderboard & Recent (Split 60/40) */}
+            {/* Row 3: Connected Insights (Grid) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* 1. Funnel */}
+                <FunnelChart data={funnelData} className="bg-white" />
+
+                {/* 2. Top Products (Mock/Placeholder until API finalized or empty) */}
+                <ProductList data={productData} className="bg-white" />
+
+                {/* 3. Status Distribution (Existing Pie Logic or new) */}
+                <Card className="border-slate-100 shadow-sm bg-white">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-slate-500">Pipeline Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4 pt-2">
+                            {(stats?.pieData || []).map((item, i) => (
+                                <div key={i} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-3 h-3 rounded-full ${['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-red-500'][i % 4]}`} />
+                                        <span className="text-sm text-slate-600 capitalize">{item.name.replace('_', ' ')}</span>
+                                    </div>
+                                    <span className="text-sm font-semibold text-slate-900">{item.value}</span>
+                                </div>
+                            ))}
+                            {(!stats?.pieData || stats.pieData.length === 0) && (
+                                <p className="text-sm text-slate-400">No status data available.</p>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Row 4: Leaderboard (Manager Only) */}
             {isManager && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Leaderboard - 7 Cols */}
-                    <Card className="lg:col-span-7 border-slate-100 shadow-sm">
+                <div className="grid grid-cols-1 gap-6">
+                    <Card className="border-slate-100 shadow-sm bg-white">
                         <CardHeader>
                             <CardTitle className="text-lg">Top Performers</CardTitle>
                             <CardDescription>Revenue contribution by team member</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <TopPerformers data={leaderboardData} />
-                        </CardContent>
-                    </Card>
-
-                    {/* Quick Stats / Distribution - 5 Cols */}
-                    <Card className="lg:col-span-5 border-slate-100 shadow-sm">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Document Status</CardTitle>
-                            <CardDescription>Current pipeline distribution</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {/* Just a flexible placeholder or the Pie Chart if requested. 
-                                 User disliked "boxy stuff". Let's put a clean list summary for now. */}
-                            <div className="space-y-4">
-                                {(stats?.pieData || []).map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-3 h-3 rounded-full ${['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-red-500'][i % 4]}`} />
-                                            <span className="text-sm text-slate-600">{item.name}</span>
-                                        </div>
-                                        <span className="text-sm font-semibold text-slate-900">{item.value}</span>
-                                    </div>
-                                ))}
-                                {(!stats?.pieData || stats.pieData.length === 0) && (
-                                    <p className="text-sm text-slate-400">No status data available.</p>
-                                )}
-                            </div>
                         </CardContent>
                     </Card>
                 </div>
