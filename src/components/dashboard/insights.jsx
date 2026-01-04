@@ -77,10 +77,48 @@ export function FunnelChart({ data, className }) {
     );
 }
 
-export function ProductList({ data, className }) {
-    // Data expected: [{ name: 'Product A', value: 50000, quantity: 100 }]
-    const sorted = [...(data || [])].sort((a, b) => b.value - a.value).slice(0, 5);
-    const maxVal = sorted[0]?.value || 1;
+export function ProductList({ data, className, loading }) {
+    if (loading) {
+        return (
+            <Card className={cn("border-slate-100 shadow-sm", className)}>
+                <CardHeader className="pb-2">
+                    <div className="h-4 w-32 bg-slate-100 rounded animate-pulse" />
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="space-y-2">
+                                <div className="flex justify-between">
+                                    <div className="h-4 w-24 bg-slate-100 rounded animate-pulse" />
+                                    <div className="h-4 w-16 bg-slate-100 rounded animate-pulse" />
+                                </div>
+                                <div className="h-1.5 bg-slate-100 rounded-full" />
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    // Data expected: [{ name, revenue, quantity, orders }]
+    const sorted = [...(data || [])].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+    const maxVal = sorted[0]?.revenue || 1;
+
+    if (sorted.length === 0) {
+        return (
+            <Card className={cn("border-slate-100 shadow-sm", className)}>
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-500">Top Products (Revenue)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-center py-6 text-slate-400">
+                        <p className="text-sm">No product data available.</p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <Card className={cn("border-slate-100 shadow-sm", className)}>
@@ -90,28 +128,26 @@ export function ProductList({ data, className }) {
             <CardContent>
                 <div className="space-y-4">
                     {sorted.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <p className="text-sm font-medium text-slate-800 truncate" title={item.name}>
-                                        {item.name}
-                                    </p>
-                                    <p className="text-xs font-semibold text-slate-900">
-                                        {formatCurrency(item.value, { compact: true })}
-                                    </p>
+                        <div key={i} className="flex flex-col gap-1">
+                            <div className="flex justify-between items-baseline">
+                                <p className="text-sm font-medium text-slate-800 truncate max-w-[180px]" title={item.name}>
+                                    {item.name}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-slate-400">{item.orders || 0} orders</span>
+                                    <span className="text-xs font-semibold text-slate-900">
+                                        {formatCurrency(item.revenue, { compact: true })}
+                                    </span>
                                 </div>
-                                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                    <div
-                                        className="h-full bg-indigo-600 rounded-full"
-                                        style={{ width: `${(item.value / maxVal) * 100}%` }}
-                                    />
-                                </div>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                    className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                    style={{ width: `${(item.revenue / maxVal) * 100}%` }}
+                                />
                             </div>
                         </div>
                     ))}
-                    {sorted.length === 0 && (
-                        <p className="text-xs text-slate-400">No product data available.</p>
-                    )}
                 </div>
             </CardContent>
         </Card>

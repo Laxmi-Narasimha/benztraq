@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { startOfMonth, endOfMonth, eachMonthOfInterval, format, startOfYear, endOfYear, parseISO, isWithinInterval } from 'date-fns';
+import { startOfMonth, endOfMonth, eachMonthOfInterval, format, subMonths, isWithinInterval, parseISO, differenceInDays } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,6 @@ export async function GET(request) {
                 getAll() { return cookieStore.getAll() },
                 setAll(cookiesToSet) {
                     cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-
                 },
             },
         }
@@ -23,10 +22,9 @@ export async function GET(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        const dateFrom = searchParams.get('from');
-        const dateTo = searchParams.get('to');
+        const dateFrom = searchParams.get('from') || new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+        const dateTo = searchParams.get('to') || new Date().toISOString();
         const salespersonIds = searchParams.get('users')?.split(',').filter(Boolean) || [];
-        const organizationId = searchParams.get('org'); // If relevant
 
         // Get current user for RBAC
         const { data: { user } } = await supabase.auth.getUser();
@@ -39,41 +37,93 @@ export async function GET(request) {
             .eq('user_id', user.id)
             .single();
 
-        // RBAC: ASM can only see themselves unless comparing (if allowed? usually no)
-        // Manager can see anyone.
+        if (!profile) {
+            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        }
 
-        let effectiveUserIds = salespersonIds;
-        if (profile.role === 'asm') {
-            // Force override for ASM
+        const isManager = ['vp', 'director', 'head_of_sales'].includes(profile.role);
+
+        // ========================================
+        // 1. ACCESSIBLE USERS (for filter dropdown)
+        // ========================================
+        let accessibleUsers = [];
+
+        if (isManager) {
+            // Manager can see all ASMs
+            const { data: teamProfiles } = await supabase
+                .from('profiles')
+                .select('user_id, full_name, role')
+                .eq('role', 'asm');
+
+            accessibleUsers = (teamProfiles || []).map(p => ({
+                id: p.user_id,
+                name: p.full_name || 'Unknown',
+                role: p.role
+            }));
+        }
+
+        // Determine effective user IDs for queries
+        let effectiveUserIds = salespersonIds.length > 0 ? salespersonIds : [];
+        if (!isManager) {
+            // ASM can only see themselves
             effectiveUserIds = [user.id];
         }
 
-        // Build Document Query - Fetch ALL types to separate later
-        let query = supabase
+        // ========================================
+        // 2. FETCH ALL DOCUMENTS
+        // ========================================
+        let docQuery = supabase
             .from('documents')
             .select(`
                 id,
                 doc_type,
                 doc_date,
+                doc_number,
                 total_value,
                 status,
-                salesperson_user_id
+                salesperson_user_id,
+                customer_name_raw,
+                customer_display_name,
+                product_name,
+                quantity,
+                uom
             `)
             .in('doc_type', ['quotation', 'sales_order'])
             .gte('doc_date', dateFrom)
             .lte('doc_date', dateTo);
 
         if (effectiveUserIds.length > 0) {
-            query = query.in('salesperson_user_id', effectiveUserIds);
+            docQuery = docQuery.in('salesperson_user_id', effectiveUserIds);
         }
 
-        // Apply Org ID if applicable (from profile usually)
-        // query = query.eq('organization', ...); 
-
-        const { data: docs, error: docsError } = await query;
+        const { data: docs, error: docsError } = await docQuery;
         if (docsError) throw docsError;
 
-        // Fetch Targets
+        // ========================================
+        // 3. CALCULATE PREVIOUS PERIOD (for comparison)
+        // ========================================
+        const fromDate = new Date(dateFrom);
+        const toDate = new Date(dateTo);
+        const periodLengthDays = differenceInDays(toDate, fromDate);
+        const prevFrom = new Date(fromDate.getTime() - periodLengthDays * 24 * 60 * 60 * 1000);
+        const prevTo = new Date(fromDate.getTime() - 1);
+
+        let prevDocQuery = supabase
+            .from('documents')
+            .select('doc_type, total_value, status')
+            .in('doc_type', ['quotation', 'sales_order'])
+            .gte('doc_date', prevFrom.toISOString())
+            .lte('doc_date', prevTo.toISOString());
+
+        if (effectiveUserIds.length > 0) {
+            prevDocQuery = prevDocQuery.in('salesperson_user_id', effectiveUserIds);
+        }
+
+        const { data: prevDocs } = await prevDocQuery;
+
+        // ========================================
+        // 4. FETCH TARGETS
+        // ========================================
         const years = new Set([
             new Date(dateFrom).getFullYear(),
             new Date(dateTo).getFullYear()
@@ -83,122 +133,187 @@ export async function GET(request) {
             .from('annual_targets')
             .select('*')
             .in('year', Array.from(years))
-            .in('salesperson_user_id', effectiveUserIds.length > 0 ? effectiveUserIds : []);
+            .in('salesperson_user_id', effectiveUserIds.length > 0 ? effectiveUserIds : accessibleUsers.map(u => u.id));
 
-        // ------------------------------------------------------------------
-        // Aggregation Logic
-        // ------------------------------------------------------------------
+        // ========================================
+        // 5. AGGREGATION HELPER
+        // ========================================
+        const aggregateMetrics = (filteredDocs) => {
+            let revenue = 0, ordersCount = 0, quotesValue = 0, quotesCount = 0;
 
-        // Helper: Monthly buckets
+            filteredDocs.forEach(d => {
+                if (d.doc_type === 'sales_order' && d.status !== 'cancelled') {
+                    revenue += (d.total_value || 0);
+                    ordersCount++;
+                } else if (d.doc_type === 'quotation') {
+                    quotesValue += (d.total_value || 0);
+                    quotesCount++;
+                }
+            });
+
+            return { revenue, ordersCount, quotesValue, quotesCount };
+        };
+
+        // ========================================
+        // 6. SUMMARY METRICS
+        // ========================================
+        const currentMetrics = aggregateMetrics(docs || []);
+        const previousMetrics = aggregateMetrics(prevDocs || []);
+
+        const revenueChange = previousMetrics.revenue > 0
+            ? Math.round(((currentMetrics.revenue - previousMetrics.revenue) / previousMetrics.revenue) * 100)
+            : 0;
+        const ordersChange = previousMetrics.ordersCount > 0
+            ? Math.round(((currentMetrics.ordersCount - previousMetrics.ordersCount) / previousMetrics.ordersCount) * 100)
+            : 0;
+
+        const summaryMetrics = {
+            totalRevenue: currentMetrics.revenue,
+            totalQuotedValue: currentMetrics.quotesValue,
+            totalOrders: currentMetrics.ordersCount,
+            totalQuotations: currentMetrics.quotesCount,
+            conversionRate: currentMetrics.quotesCount > 0
+                ? Math.round((currentMetrics.ordersCount / currentMetrics.quotesCount) * 100)
+                : 0,
+            avgOrderValue: currentMetrics.ordersCount > 0
+                ? Math.round(currentMetrics.revenue / currentMetrics.ordersCount)
+                : 0,
+            previousPeriod: {
+                revenue: previousMetrics.revenue,
+                orders: previousMetrics.ordersCount,
+                revenueChange,
+                ordersChange
+            }
+        };
+
+        // ========================================
+        // 7. MONTHLY TREND DATA
+        // ========================================
         const months = eachMonthOfInterval({
             start: startOfMonth(new Date(dateFrom)),
             end: endOfMonth(new Date(dateTo))
         });
 
-        // 1. Trend & Comparison Data
         const chartData = months.map(date => {
             const monthKey = format(date, 'MMM yyyy');
             const monthStart = startOfMonth(date);
             const monthEnd = endOfMonth(date);
-
-            // Base object
             const point = { name: monthKey, date: date.toISOString() };
 
-            // Helper to aggregate based on filter
-            const aggregateMetrics = (filteredDocs) => {
-                let revenue = 0;
-                let orders_count = 0;
-                let quotes_value = 0;
-                let quotes_count = 0;
-
-                filteredDocs.forEach(d => {
-                    if (d.doc_type === 'sales_order') {
-                        // Revenue = Total Value of non-cancelled orders
-                        if (d.status !== 'cancelled') {
-                            revenue += (d.total_value || 0);
-                            orders_count++;
-                        }
-                    } else if (d.doc_type === 'quotation') {
-                        quotes_value += (d.total_value || 0);
-                        quotes_count++;
-                    }
-                });
-                return { revenue, orders_count, quotes_value, quotes_count };
-            };
-
-            // Calculate for each user (Comparison View Keys)
+            // Per-user metrics for comparison
             if (effectiveUserIds.length > 0) {
                 effectiveUserIds.forEach(uid => {
-                    const userDocs = docs.filter(d =>
+                    const userDocs = (docs || []).filter(d =>
                         d.salesperson_user_id === uid &&
                         isWithinInterval(new Date(d.doc_date), { start: monthStart, end: monthEnd })
                     );
-
                     const metrics = aggregateMetrics(userDocs);
-
-                    // Assign specific keys for this user
                     point[`revenue_${uid}`] = metrics.revenue;
-                    point[`orders_${uid}`] = metrics.orders_count;
-                    point[`quotes_val_${uid}`] = metrics.quotes_value;
-                    point[`quotes_${uid}`] = metrics.quotes_count;
+                    point[`orders_${uid}`] = metrics.ordersCount;
+                    point[`quotes_val_${uid}`] = metrics.quotesValue;
+                    point[`quotes_${uid}`] = metrics.quotesCount;
 
-                    // Target
                     const year = date.getFullYear();
                     const targetRec = targetsData?.find(t => t.salesperson_user_id === uid && t.year === year);
-                    point[`target_${uid}`] = targetRec ? targetRec.annual_target / 12 : 0;
+                    point[`target_${uid}`] = targetRec ? Math.round(targetRec.annual_target / 12) : 0;
                 });
             }
 
-            // Always calculate Aggregate (Trend View Keys)
-            const monthDocs = docs.filter(d =>
+            // Aggregated metrics
+            const monthDocs = (docs || []).filter(d =>
                 isWithinInterval(new Date(d.doc_date), { start: monthStart, end: monthEnd })
             );
-
-            // If filtering by user, monthDocs is ALREADY filtered by the query above
             const totalMetrics = aggregateMetrics(monthDocs);
 
-            point['revenue'] = totalMetrics.revenue;
-            point['orders'] = totalMetrics.orders_count;
-            point['quotations'] = totalMetrics.quotes_count; // Count
-            point['quotations_value'] = totalMetrics.quotes_value; // Value
-            point['conversion'] = totalMetrics.quotes_count > 0
-                ? Math.round((totalMetrics.orders_count / totalMetrics.quotes_count) * 100)
+            point.revenue = totalMetrics.revenue;
+            point.orders = totalMetrics.ordersCount;
+            point.quotations = totalMetrics.quotesCount;
+            point.quotations_value = totalMetrics.quotesValue;
+            point.conversion = totalMetrics.quotesCount > 0
+                ? Math.round((totalMetrics.ordersCount / totalMetrics.quotesCount) * 100)
                 : 0;
 
-            // Aggregate Target
             const year = date.getFullYear();
             const relevantTargets = targetsData?.filter(t => t.year === year) || [];
-            point['target'] = relevantTargets.reduce((sum, t) => sum + (Number(t.annual_target) / 12), 0);
+            point.target = relevantTargets.reduce((sum, t) => sum + (Number(t.annual_target) / 12), 0);
 
             return point;
         });
 
-        // 2. Pie Chart Data (Status mix for selected range/users)
-        // Fetch ALL docs (Quotes + SOs) for Pie Mix?
-        // Reuse same query params but without doc_type filter? 
-        // Let's do a separate quick query for Pie stats to include Quotations
-        let pieQuery = supabase
-            .from('documents')
-            .select('status, doc_type')
-            .gte('doc_date', dateFrom)
-            .lte('doc_date', dateTo);
+        // ========================================
+        // 8. TOP PRODUCTS (by Revenue)
+        // ========================================
+        const productMap = {};
+        (docs || []).filter(d => d.doc_type === 'sales_order' && d.status !== 'cancelled').forEach(d => {
+            const name = d.product_name || 'Unknown Product';
+            if (!productMap[name]) {
+                productMap[name] = { name, revenue: 0, quantity: 0, orders: 0 };
+            }
+            productMap[name].revenue += (d.total_value || 0);
+            productMap[name].quantity += (d.quantity || 0);
+            productMap[name].orders += 1;
+        });
+        const topProducts = Object.values(productMap)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
 
-        if (effectiveUserIds.length > 0) {
-            pieQuery = pieQuery.in('salesperson_user_id', effectiveUserIds);
-        }
+        // ========================================
+        // 9. TOP CUSTOMERS (by Revenue)
+        // ========================================
+        const customerMap = {};
+        (docs || []).filter(d => d.doc_type === 'sales_order' && d.status !== 'cancelled').forEach(d => {
+            const name = d.customer_name_raw || d.customer_display_name || 'Unknown Customer';
+            if (!customerMap[name]) {
+                customerMap[name] = { name, revenue: 0, orders: 0, lastOrder: d.doc_date };
+            }
+            customerMap[name].revenue += (d.total_value || 0);
+            customerMap[name].orders += 1;
+            if (new Date(d.doc_date) > new Date(customerMap[name].lastOrder)) {
+                customerMap[name].lastOrder = d.doc_date;
+            }
+        });
+        const topCustomers = Object.values(customerMap)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
 
-        const { data: pieDocs } = await pieQuery;
+        // ========================================
+        // 10. FUNNEL DATA (from Quotation Statuses)
+        // ========================================
+        const quotations = (docs || []).filter(d => d.doc_type === 'quotation');
+        const orders = (docs || []).filter(d => d.doc_type === 'sales_order' && d.status !== 'cancelled');
 
+        const funnelData = [
+            {
+                stage: 'Quotations Created',
+                count: quotations.length,
+                value: quotations.reduce((s, d) => s + (d.total_value || 0), 0)
+            },
+            {
+                stage: 'Sent to Customer',
+                count: quotations.filter(d => d.status === 'sent' || d.status === 'accepted' || d.status === 'rejected').length,
+                value: quotations.filter(d => d.status === 'sent' || d.status === 'accepted' || d.status === 'rejected')
+                    .reduce((s, d) => s + (d.total_value || 0), 0)
+            },
+            {
+                stage: 'Converted to Order',
+                count: orders.length,
+                value: orders.reduce((s, d) => s + (d.total_value || 0), 0)
+            }
+        ];
+
+        // ========================================
+        // 11. PIE DATA (Status Distribution)
+        // ========================================
         const statusCounts = {};
-        pieDocs?.forEach(d => {
-            const s = d.status ? (d.status.charAt(0).toUpperCase() + d.status.slice(1)) : 'Unknown';
+        (docs || []).forEach(d => {
+            const s = d.status ? (d.status.charAt(0).toUpperCase() + d.status.slice(1).replace('_', ' ')) : 'Unknown';
             statusCounts[s] = (statusCounts[s] || 0) + 1;
         });
-
         const pieData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
 
-        // 3. User Map (for frontend key decoding)
-        // If we used IDs as keys, we need to send names
+        // ========================================
+        // 12. USER MAP (for chart legends)
+        // ========================================
         let userMap = {};
         if (effectiveUserIds.length > 0) {
             const { data: userProfiles } = await supabase
@@ -206,23 +321,43 @@ export async function GET(request) {
                 .select('user_id, full_name')
                 .in('user_id', effectiveUserIds);
 
-            userProfiles?.forEach(p => {
-                userMap[p.user_id] = p.full_name;
+            (userProfiles || []).forEach(p => {
+                userMap[p.user_id] = p.full_name || 'Unknown';
             });
         }
 
+        // ========================================
+        // RETURN COMPLETE RESPONSE
+        // ========================================
         return NextResponse.json({
+            // For filters
+            accessibleUsers,
+            isManager,
+            currentUserId: user.id,
+
+            // Summary
+            summaryMetrics,
+
+            // Charts
             revenueTrend: chartData,
+            funnelData,
             pieData,
-            userMap, // Send map so frontend knows "uuid-123" is "John Doe"
+
+            // Tables
+            topProducts,
+            topCustomers,
+
+            // Utilities
+            userMap,
             meta: {
-                effectiveUserIds, // helpful for debug
-                isComparison: effectiveUserIds.length > 1
+                effectiveUserIds,
+                isComparison: effectiveUserIds.length > 1,
+                dateRange: { from: dateFrom, to: dateTo }
             }
         });
 
     } catch (error) {
         console.error('Analytics API Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
     }
 }
