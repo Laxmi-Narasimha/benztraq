@@ -1,45 +1,31 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createAdminClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/utils/session';
 import { NextResponse } from 'next/server';
-import { startOfMonth, endOfMonth, eachMonthOfInterval, format, subMonths, isWithinInterval, parseISO, differenceInDays } from 'date-fns';
+import { startOfMonth, endOfMonth, eachMonthOfInterval, format, isWithinInterval, differenceInDays } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll() },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-                },
-            },
-        }
-    );
-
     try {
+        // ========================================
+        // AUTHENTICATION (Custom JWT Session)
+        // ========================================
+        const currentUser = await getCurrentUser();
+
+        if (!currentUser) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const supabase = createAdminClient();
+
         const { searchParams } = new URL(request.url);
         const dateFrom = searchParams.get('from') || new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
         const dateTo = searchParams.get('to') || new Date().toISOString();
         const salespersonIds = searchParams.get('users')?.split(',').filter(Boolean) || [];
 
-        // Get current user for RBAC
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-        // Get Profile
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-
-        if (!profile) {
-            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-        }
+        // Get Profile from currentUser (already have it)
+        const profile = currentUser;
+        const userId = currentUser.id;
 
         const isManager = ['vp', 'director', 'head_of_sales'].includes(profile.role);
 
@@ -66,7 +52,7 @@ export async function GET(request) {
         let effectiveUserIds = salespersonIds.length > 0 ? salespersonIds : [];
         if (!isManager) {
             // ASM can only see themselves
-            effectiveUserIds = [user.id];
+            effectiveUserIds = [userId];
         }
 
         // ========================================
@@ -333,7 +319,7 @@ export async function GET(request) {
             // For filters
             accessibleUsers,
             isManager,
-            currentUserId: user.id,
+            currentUserId: userId,
 
             // Summary
             summaryMetrics,
