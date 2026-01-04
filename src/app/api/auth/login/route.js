@@ -133,7 +133,8 @@ export async function POST(request) {
             const normalizedSelection = companyMapping[selectedCompany] || selectedCompany;
 
             // Check if user has access to selected company
-            if (userCompanies.length > 0 && !userCompanies.includes(normalizedSelection)) {
+            // DENY if companies array is empty OR doesn't include the selection
+            if (userCompanies.length === 0 || !userCompanies.includes(normalizedSelection)) {
                 console.warn('[Auth] Company access denied for:', profile.email, 'Tried:', selectedCompany, 'Allowed:', userCompanies);
                 return NextResponse.json(
                     { error: 'Access restricted. You don\'t have permission to access this company. Please select a different company.' },

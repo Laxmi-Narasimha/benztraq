@@ -1,7 +1,7 @@
 /**
  * New Contact Page - Simplified Lead Entry
  * 
- * Clean, minimal form for quick lead entry.
+ * Clean, minimal form with black & white theme.
  * Only essential fields: Company, Contact Person, Email, Status
  * 
  * @module app/ergopack/contacts/new/page
@@ -17,20 +17,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Building2, Save, ArrowLeft, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { Building2, Save, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const STATUS_OPTIONS = [
-    { value: 'new', label: 'New Lead', color: 'bg-blue-500' },
-    { value: 'contacted', label: 'Contacted', color: 'bg-yellow-500' },
-    { value: 'interested', label: 'Interested', color: 'bg-purple-500' },
-    { value: 'meeting_scheduled', label: 'Meeting Scheduled', color: 'bg-indigo-500' },
-    { value: 'proposal_sent', label: 'Proposal Sent', color: 'bg-cyan-500' },
-    { value: 'negotiating', label: 'Negotiating', color: 'bg-orange-500' },
-    { value: 'won', label: 'Won / Converted', color: 'bg-emerald-500' },
-    { value: 'lost', label: 'Lost', color: 'bg-red-500' },
-    { value: 'on_hold', label: 'On Hold', color: 'bg-slate-500' },
-    { value: 'other', label: 'Other', color: 'bg-gray-500' },
+    { value: 'new', label: 'New Lead' },
+    { value: 'contacted', label: 'Contacted' },
+    { value: 'interested', label: 'Interested' },
+    { value: 'meeting_scheduled', label: 'Meeting Scheduled' },
+    { value: 'proposal_sent', label: 'Proposal Sent' },
+    { value: 'negotiating', label: 'Negotiating' },
+    { value: 'won', label: 'Won / Converted' },
+    { value: 'lost', label: 'Lost' },
+    { value: 'on_hold', label: 'On Hold' },
+    { value: 'other', label: 'Other' },
 ];
 
 export default function NewContactPage() {
@@ -76,101 +76,98 @@ export default function NewContactPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="min-h-screen bg-black">
             <div className="p-8 max-w-xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <Link href="/ergopack/contacts">
-                        <Button variant="ghost" className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-full w-10 h-10 p-0">
+                        <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full w-10 h-10 p-0">
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                <Sparkles className="w-5 h-5 text-white" />
+                        <h1 className="text-2xl font-light tracking-wide text-white flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
+                                <Building2 className="w-5 h-5 text-black" />
                             </div>
                             New Lead
                         </h1>
-                        <p className="text-slate-400 mt-1 ml-[52px]">Quick add a new company</p>
+                        <p className="text-zinc-500 mt-1 ml-[52px] text-sm">Add a new company</p>
                     </div>
                 </div>
 
                 {error && (
-                    <Alert className="mb-6 border-red-500/50 bg-red-500/10 backdrop-blur">
-                        <AlertCircle className="w-4 h-4 text-red-400" />
-                        <AlertDescription className="text-red-400">{error}</AlertDescription>
+                    <Alert className="mb-6 border-zinc-700 bg-zinc-900">
+                        <AlertCircle className="w-4 h-4 text-white" />
+                        <AlertDescription className="text-white">{error}</AlertDescription>
                     </Alert>
                 )}
 
                 <form onSubmit={handleSubmit}>
-                    <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm shadow-xl">
+                    <Card className="bg-zinc-900 border-zinc-800">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-lg text-white">Lead Details</CardTitle>
-                            <CardDescription className="text-slate-400">
+                            <CardTitle className="text-lg text-white font-light">Lead Details</CardTitle>
+                            <CardDescription className="text-zinc-500">
                                 Enter the basic information
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-5">
                             {/* Company Name - Required */}
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
-                                    Company Name <span className="text-red-400">*</span>
+                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">
+                                    Company Name <span className="text-white">*</span>
                                 </Label>
                                 <Input
                                     value={formData.companyName}
                                     onChange={(e) => handleChange('companyName', e.target.value)}
                                     placeholder="ABC Packaging Pvt Ltd"
                                     required
-                                    className="h-12 bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                                    className="h-12 bg-black border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white"
                                 />
                             </div>
 
                             {/* Contact Person - Optional */}
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
-                                    Contact Person <span className="text-slate-500 text-xs">(optional)</span>
+                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">
+                                    Contact Person <span className="text-zinc-600 text-xs normal-case">(optional)</span>
                                 </Label>
                                 <Input
                                     value={formData.contactPerson}
                                     onChange={(e) => handleChange('contactPerson', e.target.value)}
                                     placeholder="John Doe"
-                                    className="h-12 bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                                    className="h-12 bg-black border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white"
                                 />
                             </div>
 
                             {/* Email - Optional */}
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">
-                                    Email <span className="text-slate-500 text-xs">(optional)</span>
+                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">
+                                    Email <span className="text-zinc-600 text-xs normal-case">(optional)</span>
                                 </Label>
                                 <Input
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     placeholder="contact@company.com"
-                                    className="h-12 bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                                    className="h-12 bg-black border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white"
                                 />
                             </div>
 
                             {/* Status */}
                             <div className="space-y-2">
-                                <Label className="text-slate-300 text-sm font-medium">Status</Label>
+                                <Label className="text-zinc-400 text-xs uppercase tracking-wider">Status</Label>
                                 <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
-                                    <SelectTrigger className="h-12 bg-slate-700/50 border-slate-600/50 text-white focus:border-emerald-500/50">
+                                    <SelectTrigger className="h-12 bg-black border-zinc-700 text-white focus:border-white">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-700">
+                                    <SelectContent className="bg-zinc-900 border-zinc-700">
                                         {STATUS_OPTIONS.map((opt) => (
                                             <SelectItem
                                                 key={opt.value}
                                                 value={opt.value}
-                                                className="text-white focus:bg-slate-700 focus:text-white"
+                                                className="text-white focus:bg-zinc-800 focus:text-white"
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`w-2 h-2 rounded-full ${opt.color}`} />
-                                                    {opt.label}
-                                                </div>
+                                                {opt.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -178,12 +175,12 @@ export default function NewContactPage() {
                             </div>
 
                             {/* Submit Buttons */}
-                            <div className="flex gap-3 pt-4">
+                            <div className="flex gap-3 pt-6">
                                 <Link href="/ergopack/contacts" className="flex-1">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="w-full h-12 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                        className="w-full h-12 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
                                     >
                                         Cancel
                                     </Button>
@@ -191,7 +188,7 @@ export default function NewContactPage() {
                                 <Button
                                     type="submit"
                                     disabled={isSubmitting || !formData.companyName.trim()}
-                                    className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/20"
+                                    className="flex-1 h-12 bg-white text-black hover:bg-zinc-200 font-light tracking-wide disabled:opacity-30"
                                 >
                                     {isSubmitting ? (
                                         <>

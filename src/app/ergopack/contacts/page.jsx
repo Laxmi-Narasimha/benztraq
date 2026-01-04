@@ -1,5 +1,5 @@
 /**
- * Ergopack Contacts List Page
+ * Ergopack Contacts List Page - Black & White Theme
  * 
  * Displays all contacts with filters and search.
  * 
@@ -17,8 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-    Building2, Search, Plus, RefreshCw, Filter,
-    Phone, Mail, MapPin, User, Clock, ArrowUpDown
+    Building2, Search, Plus, RefreshCw,
+    Phone, Mail, MapPin, User, Clock
 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -32,17 +32,6 @@ const STATUS_OPTIONS = [
     { value: 'lost', label: 'Lost' },
     { value: 'dormant', label: 'Dormant' },
 ];
-
-const STATUS_COLORS = {
-    new: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    contacted: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    interested: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    negotiating: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    proposal_sent: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-    won: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    lost: 'bg-red-500/20 text-red-400 border-red-500/30',
-    dormant: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
-};
 
 export default function ContactsListPage() {
     const searchParams = useSearchParams();
@@ -95,20 +84,20 @@ export default function ContactsListPage() {
     });
 
     return (
-        <div className="p-8 space-y-6">
+        <div className="min-h-screen bg-black p-8 space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <Building2 className="w-7 h-7 text-emerald-400" />
+                    <h1 className="text-2xl font-light tracking-wide text-white flex items-center gap-3">
+                        <Building2 className="w-7 h-7 text-white" />
                         All Contacts
                     </h1>
-                    <p className="text-slate-400 mt-1">
+                    <p className="text-zinc-500 mt-1">
                         {stats?.total || 0} total contacts
                     </p>
                 </div>
                 <Link href="/ergopack/contacts/new">
-                    <Button className="bg-emerald-600 hover:bg-emerald-700">
+                    <Button className="bg-white text-black hover:bg-zinc-200">
                         <Plus className="w-4 h-4 mr-2" />
                         Add Contact
                     </Button>
@@ -116,31 +105,31 @@ export default function ContactsListPage() {
             </div>
 
             {/* Filters */}
-            <Card className="bg-slate-800 border-slate-700">
+            <Card className="bg-zinc-900 border-zinc-800">
                 <CardContent className="pt-6">
                     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                             <Input
                                 placeholder="Search company, person, or city..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
+                                className="pl-10 bg-black border-zinc-700 text-white placeholder:text-zinc-600"
                             />
                         </div>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-full md:w-48 bg-slate-700 border-slate-600 text-white">
+                            <SelectTrigger className="w-full md:w-48 bg-black border-zinc-700 text-white">
                                 <SelectValue placeholder="Filter by status" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-700 border-slate-600">
+                            <SelectContent className="bg-zinc-900 border-zinc-700">
                                 {STATUS_OPTIONS.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>
+                                    <SelectItem key={opt.value} value={opt.value} className="text-white focus:bg-zinc-800">
                                         {opt.label}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Button type="submit" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                        <Button type="submit" variant="outline" className="border-zinc-700 text-zinc-400 hover:bg-zinc-800">
                             <RefreshCw className="w-4 h-4" />
                         </Button>
                     </form>
@@ -148,22 +137,22 @@ export default function ContactsListPage() {
             </Card>
 
             {/* Contacts Table */}
-            <Card className="bg-slate-800 border-slate-700">
+            <Card className="bg-zinc-900 border-zinc-800">
                 <CardContent className="p-0">
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-12 text-slate-400">
+                        <div className="flex items-center justify-center py-12 text-zinc-500">
                             Loading contacts...
                         </div>
                     ) : filteredContacts.length === 0 ? (
                         <div className="text-center py-12">
-                            <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <p className="text-slate-400 mb-4">
+                            <Building2 className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+                            <p className="text-zinc-500 mb-4">
                                 {searchQuery || statusFilter !== 'all'
                                     ? 'No contacts match your filters'
                                     : 'No contacts yet'}
                             </p>
                             <Link href="/ergopack/contacts/new">
-                                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                                <Button className="bg-white text-black hover:bg-zinc-200">
                                     <Plus className="w-4 h-4 mr-2" />
                                     Add First Contact
                                 </Button>
@@ -172,28 +161,28 @@ export default function ContactsListPage() {
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-slate-700/50">
+                                <thead className="bg-zinc-800/50">
                                     <tr>
-                                        <th className="text-left p-4 text-sm font-medium text-slate-300">Company</th>
-                                        <th className="text-left p-4 text-sm font-medium text-slate-300">Contact</th>
-                                        <th className="text-left p-4 text-sm font-medium text-slate-300">Location</th>
-                                        <th className="text-left p-4 text-sm font-medium text-slate-300">Status</th>
-                                        <th className="text-left p-4 text-sm font-medium text-slate-300">Last Updated</th>
-                                        <th className="text-left p-4 text-sm font-medium text-slate-300">Updated By</th>
+                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Company</th>
+                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Contact</th>
+                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Location</th>
+                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Status</th>
+                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Last Updated</th>
+                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Updated By</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-700">
+                                <tbody className="divide-y divide-zinc-800">
                                     {filteredContacts.map((contact) => (
                                         <tr
                                             key={contact.id}
-                                            className="hover:bg-slate-700/30 transition-colors cursor-pointer"
+                                            className="hover:bg-zinc-800/30 transition-colors cursor-pointer"
                                             onClick={() => window.location.href = `/ergopack/contacts/${contact.id}`}
                                         >
                                             <td className="p-4">
                                                 <div>
                                                     <p className="font-medium text-white">{contact.company_name}</p>
                                                     {contact.industry && (
-                                                        <p className="text-xs text-slate-500">{contact.industry}</p>
+                                                        <p className="text-xs text-zinc-600">{contact.industry}</p>
                                                     )}
                                                 </div>
                                             </td>
@@ -201,44 +190,44 @@ export default function ContactsListPage() {
                                                 <div className="text-sm">
                                                     {contact.contact_person ? (
                                                         <>
-                                                            <p className="text-slate-300 flex items-center gap-1">
-                                                                <User className="w-3 h-3 text-slate-500" />
+                                                            <p className="text-zinc-300 flex items-center gap-1">
+                                                                <User className="w-3 h-3 text-zinc-600" />
                                                                 {contact.contact_person}
                                                             </p>
                                                             {contact.email && (
-                                                                <p className="text-slate-500 flex items-center gap-1">
+                                                                <p className="text-zinc-600 flex items-center gap-1">
                                                                     <Mail className="w-3 h-3" />
                                                                     {contact.email}
                                                                 </p>
                                                             )}
                                                         </>
                                                     ) : (
-                                                        <span className="text-slate-500">-</span>
+                                                        <span className="text-zinc-600">-</span>
                                                     )}
                                                 </div>
                                             </td>
                                             <td className="p-4">
                                                 {contact.city ? (
-                                                    <span className="text-slate-300 flex items-center gap-1 text-sm">
-                                                        <MapPin className="w-3 h-3 text-slate-500" />
+                                                    <span className="text-zinc-400 flex items-center gap-1 text-sm">
+                                                        <MapPin className="w-3 h-3 text-zinc-600" />
                                                         {contact.city}{contact.state && `, ${contact.state}`}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-slate-500">-</span>
+                                                    <span className="text-zinc-600">-</span>
                                                 )}
                                             </td>
                                             <td className="p-4">
-                                                <Badge className={`${STATUS_COLORS[contact.status]} border capitalize`}>
+                                                <Badge className="bg-zinc-800 text-zinc-300 border border-zinc-700 capitalize">
                                                     {contact.status?.replace('_', ' ')}
                                                 </Badge>
                                             </td>
-                                            <td className="p-4 text-sm text-slate-400">
+                                            <td className="p-4 text-sm text-zinc-500">
                                                 <div className="flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
                                                     {new Date(contact.updated_at).toLocaleDateString()}
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-sm text-slate-400">
+                                            <td className="p-4 text-sm text-zinc-500">
                                                 {contact.updated_by_user?.full_name || '-'}
                                             </td>
                                         </tr>
