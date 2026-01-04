@@ -15,9 +15,9 @@ const DEFAULT_PASSWORD = 'Benz@2024';
 
 export async function POST(request) {
     try {
-        const { email, password } = await request.json();
+        const { email, password, selectedCompany } = await request.json();
 
-        console.log('[Auth] Login attempt starting for:', email);
+        console.log('[Auth] Login attempt starting for:', email, 'Company:', selectedCompany);
 
         if (!email || !password) {
             console.log('[Auth] Missing credentials');
@@ -28,64 +28,85 @@ export async function POST(request) {
         }
 
         const supabase = createAdminClient();
-
-        // Find user profile by email (fetch profile first, then role)
-        // Using ilike for case-insensitive matching
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('user_id, full_name, email, password_hash, is_active, role_id, region_id, designation')
-            .ilike('email', email.trim())
-            .single();
-
-        if (profileError || !profile) {
-            console.error('[Auth] Profile lookup failed:', profileError);
-            return NextResponse.json(
-                { error: 'Invalid email or password' },
-                { status: 401 }
-            );
-        }
-
-        console.log('[Auth] Profile found:', profile.user_id);
-
-        // Fetch role separately
-        let roleData = null;
-        if (profile.role_id) {
-            const { data: role } = await supabase
-                .from('roles')
-                .select('id, name, display_name, level')
-                .eq('id', profile.role_id)
-                .single();
-            roleData = role;
-        }
-
-        // Attach role to profile
-        profile.roles = roleData;
-
-        if (!profile.is_active) {
-            console.warn('[Auth] Inactive account attempted login:', profile.email);
-            return NextResponse.json(
-                { error: 'Account is inactive. Please contact administrator.' },
-                { status: 403 }
-            );
-        }
-
-        // Check password
+        let profile = null;
         let passwordValid = false;
+        let roles = null;
+        let permissionsMap = {};
 
-        if (profile.password_hash) {
-            // Verify against stored hash
-            passwordValid = await verifyPassword(password, profile.password_hash);
-        } else {
-            // First login - check against default password
-            if (password === DEFAULT_PASSWORD) {
-                passwordValid = true;
-                // Hash and store the default password
-                const hashedPassword = await hashPassword(DEFAULT_PASSWORD);
-                await supabase
-                    .from('profiles')
-                    .update({ password_hash: hashedPassword })
-                    .eq('user_id', profile.user_id);
+        // 1. Database Lookup (Primary)
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('user_id, full_name, email, password_hash, is_active, role_id, region_id, designation, organization, companies')
+                .ilike('email', email.trim())
+                .single();
+
+            if (data && !error) {
+                profile = data;
+                console.log('[Auth] Profile found in DB:', profile.user_id, 'Org:', profile.organization);
+            } else {
+                console.log('[Auth] Database lookup failed or returned no user:', error?.message);
+                return NextResponse.json(
+                    { error: 'Invalid email or password' },
+                    { status: 401 }
+                );
             }
+        } catch (dbError) {
+            console.error('[Auth] Database connection exception:', dbError);
+            return NextResponse.json(
+                { error: 'Internal server error' },
+                { status: 500 }
+            );
+        }
+
+        // 2. Authentication Logic
+        if (profile) {
+            // Check if active
+            if (!profile.is_active) {
+                console.warn('[Auth] Inactive account attempted login:', profile.email);
+                return NextResponse.json(
+                    { error: 'Account is inactive. Please contact administrator.' },
+                    { status: 403 }
+                );
+            }
+
+            // Fetch role
+            if (profile.role_id) {
+                const { data: role } = await supabase
+                    .from('roles')
+                    .select('id, name, display_name, level')
+                    .eq('id', profile.role_id)
+                    .single();
+                roles = role;
+            }
+            profile.roles = roles;
+
+            // Check password
+            if (profile.password_hash) {
+                passwordValid = await verifyPassword(password, profile.password_hash);
+            } else if (password === DEFAULT_PASSWORD) {
+                // First login
+                console.log('[Auth] First time login detected');
+                passwordValid = true;
+                const hashedPassword = await hashPassword(DEFAULT_PASSWORD);
+                await supabase.from('profiles').update({ password_hash: hashedPassword }).eq('user_id', profile.user_id);
+            }
+
+            // Get permissions
+            const { data: permissions } = await supabase
+                .from('permissions')
+                .select('resource, can_read, can_write, can_create, can_delete, scope')
+                .eq('role_id', profile.role_id);
+
+            permissions?.forEach(p => {
+                permissionsMap[p.resource] = {
+                    read: p.can_read,
+                    write: p.can_write,
+                    create: p.can_create,
+                    delete: p.can_delete,
+                    scope: p.scope
+                };
+            });
         }
 
         console.log('[Auth] Password validation result:', passwordValid);
@@ -97,44 +118,33 @@ export async function POST(request) {
             );
         }
 
-        // Get user permissions
-        const { data: permissions } = await supabase
-            .from('permissions')
-            .select('resource, can_read, can_write, can_create, can_delete, scope')
-            .eq('role_id', profile.role_id);
+        // 3. Company Access Validation
+        if (selectedCompany) {
+            const userCompanies = profile.companies || [];
 
-        // Format permissions as object
-        const permissionsMap = {};
-        permissions?.forEach(p => {
-            permissionsMap[p.resource] = {
-                read: p.can_read,
-                write: p.can_write,
-                create: p.can_create,
-                delete: p.can_delete,
-                scope: p.scope
+            // Map frontend company selection to DB values
+            const companyMapping = {
+                'benz': 'benz',
+                'ergopack': 'ergopack',
+                'benz_packaging': 'benz',
+                'ergopack_india': 'ergopack'
             };
-        });
 
-        // Update last login
-        await supabase
-            .from('profiles')
-            .update({
-                last_login: new Date().toISOString(),
-                login_count: (profile.login_count || 0) + 1
-            })
-            .eq('user_id', profile.user_id);
+            const normalizedSelection = companyMapping[selectedCompany] || selectedCompany;
 
-        // Log activity
-        await supabase
-            .from('activity_log')
-            .insert({
-                user_id: profile.user_id,
-                action: 'login',
-                resource_type: 'auth',
-                details: { email: profile.email }
-            });
+            // Check if user has access to selected company
+            if (userCompanies.length > 0 && !userCompanies.includes(normalizedSelection)) {
+                console.warn('[Auth] Company access denied for:', profile.email, 'Tried:', selectedCompany, 'Allowed:', userCompanies);
+                return NextResponse.json(
+                    { error: 'Access restricted. You don\'t have permission to access this company. Please select a different company.' },
+                    { status: 403 }
+                );
+            }
 
-        // Create session token
+            console.log('[Auth] Company access granted:', normalizedSelection);
+        }
+
+        // Create session token (Include Organization)
         const token = await createToken({
             sub: profile.user_id,
             email: profile.email,
@@ -143,6 +153,7 @@ export async function POST(request) {
             role_id: profile.role_id,
             role_level: profile.roles?.level,
             permissions: permissionsMap,
+            organization: profile.organization || 'benz_packaging', // Default to benz if missing
         });
 
         // Set session cookie
@@ -160,6 +171,7 @@ export async function POST(request) {
                 roleDisplay: profile.roles?.display_name,
                 roleLevel: profile.roles?.level,
                 designation: profile.designation,
+                organization: profile.organization,
                 permissions: permissionsMap,
                 needsPasswordChange: !profile.password_hash,
             }

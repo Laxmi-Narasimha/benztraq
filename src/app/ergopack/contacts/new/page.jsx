@@ -1,7 +1,8 @@
 /**
- * New Contact Page
+ * New Contact Page - Simplified Lead Entry
  * 
- * Form to create a new Ergopack contact.
+ * Clean, minimal form for quick lead entry.
+ * Only essential fields: Company, Contact Person, Email, Status
  * 
  * @module app/ergopack/contacts/new/page
  */
@@ -14,38 +15,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Building2, Save, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { Building2, Save, ArrowLeft, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 const STATUS_OPTIONS = [
-    { value: 'new', label: 'New' },
-    { value: 'contacted', label: 'Contacted' },
-    { value: 'interested', label: 'Interested' },
-    { value: 'negotiating', label: 'Negotiating' },
-    { value: 'proposal_sent', label: 'Proposal Sent' },
-    { value: 'won', label: 'Won' },
-    { value: 'lost', label: 'Lost' },
-    { value: 'dormant', label: 'Dormant' },
-];
-
-const SOURCE_OPTIONS = [
-    { value: 'linkedin', label: 'LinkedIn' },
-    { value: 'indiamart', label: 'IndiaMart' },
-    { value: 'exhibition', label: 'Exhibition' },
-    { value: 'referral', label: 'Referral' },
-    { value: 'cold_call', label: 'Cold Call' },
-    { value: 'website', label: 'Website' },
-    { value: 'other', label: 'Other' },
-];
-
-const PRIORITY_OPTIONS = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-    { value: 'urgent', label: 'Urgent' },
+    { value: 'new', label: 'New Lead', color: 'bg-blue-500' },
+    { value: 'contacted', label: 'Contacted', color: 'bg-yellow-500' },
+    { value: 'interested', label: 'Interested', color: 'bg-purple-500' },
+    { value: 'meeting_scheduled', label: 'Meeting Scheduled', color: 'bg-indigo-500' },
+    { value: 'proposal_sent', label: 'Proposal Sent', color: 'bg-cyan-500' },
+    { value: 'negotiating', label: 'Negotiating', color: 'bg-orange-500' },
+    { value: 'won', label: 'Won / Converted', color: 'bg-emerald-500' },
+    { value: 'lost', label: 'Lost', color: 'bg-red-500' },
+    { value: 'on_hold', label: 'On Hold', color: 'bg-slate-500' },
+    { value: 'other', label: 'Other', color: 'bg-gray-500' },
 ];
 
 export default function NewContactPage() {
@@ -57,15 +42,6 @@ export default function NewContactPage() {
         companyName: '',
         contactPerson: '',
         email: '',
-        phone: '',
-        website: '',
-        city: '',
-        state: '',
-        industry: '',
-        companySize: '',
-        source: '',
-        notes: '',
-        priority: 'medium',
         status: 'new',
     });
 
@@ -88,7 +64,7 @@ export default function NewContactPage() {
             const data = await response.json();
 
             if (data.success) {
-                router.push(`/ergopack/contacts/${data.contact.id}`);
+                router.push('/ergopack/contacts');
             } else {
                 setError(data.error || 'Failed to create contact');
             }
@@ -100,212 +76,140 @@ export default function NewContactPage() {
     };
 
     return (
-        <div className="p-8 max-w-3xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
-                <Link href="/ergopack/contacts">
-                    <Button variant="ghost" className="text-slate-400 hover:text-white hover:bg-slate-700">
-                        <ArrowLeft className="w-4 h-4" />
-                    </Button>
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <Building2 className="w-7 h-7 text-emerald-400" />
-                        Add New Contact
-                    </h1>
-                    <p className="text-slate-400 mt-1">Add a new company to track</p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            <div className="p-8 max-w-xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                    <Link href="/ergopack/contacts">
+                        <Button variant="ghost" className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-full w-10 h-10 p-0">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                <Sparkles className="w-5 h-5 text-white" />
+                            </div>
+                            New Lead
+                        </h1>
+                        <p className="text-slate-400 mt-1 ml-[52px]">Quick add a new company</p>
+                    </div>
                 </div>
-            </div>
 
-            {error && (
-                <Alert className="mb-6 border-red-500 bg-red-500/10">
-                    <AlertCircle className="w-4 h-4 text-red-400" />
-                    <AlertDescription className="text-red-400">{error}</AlertDescription>
-                </Alert>
-            )}
+                {error && (
+                    <Alert className="mb-6 border-red-500/50 bg-red-500/10 backdrop-blur">
+                        <AlertCircle className="w-4 h-4 text-red-400" />
+                        <AlertDescription className="text-red-400">{error}</AlertDescription>
+                    </Alert>
+                )}
 
-            <form onSubmit={handleSubmit}>
-                <Card className="bg-slate-800 border-slate-700">
-                    <CardHeader>
-                        <CardTitle className="text-white">Company Information</CardTitle>
-                        <CardDescription className="text-slate-400">
-                            Basic details about the company
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Company Name */}
-                        <div className="space-y-2">
-                            <Label className="text-slate-300">Company Name *</Label>
-                            <Input
-                                value={formData.companyName}
-                                onChange={(e) => handleChange('companyName', e.target.value)}
-                                placeholder="ABC Packaging Pvt Ltd"
-                                required
-                                className="bg-slate-700 border-slate-600 text-white"
-                            />
-                        </div>
-
-                        {/* Contact Person + Email */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit}>
+                    <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm shadow-xl">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-lg text-white">Lead Details</CardTitle>
+                            <CardDescription className="text-slate-400">
+                                Enter the basic information
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-5">
+                            {/* Company Name - Required */}
                             <div className="space-y-2">
-                                <Label className="text-slate-300">Contact Person</Label>
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Company Name <span className="text-red-400">*</span>
+                                </Label>
+                                <Input
+                                    value={formData.companyName}
+                                    onChange={(e) => handleChange('companyName', e.target.value)}
+                                    placeholder="ABC Packaging Pvt Ltd"
+                                    required
+                                    className="h-12 bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                                />
+                            </div>
+
+                            {/* Contact Person - Optional */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Contact Person <span className="text-slate-500 text-xs">(optional)</span>
+                                </Label>
                                 <Input
                                     value={formData.contactPerson}
                                     onChange={(e) => handleChange('contactPerson', e.target.value)}
                                     placeholder="John Doe"
-                                    className="bg-slate-700 border-slate-600 text-white"
+                                    className="h-12 bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
                                 />
                             </div>
+
+                            {/* Email - Optional */}
                             <div className="space-y-2">
-                                <Label className="text-slate-300">Email</Label>
+                                <Label className="text-slate-300 text-sm font-medium">
+                                    Email <span className="text-slate-500 text-xs">(optional)</span>
+                                </Label>
                                 <Input
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
-                                    placeholder="john@company.com"
-                                    className="bg-slate-700 border-slate-600 text-white"
+                                    placeholder="contact@company.com"
+                                    className="h-12 bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
                                 />
                             </div>
-                        </div>
 
-                        {/* Phone + Website */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Status */}
                             <div className="space-y-2">
-                                <Label className="text-slate-300">Phone</Label>
-                                <Input
-                                    value={formData.phone}
-                                    onChange={(e) => handleChange('phone', e.target.value)}
-                                    placeholder="+91 9876543210"
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Website</Label>
-                                <Input
-                                    value={formData.website}
-                                    onChange={(e) => handleChange('website', e.target.value)}
-                                    placeholder="https://company.com"
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                />
-                            </div>
-                        </div>
-
-                        {/* City + State */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">City</Label>
-                                <Input
-                                    value={formData.city}
-                                    onChange={(e) => handleChange('city', e.target.value)}
-                                    placeholder="Mumbai"
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">State</Label>
-                                <Input
-                                    value={formData.state}
-                                    onChange={(e) => handleChange('state', e.target.value)}
-                                    placeholder="Maharashtra"
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Industry */}
-                        <div className="space-y-2">
-                            <Label className="text-slate-300">Industry</Label>
-                            <Input
-                                value={formData.industry}
-                                onChange={(e) => handleChange('industry', e.target.value)}
-                                placeholder="Manufacturing, FMCG, Pharma..."
-                                className="bg-slate-700 border-slate-600 text-white"
-                            />
-                        </div>
-
-                        {/* Source + Priority + Status */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Source</Label>
-                                <Select value={formData.source} onValueChange={(v) => handleChange('source', v)}>
-                                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                                        <SelectValue placeholder="Select source" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-700 border-slate-600">
-                                        {SOURCE_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Priority</Label>
-                                <Select value={formData.priority} onValueChange={(v) => handleChange('priority', v)}>
-                                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-700 border-slate-600">
-                                        {PRIORITY_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Status</Label>
+                                <Label className="text-slate-300 text-sm font-medium">Status</Label>
                                 <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
-                                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                    <SelectTrigger className="h-12 bg-slate-700/50 border-slate-600/50 text-white focus:border-emerald-500/50">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-700 border-slate-600">
+                                    <SelectContent className="bg-slate-800 border-slate-700">
                                         {STATUS_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            <SelectItem
+                                                key={opt.value}
+                                                value={opt.value}
+                                                className="text-white focus:bg-slate-700 focus:text-white"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-2 h-2 rounded-full ${opt.color}`} />
+                                                    {opt.label}
+                                                </div>
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                        </div>
 
-                        {/* Notes */}
-                        <div className="space-y-2">
-                            <Label className="text-slate-300">Notes</Label>
-                            <Textarea
-                                value={formData.notes}
-                                onChange={(e) => handleChange('notes', e.target.value)}
-                                placeholder="Additional notes about this contact..."
-                                rows={4}
-                                className="bg-slate-700 border-slate-600 text-white"
-                            />
-                        </div>
-
-                        {/* Submit */}
-                        <div className="flex justify-end gap-3 pt-4">
-                            <Link href="/ergopack/contacts">
-                                <Button type="button" variant="outline" className="border-slate-600 text-slate-300">
-                                    Cancel
+                            {/* Submit Buttons */}
+                            <div className="flex gap-3 pt-4">
+                                <Link href="/ergopack/contacts" className="flex-1">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full h-12 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Link>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting || !formData.companyName.trim()}
+                                    className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium shadow-lg shadow-emerald-500/20"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="w-4 h-4 mr-2" />
+                                            Save Lead
+                                        </>
+                                    )}
                                 </Button>
-                            </Link>
-                            <Button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="bg-emerald-600 hover:bg-emerald-700"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="w-4 h-4 mr-2" />
-                                        Save Contact
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </form>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </form>
+            </div>
         </div>
     );
 }

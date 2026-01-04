@@ -143,7 +143,8 @@ export function AuthProvider({ children }) {
             setUser(null);
             setPermissions({});
             localStorage.removeItem('benztraq_user');
-            router.push('/login');
+            // Force hard redirect to clear all client state
+            window.location.href = '/login';
         }
     }, [router]);
 

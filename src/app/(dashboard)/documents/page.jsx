@@ -12,8 +12,10 @@
 // Force dynamic rendering to avoid SSR issues
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/providers/auth-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +29,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -72,6 +81,8 @@ const mockInvoices = [
  * Status badge component with color coding.
  */
 function StatusBadge({ status, docType }) {
+    const safeStatus = status || 'draft'; // Default to 'draft' if status is undefined
+
     const colorMap = {
         draft: 'bg-gray-100 text-gray-700',
         sent: 'bg-blue-100 text-blue-700',
@@ -86,9 +97,9 @@ function StatusBadge({ status, docType }) {
     return (
         <Badge
             variant="secondary"
-            className={colorMap[status] || 'bg-gray-100 text-gray-700'}
+            className={colorMap[safeStatus] || 'bg-gray-100 text-gray-700'}
         >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1)}
         </Badge>
     );
 }
@@ -107,7 +118,7 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
         return (
             <DocumentEmptyState
                 type={docType}
-                onAdd={() => router.push('/documents/upload')}
+                onAdd={() => router.push('/documents/new')}
             />
         );
     }
@@ -155,9 +166,9 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
                                         Edit
                                     </DropdownMenuItem>
                                     {docType === DOC_TYPES.QUOTATION && (
-                                        <DropdownMenuItem>
-                                            <Link className="h-4 w-4 mr-2" />
-                                            Link to Sales Order
+                                        <DropdownMenuItem onClick={() => router.push(`/documents/new?type=sales_order&convert=${doc.id}`)}>
+                                            <ShoppingCart className="h-4 w-4 mr-2" />
+                                            Convert to Sales Order
                                         </DropdownMenuItem>
                                     )}
                                     <DropdownMenuItem className="text-red-600" onClick={() => onDelete?.(doc)}>
@@ -179,20 +190,69 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
  */
 export default function DocumentCenterPage() {
     const router = useRouter();
+    const { profile } = useAuth(); // Get current user profile
     const [activeTab, setActiveTab] = useState('quotations');
     const [searchQuery, setSearchQuery] = useState('');
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // TODO: Replace with real data fetching
-    const isLoading = false;
+    const [error, setError] = useState(null);
+
+    const supabase = createClient();
+
+    // Fetch documents based on role and tab
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                let query;
+                const table = activeTab; // quotations, sales_orders, invoices
+
+                // Determine document type based on tab
+                let docType = null;
+                if (activeTab === 'quotations') docType = 'quotation';
+                else if (activeTab === 'sales_orders') docType = 'sales_order';
+                else if (activeTab === 'invoices') docType = 'invoice';
+
+                // Build query string
+                const params = new URLSearchParams();
+                if (docType) params.append('doc_type', docType);
+                if (searchQuery) params.append('search', searchQuery);
+
+                const response = await fetch(`/api/documents?${params.toString()}`);
+                const resData = await response.json();
+
+                if (!response.ok) {
+                    console.error('API Error:', resData);
+                    setError(resData.details || resData.error || 'Failed to fetch documents');
+                    setDocuments([]);
+                } else {
+                    setDocuments(resData.documents || []);
+                }
+
+            } catch (err) {
+                console.error('Exception fetching documents:', err);
+                setError(err.message || 'An unexpected error occurred');
+                setDocuments([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (profile) {
+            fetchDocuments();
+        }
+    }, [activeTab, searchQuery, profile]);
 
     const getTabIcon = (tab) => {
         switch (tab) {
             case 'quotations':
-                return <FileText className="h-4 w-4" />;
+                return <FileText className="h-4 w-4" />
             case 'sales_orders':
-                return <ShoppingCart className="h-4 w-4" />;
+                return <ShoppingCart className="h-4 w-4" />
             case 'invoices':
-                return <Receipt className="h-4 w-4" />;
+                return <Receipt className="h-4 w-4" />
             default:
                 return null;
         }
@@ -209,19 +269,39 @@ export default function DocumentCenterPage() {
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => router.push('/documents/upload')}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload PDF
-                    </Button>
-                    <Button onClick={() => router.push('/documents/new')}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Manual Entry
-                    </Button>
+                    {/* Consolidated Upload/New Action */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button>
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Document
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push('/documents/new')}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                Create Document
+                            </DropdownMenuItem>
+                            {/* Upload feature temporarily disabled or redirected until page exists */}
+                            {/* <DropdownMenuItem onClick={() => router.push('/documents/upload')}>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload PDF
+                            </DropdownMenuItem> */}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex items-center gap-4">
+            {/* Error Alert */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong className="font-bold">Error: </strong>
+                    <span className="block sm:inline">{error}</span>
+                </div>
+            )}
+
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -231,6 +311,28 @@ export default function DocumentCenterPage() {
                         className="pl-9"
                     />
                 </div>
+
+                {/* Management Filters */}
+                {profile && ['director', 'developer', 'head_of_sales', 'vp'].includes(profile.role) && (
+                    <div className="flex gap-2">
+                        <Select
+                            onValueChange={(value) => {
+                                // TODO: Add filter logic to state
+                                console.log("Filter by region:", value);
+                            }}
+                        >
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Filter by Region" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Regions</SelectItem>
+                                <SelectItem value="Gurgaon">Gurgaon</SelectItem>
+                                <SelectItem value="Jaipur">Jaipur</SelectItem>
+                                <SelectItem value="Indore">Indore</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
             </div>
 
             {/* Tabs */}
@@ -250,59 +352,26 @@ export default function DocumentCenterPage() {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="quotations" className="mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Quotations</CardTitle>
-                            <CardDescription>
-                                Track and manage customer quotations. Link won quotes to sales orders for comparison.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <DocumentTable
-                                documents={mockQuotations}
-                                docType={DOC_TYPES.QUOTATION}
-                                loading={isLoading}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="sales_orders" className="mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Sales Orders</CardTitle>
-                            <CardDescription>
-                                Sales orders count towards performance metrics and revenue tracking.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <DocumentTable
-                                documents={mockSalesOrders}
-                                docType={DOC_TYPES.SALES_ORDER}
-                                loading={isLoading}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="invoices" className="mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Invoices</CardTitle>
-                            <CardDescription>
-                                Invoices are for reference only and do not affect performance calculations.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <DocumentTable
-                                documents={mockInvoices}
-                                docType={DOC_TYPES.INVOICE}
-                                loading={isLoading}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                {/* Content Areas - Reusing the same logic for all tabs since they share structure */}
+                {['quotations', 'sales_orders', 'invoices'].map(tab => (
+                    <TabsContent key={tab} value={tab} className="mt-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{tab.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</CardTitle>
+                                <CardDescription>
+                                    View and manage your {tab.replace('_', ' ')}.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <DocumentTable
+                                    documents={documents}
+                                    docType={tab === 'quotations' ? DOC_TYPES.QUOTATION : tab === 'sales_orders' ? DOC_TYPES.SALES_ORDER : DOC_TYPES.INVOICE}
+                                    loading={loading}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                ))}
             </Tabs>
         </div>
     );

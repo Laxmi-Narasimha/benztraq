@@ -29,11 +29,8 @@ Benz@2024
 | **Director** | Chaitanya | chaitanya@benz-packaging.com | Benz@2024 |
 | **Director** | Prashansa | prashansa@benz-packaging.com | Benz@2024 |
 | Head of Sales | Pulak Biswas | pulak@benz-packaging.com | Benz@2024 |
-| ASM | Abhishek | abhishek@benz-packaging.com | Benz@2024 |
-| ASM | Mani Bhushan | wh.jaipur@benz-packaging.com | Benz@2024 |
-| ASM | Sales Manager 1 | asm1@benz-packaging.com | Benz@2024 |
-| ASM | Sales Manager 2 | asm2@benz-packaging.com | Benz@2024 |
-| ASM | Sales Manager 3 | asm3@benz-packaging.com | Benz@2024 |
+| ASM (Indore) | Abhishek | abhishek@benz-packaging.com | Benz@2024 |
+| ASM (Jaipur) | Mani Bhushan | wh.jaipur@benz-packaging.com | Benz@2024 |
 
 *Directors have full access to both Benz Packaging and Ergopack India*
 
@@ -66,4 +63,3 @@ Benz@2024
 
 - All users must be seeded first via Admin Panel → Seed Default Users
 - Passwords can be changed in Admin Panel → Manage Users
-- Ergopack users need to be added manually or via seed script

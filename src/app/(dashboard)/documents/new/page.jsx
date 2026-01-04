@@ -120,8 +120,10 @@ export default function NewDocumentPage() {
 
         try {
             // Validate required fields
-            if (!customerName.trim() || !productName.trim() || !quantity || !quotedPrice) {
-                throw new Error('Please fill in all required fields');
+            const priceCheck = isQuotation ? quotedPrice : finalPrice;
+
+            if (!customerName.trim() || !productName.trim() || !quantity || !priceCheck) {
+                throw new Error('Please fill in all required fields (Name, Product, Qty, Price)');
             }
 
             const payload = {
@@ -160,7 +162,11 @@ export default function NewDocumentPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to create document');
+                // Combine error and details for display
+                const errorMessage = data.details
+                    ? `${data.error}: ${data.details}`
+                    : (data.error || 'Failed to create document');
+                throw new Error(errorMessage);
             }
 
             setSuccess(true);

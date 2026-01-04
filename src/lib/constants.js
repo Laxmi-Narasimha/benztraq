@@ -253,7 +253,6 @@ export const NAVIGATION_ITEMS = Object.freeze([
         title: 'Documents',
         items: [
             { title: 'Document Center', href: '/documents', icon: 'FileText' },
-            { title: 'Upload Document', href: '/documents/upload', icon: 'Upload' },
         ],
     },
     {

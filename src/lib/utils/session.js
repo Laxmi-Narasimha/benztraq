@@ -94,5 +94,6 @@ export async function getCurrentUser() {
         role: session.role,
         roleId: session.role_id,
         permissions: session.permissions || {},
+        organization: session.organization || 'benz_packaging', // Expose organization
     };
 }

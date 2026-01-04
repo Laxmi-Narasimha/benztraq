@@ -39,30 +39,40 @@ function formatCurrency(value) {
 }
 
 // Stat Card Component
-function StatCard({ title, value, subtitle, icon: Icon, trend }) {
-    return (
-        <Card>
-            <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                        <p className="text-2xl font-bold mt-1">{value}</p>
-                        {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
-                        {trend && (
-                            <p className={`text-xs mt-1 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}% vs last month
-                            </p>
-                        )}
-                    </div>
-                    {Icon && (
-                        <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Icon className="h-6 w-6 text-primary" />
-                        </div>
+function StatCard({ title, value, subtitle, icon: Icon, trend, href }) {
+    const cardContent = (
+        <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                    <p className="text-2xl font-bold mt-1">{value}</p>
+                    {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+                    {trend && (
+                        <p className={`text-xs mt-1 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}% vs last month
+                        </p>
                     )}
                 </div>
-            </CardContent>
-        </Card>
+                {Icon && (
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                )}
+            </div>
+        </CardContent>
     );
+
+    if (href) {
+        return (
+            <Link href={href}>
+                <Card className="hover:shadow-lg transition-all cursor-pointer">
+                    {cardContent}
+                </Card>
+            </Link>
+        );
+    }
+
+    return <Card>{cardContent}</Card>;
 }
 
 // Action Card for ASM
@@ -135,12 +145,14 @@ function ASMDashboard({ userName, stats }) {
                     value={stats.quotations}
                     subtitle="This month"
                     icon={FileText}
+                    href="/documents?tab=quotations"
                 />
                 <StatCard
                     title="My Sales Orders"
                     value={stats.salesOrders}
                     subtitle="This month"
                     icon={ShoppingCart}
+                    href="/documents?tab=sales_orders"
                 />
                 <StatCard
                     title="My Total Value"
@@ -239,6 +251,7 @@ function ManagerDashboard({ userName, teamStats, teamMembers }) {
                     subtitle="This month"
                     icon={FileText}
                     trend={teamStats.quotationTrend}
+                    href="/documents?tab=quotations"
                 />
                 <StatCard
                     title="Team Sales Orders"
@@ -246,6 +259,7 @@ function ManagerDashboard({ userName, teamStats, teamMembers }) {
                     subtitle="This month"
                     icon={ShoppingCart}
                     trend={teamStats.orderTrend}
+                    href="/documents?tab=sales_orders"
                 />
                 <StatCard
                     title="Total Sales Value"

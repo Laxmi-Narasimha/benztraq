@@ -57,31 +57,10 @@ import { calculateYearlyTargetBreakdown } from '@/lib/utils/calculations';
 import { cn } from '@/lib/utils';
 
 // Mock data
-const mockSalespeople = [
-    { id: '1', name: 'Rahul Sharma', region: 'Maharashtra' },
-    { id: '2', name: 'Priya Patel', region: 'Gurgaon' },
-    { id: '3', name: 'Amit Kumar', region: 'Chennai' },
-    { id: '4', name: 'Sneha Gupta', region: 'Noida' },
-    { id: '5', name: 'Vikram Singh', region: 'Jaipur' },
-];
+const mockSalespeople = []; // Mock data removed
 
-const mockTargetsData = [
-    {
-        salesperson: 'Rahul Sharma',
-        annualTarget: 6000000,
-        achieved: { 1: 450000, 2: 520000, 3: 480000, 4: 550000, 5: 610000, 6: 490000, 7: 620000, 8: 580000, 9: 540000, 10: 580000, 11: 520000, 12: 290000 }
-    },
-    {
-        salesperson: 'Priya Patel',
-        annualTarget: 4800000,
-        achieved: { 1: 380000, 2: 420000, 3: 390000, 4: 450000, 5: 480000, 6: 410000, 7: 500000, 8: 460000, 9: 420000, 10: 480000, 11: 400000, 12: 220000 }
-    },
-    {
-        salesperson: 'Amit Kumar',
-        annualTarget: 5400000,
-        achieved: { 1: 420000, 2: 480000, 3: 450000, 4: 520000, 5: 560000, 6: 440000, 7: 580000, 8: 550000, 9: 490000, 10: 540000, 11: 480000, 12: 260000 }
-    },
-];
+
+const mockTargetsData = []; // Mock data removed
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -376,44 +355,54 @@ export default function TargetsPage() {
 
             {/* Salesperson Targets */}
             <div className="space-y-4">
-                {mockTargetsData.map((target) => {
-                    const totalAchieved = Object.values(target.achieved).reduce((a, b) => a + b, 0);
-                    const isExpanded = expandedSalesperson === target.salesperson;
+                {mockTargetsData.length > 0 ? (
+                    mockTargetsData.map((target) => {
+                        const totalAchieved = Object.values(target.achieved).reduce((a, b) => a + b, 0);
+                        const isExpanded = expandedSalesperson === target.salesperson;
 
-                    return (
-                        <Card key={target.salesperson}>
-                            <CardHeader
-                                className="cursor-pointer hover:bg-muted/50 transition-colors"
-                                onClick={() => setExpandedSalesperson(isExpanded ? null : target.salesperson)}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle className="text-lg">{target.salesperson}</CardTitle>
-                                        <CardDescription>
-                                            FY {currentYear} | Annual Target: {formatCurrency(target.annualTarget, { compact: true })}
-                                        </CardDescription>
+                        return (
+                            <Card key={target.salesperson}>
+                                <CardHeader
+                                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                    onClick={() => setExpandedSalesperson(isExpanded ? null : target.salesperson)}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <CardTitle className="text-lg">{target.salesperson}</CardTitle>
+                                            <CardDescription>
+                                                FY {currentYear} | Annual Target: {formatCurrency(target.annualTarget, { compact: true })}
+                                            </CardDescription>
+                                        </div>
+                                        <Badge variant={totalAchieved >= target.annualTarget ? 'default' : 'secondary'}>
+                                            {formatPercent((totalAchieved / target.annualTarget) * 100)} YTD
+                                        </Badge>
                                     </div>
-                                    <Badge variant={totalAchieved >= target.annualTarget ? 'default' : 'secondary'}>
-                                        {formatPercent((totalAchieved / target.annualTarget) * 100)} YTD
-                                    </Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <TargetProgress achieved={totalAchieved} target={target.annualTarget} />
+                                </CardHeader>
+                                <CardContent>
+                                    <TargetProgress achieved={totalAchieved} target={target.annualTarget} />
 
-                                {isExpanded && (
-                                    <div className="mt-6 border-t pt-6">
-                                        <h4 className="font-semibold mb-4">Monthly Breakdown (with Carryover)</h4>
-                                        <MonthlyBreakdown
-                                            annualTarget={target.annualTarget}
-                                            achieved={target.achieved}
-                                        />
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+                                    {isExpanded && (
+                                        <div className="mt-6 border-t pt-6">
+                                            <h4 className="font-semibold mb-4">Monthly Breakdown (with Carryover)</h4>
+                                            <MonthlyBreakdown
+                                                annualTarget={target.annualTarget}
+                                                achieved={target.achieved}
+                                            />
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })
+                ) : (
+                    <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                            <Target className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                            <p>No target data available for this year.</p>
+                            {isManager && <p className="text-sm mt-1">Click "Set Target" to get started.</p>}
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             {/* Set Target Dialog */}

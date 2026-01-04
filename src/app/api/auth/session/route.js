@@ -13,7 +13,8 @@ export async function GET() {
         const user = await getCurrentUser();
 
         if (!user) {
-            return NextResponse.json({ authenticated: false }, { status: 401 });
+            // Return 200 instead of 401 to avoid browser console errors
+            return NextResponse.json({ authenticated: false });
         }
 
         return NextResponse.json({
@@ -22,6 +23,6 @@ export async function GET() {
         });
     } catch (error) {
         console.error('Session check error:', error);
-        return NextResponse.json({ authenticated: false }, { status: 401 });
+        return NextResponse.json({ authenticated: false });
     }
 }

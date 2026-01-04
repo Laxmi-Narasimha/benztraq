@@ -28,7 +28,16 @@ export async function GET(request) {
             );
         }
 
-        const supabase = createAdminClient();
+        let supabase;
+        try {
+            supabase = createAdminClient();
+        } catch (initError) {
+            console.error('Supabase Admin Init Error:', initError);
+            return NextResponse.json(
+                { error: 'Server misconfiguration', details: initError.message, allowed: true },
+                { status: 500 }
+            );
+        }
 
         // Parse query parameters
         const { searchParams } = new URL(request.url);
@@ -44,12 +53,8 @@ export async function GET(request) {
         // Build query
         let query = supabase
             .from('documents')
-            .select(`
-                *,
-                customer:customers(id, name),
-                region:regions(id, name),
-                salesperson:profiles!documents_salesperson_user_id_fkey(user_id, full_name)
-            `)
+            .select('*')
+            .eq('organization', currentUser.organization) // Enforce Organization Isolation
             .order('doc_date', { ascending: false })
             .range(offset, offset + limit - 1);
 
@@ -122,6 +127,7 @@ export async function POST(request) {
 
         const supabase = createAdminClient();
         const body = await request.json();
+        console.log('[API] POST /documents Payload:', JSON.stringify(body, null, 2)); // Debug Log
 
         // Extract fields from the simplified form
         const {
@@ -166,14 +172,22 @@ export async function POST(request) {
                 notes: notes || null,
                 salesperson_user_id: currentUser.id,
                 created_by: currentUser.id,
+                organization: currentUser.organization || 'benz_packaging', // Fallback for stale sessions
+                status: 'draft', // Default status for new documents
             })
             .select()
             .single();
 
         if (docError) {
-            console.error('Error creating document:', docError);
+            console.error('[API] Error creating document:', docError);
+            console.error('[API] Failed Payload:', {
+                doc_prefix: docPrefix,
+                customer: customer_name,
+                user: currentUser.id,
+                org: currentUser.organization
+            });
             return NextResponse.json(
-                { error: 'Failed to create document', details: docError.message },
+                { error: 'Failed to create document', details: docError.message, hint: docError.hint || 'Check DB logs or constraints' },
                 { status: 500 }
             );
         }
@@ -184,7 +198,7 @@ export async function POST(request) {
                 document_id: document.id,
                 product_name: line.product_name || product_name,
                 product_name_raw: line.product_name_raw || line.product_name || product_name,
-                quantity: line.quantity || quantity || 1,
+                qty: line.quantity || quantity || 1,
                 uom: line.uom || uom || 'pcs',
                 unit_price: line.unit_price || unit_price || 0,
             }));
