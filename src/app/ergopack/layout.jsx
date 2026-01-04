@@ -2,7 +2,7 @@
  * Ergopack Layout - Black & White Theme
  * 
  * Layout for Ergopack India CRM module.
- * Premium black & white design.
+ * Premium black & white design with sticky footer.
  * 
  * @module app/ergopack/layout
  */
@@ -17,7 +17,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { cn } from '@/lib/utils';
 import {
     Loader2, Building2, LayoutDashboard,
-    LogOut, ArrowLeft, Plus
+    LogOut, Plus, Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -27,7 +27,7 @@ const NAV_ITEMS = [
 ];
 
 export default function ErgopackLayout({ children }) {
-    const { user, isLoading, isAuthenticated, signOut } = useAuth();
+    const { user, isLoading, isAuthenticated, signOut, isDeveloper, isDirector } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [userCompanies, setUserCompanies] = useState([]);
@@ -66,17 +66,17 @@ export default function ErgopackLayout({ children }) {
         return null;
     }
 
-    // Check if user can access Benz Packaging (has 'benz' in companies)
-    const canAccessBenz = userCompanies.includes('benz');
+    // Check if user can access Benz Packaging
+    const canAccessBenz = userCompanies.includes('benz') || isDeveloper || isDirector;
 
     return (
         <div className="min-h-screen bg-black flex">
             {/* Sidebar */}
-            <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col">
+            <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col h-screen sticky top-0">
                 {/* Header */}
-                <div className="h-16 px-4 border-b border-zinc-800 flex items-center gap-3">
+                <div className="h-16 px-4 border-b border-zinc-800 flex items-center gap-3 flex-shrink-0">
                     <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-                        <Building2 className="w-6 h-6 text-black" />
+                        <Package className="w-6 h-6 text-black" />
                     </div>
                     <div>
                         <h1 className="text-lg font-light tracking-wide text-white">ERGOPACK</h1>
@@ -84,8 +84,8 @@ export default function ErgopackLayout({ children }) {
                     </div>
                 </div>
 
-                {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-2">
+                {/* Navigation - Scrollable */}
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     {NAV_ITEMS.map((item) => {
                         const isActive = pathname === item.href ||
                             (item.href !== '/ergopack' && pathname.startsWith(item.href));
@@ -116,36 +116,42 @@ export default function ErgopackLayout({ children }) {
                     </Link>
                 </nav>
 
-                {/* Footer */}
-                <div className="p-4 border-t border-zinc-800">
-                    {/* Switch to Benz - Only show if user has access */}
+                {/* Footer - Sticky at bottom */}
+                <div className="p-4 border-t border-zinc-800 bg-zinc-900 flex-shrink-0">
+                    {/* Company Switcher - Only for directors/developers */}
                     {canAccessBenz && (
                         <Link href="/dashboard">
                             <Button
                                 variant="outline"
-                                className="w-full mb-3 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white font-light"
+                                className="w-full mb-3 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white font-light h-11"
                             >
-                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                Benz Packaging
+                                <Building2 className="w-4 h-4 mr-2" />
+                                Switch to Benz Packaging
                             </Button>
                         </Link>
                     )}
 
-                    {/* User Info */}
-                    <div className="flex items-center justify-between">
-                        <div className="min-w-0">
-                            <p className="text-sm font-light text-white truncate">
+                    {/* User Info & Logout */}
+                    <div className="flex items-center gap-3 bg-zinc-800/50 rounded-lg p-3">
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                            <span className="text-black font-medium text-sm">
+                                {user?.fullName?.charAt(0) || 'U'}
+                            </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">
                                 {user?.fullName || 'User'}
                             </p>
-                            <p className="text-xs text-zinc-600 truncate">
-                                {user?.email}
+                            <p className="text-xs text-zinc-500 truncate">
+                                {user?.designation || user?.role}
                             </p>
                         </div>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={signOut}
-                            className="text-zinc-500 hover:text-white hover:bg-zinc-800"
+                            className="text-zinc-400 hover:text-white hover:bg-zinc-700 flex-shrink-0"
+                            title="Logout"
                         >
                             <LogOut className="w-4 h-4" />
                         </Button>
