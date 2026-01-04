@@ -37,34 +37,11 @@ export function RevenueChart({ data, userMap }) {
                     tickFormatter={(value) => `₹${value / 1000}k`}
                 />
                 <Tooltip
-                    content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                            return (
-                                <div className="bg-zinc-950/90 backdrop-blur-md p-3 border border-zinc-800 rounded-xl shadow-2xl text-white min-w-[180px]">
-                                    <p className="font-semibold text-sm mb-2 border-b border-zinc-800 pb-2 text-zinc-300">{label}</p>
-                                    <div className="space-y-1">
-                                        {payload.map((entry, index) => (
-                                            <div key={index} className="flex items-center justify-between gap-4 text-xs">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                                                    <span className={entry.name.includes('Target') ? 'text-zinc-500' : 'text-zinc-200'}>
-                                                        {entry.name}
-                                                    </span>
-                                                </div>
-                                                <span className="font-mono font-medium text-zinc-100">
-                                                    ₹{entry.value.toLocaleString('en-IN')}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        }
-                        return null;
-                    }}
-                    cursor={{ stroke: '#333', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                    itemStyle={{ color: '#fff' }}
+                    formatter={(value) => [`₹${value.toLocaleString()}`, '']}
                 />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                <Legend iconType="circle" />
 
                 {isComparison ? (
                     // Comparison Mode: Plot each user
