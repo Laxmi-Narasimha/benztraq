@@ -194,35 +194,30 @@ export default function ErgopackDashboard() {
 
                 {/* Quick Actions & Summary */}
                 <div className="space-y-6">
-                    {/* Quick Actions */}
+                    {/* Quick Actions - Clean text links */}
                     <Card className="bg-zinc-900 border-zinc-800">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-white font-light">Quick Actions</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                            <Link href="/ergopack/contacts/new" className="block">
-                                <Button variant="outline" className="w-full justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white h-11">
-                                    <Plus className="w-4 h-4 mr-3" />
-                                    Add New Contact
-                                </Button>
+                        <CardContent className="space-y-3">
+                            <Link href="/ergopack/contacts/new" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
+                                <Plus className="w-4 h-4" />
+                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">Add New Contact</span>
                             </Link>
-                            <Link href="/ergopack/contacts?status=new" className="block">
-                                <Button variant="outline" className="w-full justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white h-11">
-                                    <Clock className="w-4 h-4 mr-3" />
-                                    View New Leads ({stats?.new || 0})
-                                </Button>
+                            <Link href="/ergopack/contacts?status=new" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
+                                <Clock className="w-4 h-4" />
+                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">New Leads</span>
+                                {(stats?.new || 0) > 0 && <span className="text-xs text-zinc-600">({stats.new})</span>}
                             </Link>
-                            <Link href="/ergopack/contacts?status=interested" className="block">
-                                <Button variant="outline" className="w-full justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white h-11">
-                                    <TrendingUp className="w-4 h-4 mr-3" />
-                                    View Interested ({stats?.interested || 0})
-                                </Button>
+                            <Link href="/ergopack/contacts?status=interested" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
+                                <TrendingUp className="w-4 h-4" />
+                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">Interested</span>
+                                {(stats?.interested || 0) > 0 && <span className="text-xs text-zinc-600">({stats.interested})</span>}
                             </Link>
-                            <Link href="/ergopack/contacts?status=proposal_sent" className="block">
-                                <Button variant="outline" className="w-full justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white h-11">
-                                    <FileText className="w-4 h-4 mr-3" />
-                                    Proposals Sent ({stats?.proposal_sent || 0})
-                                </Button>
+                            <Link href="/ergopack/contacts?status=proposal_sent" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors group">
+                                <FileText className="w-4 h-4" />
+                                <span className="text-sm border-b border-transparent group-hover:border-zinc-600">Proposals Sent</span>
+                                {(stats?.proposal_sent || 0) > 0 && <span className="text-xs text-zinc-600">({stats.proposal_sent})</span>}
                             </Link>
                         </CardContent>
                     </Card>
@@ -235,21 +230,24 @@ export default function ErgopackDashboard() {
                         <CardContent>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-zinc-400">Won</span>
+                                    <span className="text-zinc-500 text-sm">Won</span>
                                     <span className="text-2xl font-light text-white">{stats?.won || 0}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-zinc-400">Lost</span>
-                                    <span className="text-2xl font-light text-zinc-500">{stats?.lost || 0}</span>
+                                    <span className="text-zinc-500 text-sm">Lost</span>
+                                    <span className="text-2xl font-light text-zinc-600">{stats?.lost || 0}</span>
                                 </div>
                                 <div className="h-px bg-zinc-800 my-3" />
                                 <div className="flex items-center justify-between">
-                                    <span className="text-zinc-400">Win Rate</span>
+                                    <span className="text-zinc-500 text-sm">Win Rate</span>
                                     <span className="text-xl font-light text-white">
-                                        {stats?.total && stats.won
-                                            ? `${Math.round((stats.won / stats.total) * 100)}%`
-                                            : '0%'
-                                        }
+                                        {(() => {
+                                            const won = stats?.won || 0;
+                                            const lost = stats?.lost || 0;
+                                            const decided = won + lost;
+                                            if (decided === 0) return '-';
+                                            return `${Math.round((won / decided) * 100)}%`;
+                                        })()}
                                     </span>
                                 </div>
                             </div>

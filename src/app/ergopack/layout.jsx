@@ -118,16 +118,18 @@ export default function ErgopackLayout({ children }) {
 
                 {/* Footer - Sticky at bottom */}
                 <div className="p-4 border-t border-zinc-800 bg-zinc-900 flex-shrink-0">
-                    {/* Company Switcher - Only for directors/developers */}
+                    {/* Company Switcher - Elegant text link */}
                     {canAccessBenz && (
-                        <Link href="/dashboard">
-                            <Button
-                                variant="outline"
-                                className="w-full mb-3 border-white/30 text-white hover:bg-white hover:text-black transition-all font-light h-11"
-                            >
-                                <Building2 className="w-4 h-4 mr-2" />
-                                Switch to Benz Packaging
-                            </Button>
+                        <Link
+                            href="/dashboard"
+                            className="block mb-4 group"
+                        >
+                            <span className="text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2">
+                                <Building2 className="w-3.5 h-3.5" />
+                                <span className="border-b border-zinc-700 group-hover:border-white/50 pb-0.5">
+                                    Benz Packaging
+                                </span>
+                            </span>
                         </Link>
                     )}
 
