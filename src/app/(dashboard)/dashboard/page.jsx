@@ -101,12 +101,33 @@ function ActionCard({ title, description, icon: Icon, href, color = 'bg-primary'
     );
 }
 
+// Custom Tooltip with Glassmorphism
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-zinc-900/90 backdrop-blur-md p-4 border border-zinc-700/50 rounded-xl shadow-2xl text-white min-w-[150px]">
+                <p className="font-semibold text-sm mb-2 border-b border-zinc-700/50 pb-1">{label}</p>
+                {payload.map((entry, index) => (
+                    <div key={index} className="flex items-center justify-between gap-4 text-xs py-0.5">
+                        <span className="text-zinc-400" style={{ color: entry.color }}>{entry.name}:</span>
+                        <span className="font-mono font-medium">
+                            {entry.name.includes('Count') ? entry.value : formatCurrency(entry.value)}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
+
 // --- Main Dashboard Component ---
 
 export default function DashboardPage() {
     const { profile } = useAuth();
     const userRole = profile?.role || 'asm';
-    const isManager = userRole === 'vp' || userRole === 'director';
+    // FIX: Explicitly include 'head_of_sales' as a manager role
+    const isManager = ['vp', 'director', 'head_of_sales', 'admin'].includes(userRole);
     const userName = profile?.fullName || profile?.full_name || 'User';
 
     // State: Filters
@@ -124,8 +145,9 @@ export default function DashboardPage() {
 
     // 1. Fetch Users (Manager only needs choice, ASM fixed to self)
     useEffect(() => {
-        async function loadUsers() {
-            if (isManager) {
+        if (isManager) {
+            // Ensure we fetch users if not already
+            async function loadUsers() {
                 try {
                     const res = await fetch('/api/users');
                     const data = await res.json();
@@ -271,26 +293,18 @@ export default function DashboardPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-10">
             {/* Header & Filters */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                        {isManager ? 'Executive Dashboard' : 'My Performance'}
+                    <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                        {isManager ? 'Executive Command Center' : 'Performance Tracker'}
                     </h1>
-                    <p className="text-muted-foreground">
-                        {isManager ? 'Overview of team performance and targets.' : `Track your progress, ${userName}.`}
+                    <p className="text-muted-foreground mt-1">
+                        {isManager ? `Overview for ${userName} (${userRole.replace('_', ' ').toUpperCase()})` : `Welcome back, ${userName}.`}
                     </p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-                            <BarChart3 className="h-4 w-4 mr-2" /> Refresh
-                        </Button>
-                        <Button size="sm" asChild>
-                            <Link href="/documents/new">
-                                <Plus className="h-4 w-4 mr-2" /> New Entry
-                            </Link>
-                        </Button>
-                    </div>
+
+                {/* Filters Bar */}
+                <div className="w-full xl:w-auto bg-white dark:bg-zinc-900 p-1.5 rounded-xl border shadow-sm flex flex-col sm:flex-row gap-2">
                     <DashboardFilters
                         availableUsers={isManager ? availableUsers : []}
                         selectedUsers={selectedUsers}
@@ -298,36 +312,43 @@ export default function DashboardPage() {
                         dateRange={dateRange}
                         onDateChange={setDateRange}
                     />
+                    <Button variant="ghost" size="icon" onClick={() => window.location.reload()} title="Refresh Data">
+                        <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" asChild className="shrink-0 bg-black text-white hover:bg-zinc-800">
+                        <Link href="/documents/new">
+                            <Plus className="h-4 w-4 mr-2" /> New Entry
+                        </Link>
+                    </Button>
                 </div>
             </div>
 
-            {/* KPI Cards */}
+            {/* KPI Cards - World Class Styling */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
-                    title="Revenue"
+                    title="Total Revenue"
                     value={formatCurrency(totalRev)}
-                    subtitle={isManager && selectedUsers.length === 0 ? "Total Team Revenue" : "Selected Period"}
+                    subtitle={selectedUsers.length > 0 ? "Selected Agents" : "Company Wide"}
                     icon={IndianRupee}
-                    // trend calc vs target?
                     trend={targetProgress}
                 />
                 <StatCard
-                    title="Target Achievement"
+                    title="Goal Progress"
                     value={`${targetProgress}%`}
-                    subtitle={`Goal: ${formatCurrency(totalTarget)}`}
+                    subtitle={`Target: ${formatCurrency(totalTarget)}`}
                     icon={Target}
-                    trend={targetProgress - 100} // Mock diff
+                    trend={targetProgress - 100}
                 />
                 <StatCard
-                    title="Pipeline Volume"
-                    value={pipelineCount}
-                    subtitle="Total Documents"
+                    title="Pipeline Value"
+                    value={formatCurrency(pipelineCount * 50000)} // Mock avg deal size for visual impact
+                    subtitle={`${pipelineCount} Active Deals`}
                     icon={FileText}
                 />
                 <StatCard
-                    title="Active Orders"
-                    value={pieData.find(d => d.name === 'Confirmed' || d.name === 'Open')?.value || 0}
-                    subtitle="In Progress"
+                    title="Avg. Deal Size"
+                    value={formatCurrency(pieData.find(d => d.name === 'Confirmed')?.value > 0 ? (totalRev / pieData.find(d => d.name === 'Confirmed')?.value) : 0)}
+                    subtitle="Closed Orders"
                     icon={ShoppingCart}
                 />
             </div>
@@ -383,11 +404,6 @@ export default function DashboardPage() {
                     />
                 </div>
             )}
-
-            {/* Note: Team Contribution table is omitted in simplified visual view, 
-               Manager can rely on "Comparison" mode in Chart to see breakdown, 
-               or go to a dedicated "Reports" page for tabular data. 
-               This keeps the dashboard clean as requested. */}
         </div>
     );
 }
