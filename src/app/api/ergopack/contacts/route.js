@@ -32,10 +32,10 @@ export async function GET(request) {
         let query = supabase
             .from('ergopack_contacts')
             .select(`
-        *,
-        created_by_user:profiles!ergopack_contacts_created_by_fkey(full_name),
-        updated_by_user:profiles!ergopack_contacts_updated_by_fkey(full_name)
-      `)
+                *,
+                created_by_user:profiles!ergopack_contacts_created_by_fkey(full_name),
+                updated_by_user:profiles!ergopack_contacts_updated_by_fkey(full_name)
+            `)
             .order('updated_at', { ascending: false });
 
         // Apply filters
@@ -56,6 +56,34 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 });
         }
 
+        // Fetch latest activity for each contact
+        const contactIds = contacts?.map(c => c.id) || [];
+        let activitiesMap = {};
+
+        if (contactIds.length > 0) {
+            const { data: activities } = await supabase
+                .from('ergopack_activities')
+                .select(`
+                    id, contact_id, activity_type, title, created_at,
+                    creator:profiles!ergopack_activities_created_by_fkey(full_name)
+                `)
+                .in('contact_id', contactIds)
+                .order('created_at', { ascending: false });
+
+            // Group by contact_id, keep only latest per contact
+            activities?.forEach(act => {
+                if (!activitiesMap[act.contact_id]) {
+                    activitiesMap[act.contact_id] = act;
+                }
+            });
+        }
+
+        // Merge latest activity into contacts
+        const contactsWithActivity = contacts?.map(c => ({
+            ...c,
+            latest_activity: activitiesMap[c.id] || null
+        })) || [];
+
         // Get stats
         const { data: allContacts } = await supabase
             .from('ergopack_contacts')
@@ -67,11 +95,13 @@ export async function GET(request) {
             contacted: allContacts?.filter(c => c.status === 'contacted').length || 0,
             interested: allContacts?.filter(c => c.status === 'interested').length || 0,
             negotiating: allContacts?.filter(c => c.status === 'negotiating').length || 0,
+            proposal_sent: allContacts?.filter(c => c.status === 'proposal_sent').length || 0,
             won: allContacts?.filter(c => c.status === 'won').length || 0,
             lost: allContacts?.filter(c => c.status === 'lost').length || 0,
+            dormant: allContacts?.filter(c => c.status === 'dormant').length || 0,
         };
 
-        return NextResponse.json({ contacts, stats });
+        return NextResponse.json({ contacts: contactsWithActivity, stats });
 
     } catch (error) {
         console.error('Contacts API error:', error);

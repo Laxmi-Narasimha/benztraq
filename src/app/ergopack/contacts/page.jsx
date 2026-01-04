@@ -1,14 +1,14 @@
 /**
- * Ergopack Contacts List Page - Black & White Theme
+ * Ergopack Contacts List Page - With Activity Tracking
  * 
- * Displays all contacts with filters and search.
+ * Displays all contacts with Created By, Updated By, and Activity columns.
  * 
  * @module app/ergopack/contacts/page
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Building2, Search, Plus, RefreshCw,
-    Phone, Mail, MapPin, User, Clock
+    User, Clock, Phone, Mail, FileText, MessageSquare, CalendarCheck, BellDot
 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -33,6 +33,15 @@ const STATUS_OPTIONS = [
     { value: 'dormant', label: 'Dormant' },
 ];
 
+const ACTIVITY_ICONS = {
+    call: Phone,
+    email: Mail,
+    meeting: CalendarCheck,
+    note: FileText,
+    status_change: RefreshCw,
+    follow_up: Clock,
+};
+
 export default function ContactsListPage() {
     const searchParams = useSearchParams();
     const initialStatus = searchParams.get('status') || 'all';
@@ -43,11 +52,7 @@ export default function ContactsListPage() {
     const [statusFilter, setStatusFilter] = useState(initialStatus);
     const [stats, setStats] = useState(null);
 
-    useEffect(() => {
-        fetchContacts();
-    }, [statusFilter]);
-
-    const fetchContacts = async () => {
+    const fetchContacts = useCallback(async () => {
         setIsLoading(true);
         try {
             const params = new URLSearchParams();
@@ -64,7 +69,15 @@ export default function ContactsListPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [statusFilter, searchQuery]);
+
+    useEffect(() => {
+        fetchContacts();
+
+        // Auto-refresh every 30 seconds for real-time updates
+        const interval = setInterval(fetchContacts, 30000);
+        return () => clearInterval(interval);
+    }, [fetchContacts]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -83,6 +96,24 @@ export default function ContactsListPage() {
         );
     });
 
+    const getStatusBadgeStyle = (status) => {
+        const styles = {
+            new: 'bg-zinc-700 text-white',
+            contacted: 'bg-zinc-600 text-white',
+            interested: 'bg-zinc-500 text-white',
+            negotiating: 'bg-zinc-400 text-black',
+            proposal_sent: 'bg-zinc-300 text-black',
+            won: 'bg-white text-black',
+            lost: 'bg-zinc-800 text-zinc-400',
+            dormant: 'bg-zinc-900 text-zinc-500 border border-zinc-700',
+        };
+        return styles[status] || 'bg-zinc-700 text-white';
+    };
+
+    const getActivityIcon = (type) => {
+        return ACTIVITY_ICONS[type] || MessageSquare;
+    };
+
     return (
         <div className="min-h-screen bg-black p-8 space-y-6">
             {/* Header */}
@@ -96,12 +127,22 @@ export default function ContactsListPage() {
                         {stats?.total || 0} total contacts
                     </p>
                 </div>
-                <Link href="/ergopack/contacts/new">
-                    <Button className="bg-white text-black hover:bg-zinc-200">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Contact
+                <div className="flex gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={fetchContacts}
+                        disabled={isLoading}
+                        className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                     </Button>
-                </Link>
+                    <Link href="/ergopack/contacts/new">
+                        <Button className="bg-white text-black hover:bg-zinc-200">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Contact
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {/* Filters */}
@@ -111,7 +152,7 @@ export default function ContactsListPage() {
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                             <Input
-                                placeholder="Search company, person, or city..."
+                                placeholder="Search company, person..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10 bg-black border-zinc-700 text-white placeholder:text-zinc-600"
@@ -129,9 +170,6 @@ export default function ContactsListPage() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Button type="submit" variant="outline" className="border-zinc-700 text-zinc-400 hover:bg-zinc-800">
-                            <RefreshCw className="w-4 h-4" />
-                        </Button>
                     </form>
                 </CardContent>
             </Card>
@@ -141,6 +179,7 @@ export default function ContactsListPage() {
                 <CardContent className="p-0">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12 text-zinc-500">
+                            <RefreshCw className="w-5 h-5 animate-spin mr-2" />
                             Loading contacts...
                         </div>
                     ) : filteredContacts.length === 0 ? (
@@ -160,84 +199,106 @@ export default function ContactsListPage() {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full min-w-[900px]">
                                 <thead className="bg-zinc-800/50">
                                     <tr>
-                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Company</th>
-                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Contact</th>
-                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Location</th>
-                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Status</th>
-                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Last Updated</th>
-                                        <th className="text-left p-4 text-sm font-medium text-zinc-400">Updated By</th>
+                                        <th className="text-left p-4 text-xs font-medium text-zinc-400 uppercase tracking-wider">Company</th>
+                                        <th className="text-left p-4 text-xs font-medium text-zinc-400 uppercase tracking-wider">Status</th>
+                                        <th className="text-left p-4 text-xs font-medium text-zinc-400 uppercase tracking-wider">Created By</th>
+                                        <th className="text-left p-4 text-xs font-medium text-zinc-400 uppercase tracking-wider">Updated By</th>
+                                        <th className="text-left p-4 text-xs font-medium text-zinc-400 uppercase tracking-wider">Activity</th>
+                                        <th className="text-left p-4 text-xs font-medium text-zinc-400 uppercase tracking-wider">Last Updated</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-zinc-800">
-                                    {filteredContacts.map((contact) => (
-                                        <tr
-                                            key={contact.id}
-                                            className="hover:bg-zinc-800/30 transition-colors cursor-pointer"
-                                            onClick={() => window.location.href = `/ergopack/contacts/${contact.id}`}
-                                        >
-                                            <td className="p-4">
-                                                <div>
-                                                    <p className="font-medium text-white">{contact.company_name}</p>
-                                                    {contact.industry && (
-                                                        <p className="text-xs text-zinc-600">{contact.industry}</p>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="text-sm">
-                                                    {contact.contact_person ? (
-                                                        <>
-                                                            <p className="text-zinc-300 flex items-center gap-1">
-                                                                <User className="w-3 h-3 text-zinc-600" />
+                                    {filteredContacts.map((contact) => {
+                                        const ActivityIcon = contact.latest_activity
+                                            ? getActivityIcon(contact.latest_activity.activity_type)
+                                            : null;
+
+                                        return (
+                                            <tr
+                                                key={contact.id}
+                                                className="hover:bg-zinc-800/30 transition-colors cursor-pointer"
+                                                onClick={() => window.location.href = `/ergopack/contacts/${contact.id}`}
+                                            >
+                                                {/* Company */}
+                                                <td className="p-4">
+                                                    <div>
+                                                        <p className="font-medium text-white">{contact.company_name}</p>
+                                                        {contact.contact_person && (
+                                                            <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
+                                                                <User className="w-3 h-3" />
                                                                 {contact.contact_person}
                                                             </p>
-                                                            {contact.email && (
-                                                                <p className="text-zinc-600 flex items-center gap-1">
-                                                                    <Mail className="w-3 h-3" />
-                                                                    {contact.email}
-                                                                </p>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-zinc-600">-</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                {contact.city ? (
-                                                    <span className="text-zinc-400 flex items-center gap-1 text-sm">
-                                                        <MapPin className="w-3 h-3 text-zinc-600" />
-                                                        {contact.city}{contact.state && `, ${contact.state}`}
+                                                        )}
+                                                    </div>
+                                                </td>
+
+                                                {/* Status */}
+                                                <td className="p-4">
+                                                    <Badge className={getStatusBadgeStyle(contact.status)}>
+                                                        {contact.status?.replace('_', ' ')}
+                                                    </Badge>
+                                                </td>
+
+                                                {/* Created By - Never changes */}
+                                                <td className="p-4">
+                                                    <span className="text-sm text-zinc-400">
+                                                        {contact.created_by_user?.full_name || '-'}
                                                     </span>
-                                                ) : (
-                                                    <span className="text-zinc-600">-</span>
-                                                )}
-                                            </td>
-                                            <td className="p-4">
-                                                <Badge className="bg-zinc-800 text-zinc-300 border border-zinc-700 capitalize">
-                                                    {contact.status?.replace('_', ' ')}
-                                                </Badge>
-                                            </td>
-                                            <td className="p-4 text-sm text-zinc-500">
-                                                <div className="flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    {new Date(contact.updated_at).toLocaleDateString()}
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-sm text-zinc-500">
-                                                {contact.updated_by_user?.full_name || '-'}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+
+                                                {/* Updated By - Changes with each update */}
+                                                <td className="p-4">
+                                                    <span className="text-sm text-zinc-300">
+                                                        {contact.updated_by_user?.full_name || '-'}
+                                                    </span>
+                                                </td>
+
+                                                {/* Activity - Latest activity with icon */}
+                                                <td className="p-4">
+                                                    {contact.latest_activity ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-1.5 bg-zinc-800 px-2 py-1 rounded text-xs">
+                                                                <ActivityIcon className="w-3 h-3 text-zinc-400" />
+                                                                <span className="text-zinc-300 capitalize">
+                                                                    {contact.latest_activity.activity_type?.replace('_', ' ')}
+                                                                </span>
+                                                            </div>
+                                                            {/* New activity indicator - show if activity is from today */}
+                                                            {new Date(contact.latest_activity.created_at).toDateString() === new Date().toDateString() && (
+                                                                <Badge className="bg-white text-black text-[10px] px-1.5 py-0">
+                                                                    NEW
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-zinc-600 text-sm">-</span>
+                                                    )}
+                                                </td>
+
+                                                {/* Last Updated */}
+                                                <td className="p-4 text-sm text-zinc-500">
+                                                    <div className="flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        {new Date(contact.updated_at).toLocaleDateString()}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
                     )}
                 </CardContent>
             </Card>
+
+            {/* Auto-refresh indicator */}
+            <p className="text-xs text-zinc-600 text-center">
+                Auto-refreshes every 30 seconds
+            </p>
         </div>
     );
 }
