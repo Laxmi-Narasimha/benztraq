@@ -69,10 +69,8 @@ export async function GET(request) {
                 status,
                 salesperson_user_id,
                 customer_name_raw,
-                customer_display_name,
                 product_name,
-                quantity,
-                uom
+                quantity
             `)
             .in('doc_type', ['quotation', 'sales_order'])
             .gte('doc_date', dateFrom)
