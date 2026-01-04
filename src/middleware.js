@@ -3,7 +3,7 @@
  * 
  * Protects routes based on:
  * - Authentication (must be logged in for dashboard routes)
- * - Role (ASM restricted from analytics, Ergopack for directors only)
+ * - Role (ASM restricted from analytics)
  * - Company (validates access based on user's companies array)
  */
 
@@ -30,11 +30,6 @@ const PROTECTED_ROUTES = [
 const ASM_RESTRICTED_ROUTES = [
     '/comparison',
     '/admin',
-];
-
-// Routes only for directors and developers
-const DIRECTOR_ONLY_ROUTES = [
-    '/ergopack',
 ];
 
 async function getSession(request) {
@@ -82,21 +77,32 @@ export async function middleware(request) {
 
     const userRole = session.role || 'asm';
     const isASM = userRole === 'asm';
-    const isDirectorOrAbove = ['director', 'developer'].includes(userRole);
+    const isDeveloper = userRole === 'developer';
+    const isDirector = userRole === 'director';
 
-    // ASM restrictions
+    // Get user's organization from session
+    const userOrganization = session.organization || 'benz_packaging';
+
+    // ASM restrictions (comparison, admin)
     if (isASM) {
         const isASMRestricted = ASM_RESTRICTED_ROUTES.some(route => pathname.startsWith(route));
         if (isASMRestricted) {
-            // Redirect to dashboard with access denied message
             return NextResponse.redirect(new URL('/dashboard?access=denied', request.url));
         }
     }
 
-    // Director-only routes (Ergopack)
-    const isDirectorOnly = DIRECTOR_ONLY_ROUTES.some(route => pathname.startsWith(route));
-    if (isDirectorOnly && !isDirectorOrAbove) {
-        return NextResponse.redirect(new URL('/dashboard?access=denied', request.url));
+    // Ergopack access - based on organization, NOT role
+    // Users with ergopack_india organization can access /ergopack
+    // Directors and developers can also access regardless of org
+    if (pathname.startsWith('/ergopack')) {
+        const hasErgopackAccess =
+            userOrganization === 'ergopack_india' ||
+            isDeveloper ||
+            isDirector;
+
+        if (!hasErgopackAccess) {
+            return NextResponse.redirect(new URL('/dashboard?access=denied', request.url));
+        }
     }
 
     // Admin routes - only developers
