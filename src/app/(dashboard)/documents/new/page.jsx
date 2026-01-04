@@ -275,15 +275,30 @@ export default function NewDocumentPage() {
                         <CardDescription>Optional: Select an existing quotation to convert</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Select value={selectedQuotation} onValueChange={setSelectedQuotation}>
+                        <Select
+                            value={selectedQuotation || 'none'}
+                            onValueChange={(val) => {
+                                if (val === 'none') {
+                                    setSelectedQuotation('');
+                                    setOriginalQuotation(null);
+                                    setCustomerName('');
+                                    setProductName('');
+                                    setQuantity('');
+                                    setQuotedPrice('');
+                                    setFinalPrice('');
+                                } else {
+                                    setSelectedQuotation(val);
+                                }
+                            }}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a quotation to convert..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">Start fresh</SelectItem>
+                                <SelectItem value="none">-- Start Fresh (No Quotation) --</SelectItem>
                                 {quotations.map(q => (
                                     <SelectItem key={q.id} value={q.id}>
-                                        {q.customer?.name || 'Unknown'} - {q.product_name || 'Product'} (₹{q.total_value})
+                                        {q.customer_name_raw || q.customer?.name || 'Unknown'} - {q.product_name || 'Product'} (₹{q.total_value?.toLocaleString() || 0})
                                     </SelectItem>
                                 ))}
                             </SelectContent>

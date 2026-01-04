@@ -303,3 +303,79 @@ export async function POST(request) {
         );
     }
 }
+
+/**
+ * DELETE /api/documents
+ * Delete a document by ID.
+ */
+export async function DELETE(request) {
+    try {
+        const currentUser = await getCurrentUser();
+
+        if (!currentUser) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'Document ID is required' },
+                { status: 400 }
+            );
+        }
+
+        const supabase = createAdminClient();
+
+        // Check ownership or manager permission
+        const { data: doc, error: fetchError } = await supabase
+            .from('documents')
+            .select('salesperson_user_id')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !doc) {
+            return NextResponse.json(
+                { error: 'Document not found' },
+                { status: 404 }
+            );
+        }
+
+        // Only allow deletion if the user is the owner or a manager
+        const isOwner = doc.salesperson_user_id === currentUser.id;
+        const isManager = currentUser.role === 'vp' || currentUser.role === 'director';
+
+        if (!isOwner && !isManager) {
+            return NextResponse.json(
+                { error: 'You do not have permission to delete this document' },
+                { status: 403 }
+            );
+        }
+
+        // Delete the document
+        const { error: deleteError } = await supabase
+            .from('documents')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) {
+            console.error('Delete error:', deleteError);
+            return NextResponse.json(
+                { error: 'Failed to delete document', details: deleteError.message },
+                { status: 500 }
+            );
+        }
+
+        return NextResponse.json({ success: true, message: 'Document deleted' });
+    } catch (error) {
+        console.error('DELETE error:', error);
+        return NextResponse.json(
+            { error: 'Internal server error', details: error.message },
+            { status: 500 }
+        );
+    }
+}

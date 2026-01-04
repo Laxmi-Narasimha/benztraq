@@ -128,9 +128,8 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
             <TableHeader>
                 <TableRow>
                     <TableHead>Document #</TableHead>
-                    <TableHead>Date</TableHead>
                     <TableHead>Customer</TableHead>
-                    <TableHead>Salesperson</TableHead>
+                    <TableHead>Product</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
@@ -138,13 +137,36 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
             </TableHeader>
             <TableBody>
                 {documents.map((doc) => (
-                    <TableRow key={doc.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell className="font-medium">{doc.doc_number || 'N/A'}</TableCell>
-                        <TableCell>{formatDate(doc.doc_date)}</TableCell>
-                        <TableCell>{doc.customer}</TableCell>
-                        <TableCell>{doc.salesperson_name || doc.salesperson || 'Unknown'}</TableCell>
+                    <TableRow
+                        key={doc.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={(e) => {
+                            // Only navigate if not clicking on a dropdown
+                            if (!e.target.closest('[role="menu"]') && !e.target.closest('button')) {
+                                router.push(`/documents/${doc.id}`);
+                            }
+                        }}
+                    >
+                        <TableCell className="font-medium">
+                            <div>
+                                <p>{doc.doc_number || 'N/A'}</p>
+                                <p className="text-xs text-muted-foreground">{formatDate(doc.doc_date)}</p>
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <div>
+                                <p className="font-medium">{doc.customer_name_raw || doc.customer_display_name || doc.customer || 'Unknown'}</p>
+                                <p className="text-xs text-muted-foreground">{doc.salesperson_name || 'Unknown'}</p>
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <div>
+                                <p className="truncate max-w-[150px]">{doc.product_name || 'N/A'}</p>
+                                {doc.quantity && <p className="text-xs text-muted-foreground">{doc.quantity} {doc.uom || 'pcs'}</p>}
+                            </div>
+                        </TableCell>
                         <TableCell className="text-right font-medium">
-                            {formatCurrency(doc.grand_total, { compact: true })}
+                            {formatCurrency(doc.total_value || doc.grand_total, { compact: true })}
                         </TableCell>
                         <TableCell>
                             <StatusBadge status={doc.status} docType={docType} />
@@ -152,7 +174,7 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
                         <TableCell>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                                         <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -161,7 +183,7 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
                                         <Eye className="h-4 w-4 mr-2" />
                                         View Details
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onEdit?.(doc)}>
+                                    <DropdownMenuItem onClick={() => router.push(`/documents/new?edit=${doc.id}`)}>
                                         <Edit className="h-4 w-4 mr-2" />
                                         Edit
                                     </DropdownMenuItem>
@@ -367,6 +389,20 @@ export default function DocumentCenterPage() {
                                     documents={documents}
                                     docType={tab === 'quotations' ? DOC_TYPES.QUOTATION : tab === 'sales_orders' ? DOC_TYPES.SALES_ORDER : DOC_TYPES.INVOICE}
                                     loading={loading}
+                                    onDelete={async (doc) => {
+                                        if (!confirm(`Are you sure you want to delete ${doc.doc_number || 'this document'}? This action cannot be undone.`)) return;
+                                        try {
+                                            const res = await fetch(`/api/documents?id=${doc.id}`, { method: 'DELETE' });
+                                            if (!res.ok) {
+                                                const data = await res.json();
+                                                throw new Error(data.error || 'Failed to delete');
+                                            }
+                                            // Refresh documents
+                                            setDocuments(prev => prev.filter(d => d.id !== doc.id));
+                                        } catch (err) {
+                                            alert('Failed to delete: ' + err.message);
+                                        }
+                                    }}
                                 />
                             </CardContent>
                         </Card>
