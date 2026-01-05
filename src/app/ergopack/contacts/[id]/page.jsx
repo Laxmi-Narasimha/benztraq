@@ -39,7 +39,6 @@ const STATUS_OPTIONS = [
 ];
 
 const SUGGESTED_MODELS = [
-    { value: '', label: 'Select Model' },
     { value: 'ergopack-726x-li', label: 'Ergopack 726X-Li' },
     { value: 'ergopack-go', label: 'Ergopack Go' },
     { value: 'ergopack-700', label: 'Ergopack 700 Crank' },
@@ -384,12 +383,12 @@ export default function ContactDetailPage({ params }) {
                                 <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
                                     <Package className="w-3 h-3" /> Suggested Model
                                 </Label>
-                                <Select value={contact.suggested_model || ''} onValueChange={(v) => handleChange('suggested_model', v)}>
+                                <Select value={contact.suggested_model || undefined} onValueChange={(v) => handleChange('suggested_model', v)}>
                                     <SelectTrigger className="bg-zinc-900/50 border-zinc-800 text-white h-9">
                                         <SelectValue placeholder="Select Model" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-zinc-900 border-zinc-800">
-                                        {SUGGESTED_MODELS.map((opt) => (
+                                        {SUGGESTED_MODELS.filter(opt => opt.value).map((opt) => (
                                             <SelectItem key={opt.value} value={opt.value} className="text-white focus:bg-zinc-800">
                                                 {opt.label}
                                             </SelectItem>
