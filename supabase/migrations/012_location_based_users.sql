@@ -1,75 +1,93 @@
--- Migration: Update users to location-based names and add new regions
--- Run this to update existing users and add missing regions
+-- Migration: Clean up and set 5 location-based ASM users
+-- Run this in Supabase SQL Editor
 
--- Add missing regions
-INSERT INTO regions (name, description)
-VALUES 
-    ('Bangalore', 'Karnataka region'),
-    ('Delhi', 'Delhi-NCR region'),
-    ('Indore', 'Madhya Pradesh region')
-ON CONFLICT (name) DO NOTHING;
+-- Step 1: Add missing regions (no description column)
+INSERT INTO regions (name) VALUES ('Bangalore') ON CONFLICT (name) DO NOTHING;
+INSERT INTO regions (name) VALUES ('Delhi') ON CONFLICT (name) DO NOTHING;
+INSERT INTO regions (name) VALUES ('Indore') ON CONFLICT (name) DO NOTHING;
+INSERT INTO regions (name) VALUES ('Pune') ON CONFLICT (name) DO NOTHING;
 
--- Update Abhishek to Indore
+-- Step 2: Update existing ASM users to location names
+-- Abhishek -> Indore
 UPDATE profiles 
 SET full_name = 'Indore',
     region_id = (SELECT id FROM regions WHERE name = 'Indore' LIMIT 1)
 WHERE email = 'abhishek@benz-packaging.com';
 
--- Update Mani Bhushan to Jaipur
+-- Mani Bhushan -> Jaipur
 UPDATE profiles 
-SET full_name = 'Jaipur'
+SET full_name = 'Jaipur',
+    region_id = (SELECT id FROM regions WHERE name = 'Jaipur' LIMIT 1)
 WHERE email = 'wh.jaipur@benz-packaging.com';
 
--- Update old ASMs or insert new location-based users
--- Bangalore
-INSERT INTO profiles (user_id, email, full_name, role_id, region_id, designation, is_active, organization, companies, password_hash)
-SELECT 
-    gen_random_uuid(),
-    'bangalore@benz-packaging.com',
-    'Bangalore',
-    (SELECT id FROM roles WHERE name = 'asm'),
-    (SELECT id FROM regions WHERE name = 'Bangalore'),
-    'Area Sales Manager',
-    true,
-    'benz_packaging',
-    ARRAY['benz'],
-    (SELECT password_hash FROM profiles WHERE email = 'abhishek@benz-packaging.com' LIMIT 1)
-WHERE NOT EXISTS (SELECT 1 FROM profiles WHERE email = 'bangalore@benz-packaging.com');
-
--- Maharashtra (update existing or insert)
-INSERT INTO profiles (user_id, email, full_name, role_id, region_id, designation, is_active, organization, companies, password_hash)
-SELECT 
-    gen_random_uuid(),
-    'maharashtra@benz-packaging.com',
-    'Maharashtra',
-    (SELECT id FROM roles WHERE name = 'asm'),
-    (SELECT id FROM regions WHERE name = 'Maharashtra'),
-    'Area Sales Manager',
-    true,
-    'benz_packaging',
-    ARRAY['benz'],
-    (SELECT password_hash FROM profiles WHERE email = 'abhishek@benz-packaging.com' LIMIT 1)
-WHERE NOT EXISTS (SELECT 1 FROM profiles WHERE email = 'maharashtra@benz-packaging.com');
-
--- Delhi-NCR
-INSERT INTO profiles (user_id, email, full_name, role_id, region_id, designation, is_active, organization, companies, password_hash)
-SELECT 
-    gen_random_uuid(),
-    'delhi@benz-packaging.com',
-    'Delhi-NCR',
-    (SELECT id FROM roles WHERE name = 'asm'),
-    (SELECT id FROM regions WHERE name = 'Delhi'),
-    'Area Sales Manager',
-    true,
-    'benz_packaging',
-    ARRAY['benz'],
-    (SELECT password_hash FROM profiles WHERE email = 'abhishek@benz-packaging.com' LIMIT 1)
-WHERE NOT EXISTS (SELECT 1 FROM profiles WHERE email = 'delhi@benz-packaging.com');
-
--- Update asm1 to Maharashtra if it exists
+-- Step 3: Deactivate old generic ASM accounts (will be hidden from filters)
 UPDATE profiles 
-SET full_name = 'Maharashtra'
-WHERE email = 'asm1@benz-packaging.com';
+SET is_active = false 
+WHERE email IN (
+    'asm1@benz-packaging.com', 
+    'asm2@benz-packaging.com', 
+    'asm3@benz-packaging.com'
+);
 
--- Optionally deactivate old generic ASM accounts
-UPDATE profiles SET is_active = false WHERE email IN ('asm2@benz-packaging.com', 'asm3@benz-packaging.com');
+-- Step 4: Create new location-based users if they don't exist
+-- Get the password hash from an existing user
+DO $$
+DECLARE
+    v_password_hash TEXT;
+    v_asm_role_id UUID;
+BEGIN
+    -- Get password hash from existing user
+    SELECT password_hash INTO v_password_hash FROM profiles WHERE is_active = true LIMIT 1;
+    SELECT id INTO v_asm_role_id FROM roles WHERE name = 'asm' LIMIT 1;
+
+    -- Bangalore
+    INSERT INTO profiles (user_id, email, full_name, role_id, region_id, designation, is_active, organization, companies, password_hash)
+    VALUES (
+        gen_random_uuid(),
+        'banglore@benz-packaging.com',
+        'Bangalore',
+        v_asm_role_id,
+        (SELECT id FROM regions WHERE name = 'Bangalore' LIMIT 1),
+        'Area Sales Manager',
+        true,
+        'benz_packaging',
+        ARRAY['benz'],
+        v_password_hash
+    ) ON CONFLICT (email) DO UPDATE SET full_name = 'Bangalore', is_active = true;
+
+    -- Pune (Maharashtra region)
+    INSERT INTO profiles (user_id, email, full_name, role_id, region_id, designation, is_active, organization, companies, password_hash)
+    VALUES (
+        gen_random_uuid(),
+        'pune@benz-packaging.com',
+        'Pune',
+        v_asm_role_id,
+        (SELECT id FROM regions WHERE name = 'Pune' LIMIT 1),
+        'Area Sales Manager',
+        true,
+        'benz_packaging',
+        ARRAY['benz'],
+        v_password_hash
+    ) ON CONFLICT (email) DO UPDATE SET full_name = 'Pune', is_active = true;
+
+    -- Delhi-NCR
+    INSERT INTO profiles (user_id, email, full_name, role_id, region_id, designation, is_active, organization, companies, password_hash)
+    VALUES (
+        gen_random_uuid(),
+        'delhi@benz-packaging.com',
+        'Delhi-NCR',
+        v_asm_role_id,
+        (SELECT id FROM regions WHERE name = 'Delhi' LIMIT 1),
+        'Area Sales Manager',
+        true,
+        'benz_packaging',
+        ARRAY['benz'],
+        v_password_hash
+    ) ON CONFLICT (email) DO UPDATE SET full_name = 'Delhi-NCR', is_active = true;
+
+END $$;
+
+-- Step 5: Verify - List all active ASM users (should show 5 locations)
+SELECT email, full_name, is_active FROM profiles 
+WHERE role_id = (SELECT id FROM roles WHERE name = 'asm') 
+ORDER BY full_name;

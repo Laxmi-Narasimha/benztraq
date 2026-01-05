@@ -75,7 +75,7 @@ const DEFAULT_USERS = [
         organization: 'benz_packaging',
         companies: ['benz']  // Benz only
     },
-    // ASMs - Location-based names (Benz only)
+    // ASMs - 5 Location-based users (Benz only)
     {
         email: 'abhishek@benz-packaging.com',
         fullName: 'Indore',
@@ -97,7 +97,7 @@ const DEFAULT_USERS = [
         companies: ['benz']
     },
     {
-        email: 'bangalore@benz-packaging.com',
+        email: 'banglore@benz-packaging.com',
         fullName: 'Bangalore',
         roleName: 'asm',
         designation: 'Area Sales Manager',
@@ -107,12 +107,12 @@ const DEFAULT_USERS = [
         companies: ['benz']
     },
     {
-        email: 'maharashtra@benz-packaging.com',
-        fullName: 'Maharashtra',
+        email: 'pune@benz-packaging.com',
+        fullName: 'Pune',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Maharashtra',
+        regionName: 'Pune',
         organization: 'benz_packaging',
         companies: ['benz']
     },

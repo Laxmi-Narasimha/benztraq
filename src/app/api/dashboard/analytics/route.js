@@ -35,11 +35,12 @@ export async function GET(request) {
         let accessibleUsers = [];
 
         if (isManager) {
-            // Manager can see all ASMs
+            // Manager can see only ACTIVE ASMs
             const { data: teamProfiles } = await supabase
                 .from('profiles')
                 .select('user_id, full_name, role')
-                .eq('role', 'asm');
+                .eq('role', 'asm')
+                .eq('is_active', true);
 
             accessibleUsers = (teamProfiles || []).map(p => ({
                 id: p.user_id,
