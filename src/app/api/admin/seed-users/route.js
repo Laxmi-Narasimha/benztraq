@@ -10,6 +10,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { hashPassword } from '@/lib/utils/password';
 
 const DEFAULT_PASSWORD = 'Benz@2024';
+const CHOPRA_PASSWORD = 'Hound@1102';
 
 const DEFAULT_USERS = [
     {
@@ -22,7 +23,7 @@ const DEFAULT_USERS = [
         organization: 'benz_packaging',
         companies: ['benz', 'ergopack']  // Full access
     },
-    // Directors - Full access to both companies
+    // Directors - Full access to both companies (Custom password)
     {
         email: 'manan@benz-packaging.com',
         fullName: 'Manan',
@@ -31,7 +32,8 @@ const DEFAULT_USERS = [
         phone: null,
         regionName: null,
         organization: 'benz_packaging',
-        companies: ['benz', 'ergopack']
+        companies: ['benz', 'ergopack'],
+        customPassword: CHOPRA_PASSWORD
     },
     {
         email: 'chaitanya@benz-packaging.com',
@@ -41,7 +43,8 @@ const DEFAULT_USERS = [
         phone: null,
         regionName: null,
         organization: 'benz_packaging',
-        companies: ['benz', 'ergopack']
+        companies: ['benz', 'ergopack'],
+        customPassword: CHOPRA_PASSWORD
     },
     {
         email: 'prashansa@benz-packaging.com',
@@ -51,7 +54,8 @@ const DEFAULT_USERS = [
         phone: null,
         regionName: null,
         organization: 'benz_packaging',
-        companies: ['benz', 'ergopack']
+        companies: ['benz', 'ergopack'],
+        customPassword: CHOPRA_PASSWORD
     },
     // Lokesh - Ergopack only
     {
@@ -163,6 +167,11 @@ export async function POST(request) {
                         : user.roleName === 'head_of_sales' ? 'director'
                             : 'asm';
 
+                // Use custom password if defined, otherwise use default
+                const userPasswordHash = user.customPassword
+                    ? await hashPassword(user.customPassword)
+                    : passwordHash;
+
                 const { data, error } = await supabase
                     .from('profiles')
                     .upsert({
@@ -173,7 +182,7 @@ export async function POST(request) {
                         region_id: regionId,
                         designation: user.designation,
                         phone: user.phone,
-                        password_hash: passwordHash,
+                        password_hash: userPasswordHash,
                         is_active: true,
                         role: legacyRole,
                         organization: user.organization || 'benz_packaging',
