@@ -202,7 +202,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between">
                                                     <h3 className="font-medium text-white">{product.name}</h3>
-                                                    <Badge className="bg-zinc-700 text-zinc-300">
+                                                    <Badge className="bg-emerald-600 text-white font-semibold">
                                                         {formatCurrency(product.rate)}
                                                     </Badge>
                                                 </div>

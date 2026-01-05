@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Helvetica-Bold',
     },
     titleBadge: {
-        backgroundColor: '#f59e0b',
+        backgroundColor: '#2563eb',
         color: '#ffffff',
         padding: '3 8',
         borderRadius: 3,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     grandTotal: {
-        backgroundColor: '#f59e0b',
+        backgroundColor: '#1e4a8e',
         padding: '8 12',
         borderRadius: 4,
         marginTop: 5,

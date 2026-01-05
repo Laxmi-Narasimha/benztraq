@@ -239,7 +239,7 @@ export default function ContactDetailPage({ params }) {
                             variant="outline"
                             size="sm"
                             onClick={() => setShowQuotationModal(true)}
-                            className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 h-8"
+                            className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 h-8"
                         >
                             <FileText className="w-3.5 h-3.5 mr-1" />
                             Create Quote
