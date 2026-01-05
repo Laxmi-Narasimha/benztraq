@@ -10,6 +10,9 @@
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { COMPANY_INFO, QUOTATION_TERMS, formatCurrency, numberToWords } from '@/lib/ergopack/products';
 
+// Benz Blue color
+const BENZ_BLUE = '#097dc4';
+
 // Register fonts (using default for now)
 const styles = StyleSheet.create({
     page: {
@@ -22,40 +25,31 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e5e5',
         paddingBottom: 15,
     },
     logo: {
-        width: 120,
-        height: 40,
+        width: 140,
+        height: 45,
         objectFit: 'contain',
     },
     titleSection: {
         alignItems: 'flex-end',
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         color: '#333333',
         fontFamily: 'Helvetica-Bold',
-    },
-    titleBadge: {
-        backgroundColor: '#2563eb',
-        color: '#ffffff',
-        padding: '3 8',
-        borderRadius: 3,
-        fontSize: 8,
-        marginTop: 5,
     },
     subtitle: {
         fontSize: 10,
         color: '#666666',
-        marginTop: 3,
+        marginTop: 5,
     },
     infoSection: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 20,
+        marginTop: 10,
     },
     infoBox: {
         width: '32%',
@@ -64,7 +58,6 @@ const styles = StyleSheet.create({
         fontSize: 8,
         color: '#666666',
         marginBottom: 5,
-        textTransform: 'uppercase',
     },
     infoValue: {
         fontSize: 10,
@@ -81,32 +74,33 @@ const styles = StyleSheet.create({
     },
     detailRow: {
         flexDirection: 'row',
-        marginBottom: 2,
+        marginBottom: 3,
     },
     detailLabel: {
         width: 100,
-        fontSize: 8,
+        fontSize: 9,
         color: '#666666',
     },
     detailValue: {
-        fontSize: 8,
+        fontSize: 9,
         color: '#333333',
+        fontFamily: 'Helvetica-Bold',
     },
     table: {
         marginTop: 20,
         borderWidth: 1,
-        borderColor: '#e5e5e5',
+        borderColor: '#dddddd',
     },
     tableHeader: {
         flexDirection: 'row',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#f8f9fa',
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e5e5',
-        paddingVertical: 8,
+        borderBottomColor: '#dddddd',
+        paddingVertical: 10,
         paddingHorizontal: 5,
     },
     tableHeaderCell: {
-        fontSize: 8,
+        fontSize: 9,
         fontFamily: 'Helvetica-Bold',
         color: '#333333',
         textAlign: 'center',
@@ -115,31 +109,32 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: '#eeeeee',
-        paddingVertical: 8,
+        paddingVertical: 10,
         paddingHorizontal: 5,
     },
     tableCell: {
-        fontSize: 8,
+        fontSize: 9,
         color: '#333333',
         textAlign: 'center',
     },
-    itemCol: { width: '25%', textAlign: 'left', paddingLeft: 5 },
-    gstCol: { width: '8%' },
-    qtyCol: { width: '8%' },
-    uomCol: { width: '8%' },
+    itemCol: { width: '20%', textAlign: 'left', paddingLeft: 8 },
+    gstCol: { width: '7%' },
+    qtyCol: { width: '7%' },
+    uomCol: { width: '7%' },
     rateCol: { width: '12%' },
     amountCol: { width: '12%' },
-    cgstCol: { width: '10%' },
-    sgstCol: { width: '10%' },
-    totalCol: { width: '12%' },
+    cgstCol: { width: '12%' },
+    sgstCol: { width: '12%' },
+    totalCol: { width: '13%' },
     productDesc: {
-        fontSize: 7,
+        fontSize: 8,
         color: '#666666',
-        marginTop: 3,
-        paddingLeft: 10,
+        marginTop: 4,
+        paddingLeft: 15,
+        lineHeight: 1.4,
     },
     termsSection: {
-        marginTop: 20,
+        marginTop: 25,
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
@@ -147,15 +142,16 @@ const styles = StyleSheet.create({
         width: '50%',
     },
     termsTitle: {
-        fontSize: 10,
+        fontSize: 11,
         fontFamily: 'Helvetica-Bold',
         color: '#333333',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     termItem: {
-        fontSize: 8,
+        fontSize: 9,
         color: '#555555',
-        marginBottom: 4,
+        marginBottom: 5,
+        lineHeight: 1.4,
     },
     totalsBox: {
         width: '40%',
@@ -165,43 +161,49 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
-        marginBottom: 4,
+        marginBottom: 5,
     },
     totalLabel: {
-        fontSize: 9,
+        fontSize: 10,
         color: '#666666',
     },
     totalValue: {
-        fontSize: 9,
+        fontSize: 10,
         color: '#333333',
         textAlign: 'right',
     },
     grandTotal: {
-        backgroundColor: '#1e4a8e',
-        padding: '8 12',
+        backgroundColor: BENZ_BLUE,
+        padding: '10 15',
         borderRadius: 4,
-        marginTop: 5,
+        marginTop: 8,
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
     },
     grandTotalLabel: {
-        fontSize: 10,
+        fontSize: 11,
         color: '#ffffff',
         fontFamily: 'Helvetica-Bold',
     },
     grandTotalValue: {
-        fontSize: 12,
+        fontSize: 13,
         color: '#ffffff',
         fontFamily: 'Helvetica-Bold',
     },
     totalInWords: {
-        marginTop: 8,
-        fontSize: 8,
+        marginTop: 12,
+        fontSize: 9,
         color: '#555555',
     },
+    totalInWordsValue: {
+        fontSize: 9,
+        color: '#333333',
+        fontFamily: 'Helvetica-Bold',
+        marginTop: 3,
+    },
     signatureSection: {
-        marginTop: 30,
+        marginTop: 40,
         alignItems: 'flex-end',
     },
     signature: {
@@ -230,7 +232,7 @@ const styles = StyleSheet.create({
 });
 
 function formatINR(amount) {
-    return '₹' + new Intl.NumberFormat('en-IN').format(amount.toFixed(2));
+    return '₹' + new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
 }
 
 export default function QuotationPDF({ data }) {
@@ -260,9 +262,6 @@ export default function QuotationPDF({ data }) {
                     />
                     <View style={styles.titleSection}>
                         <Text style={styles.title}>Quotation</Text>
-                        <View style={styles.titleBadge}>
-                            <Text style={{ color: '#ffffff', fontSize: 8 }}>Created</Text>
-                        </View>
                         <Text style={styles.subtitle}>Protective Packaging Solutions</Text>
                     </View>
                 </View>
@@ -283,8 +282,11 @@ export default function QuotationPDF({ data }) {
                         <Text style={styles.infoLabel}>Quotation For</Text>
                         <Text style={styles.infoValue}>{data.customerName}</Text>
                         <Text style={styles.infoText}>
-                            {data.customerCity}{data.customerAddress ? `, ${data.customerAddress}` : ''}
+                            {data.customerCity}{data.customerAddress ? `,` : ''}
                         </Text>
+                        {data.customerAddress && (
+                            <Text style={styles.infoText}>{data.customerAddress}</Text>
+                        )}
                     </View>
 
                     {/* Details */}
@@ -308,6 +310,10 @@ export default function QuotationPDF({ data }) {
                                 <Text style={styles.detailValue}>{QUOTATION_TERMS.currency}</Text>
                             </View>
                             <View style={styles.detailRow}>
+                                <Text style={styles.detailLabel}>Country of Supply</Text>
+                                <Text style={styles.detailValue}>India</Text>
+                            </View>
+                            <View style={styles.detailRow}>
                                 <Text style={styles.detailLabel}>Place of Supply:</Text>
                                 <Text style={styles.detailValue}>{COMPANY_INFO.placeOfSupply}</Text>
                             </View>
@@ -320,7 +326,7 @@ export default function QuotationPDF({ data }) {
                     {/* Header */}
                     <View style={styles.tableHeader}>
                         <Text style={[styles.tableHeaderCell, styles.itemCol]}>Item</Text>
-                        <Text style={[styles.tableHeaderCell, styles.gstCol]}>GST Rate</Text>
+                        <Text style={[styles.tableHeaderCell, styles.gstCol]}>GST{'\n'}Rate</Text>
                         <Text style={[styles.tableHeaderCell, styles.qtyCol]}>Quantity</Text>
                         <Text style={[styles.tableHeaderCell, styles.uomCol]}>UoM</Text>
                         <Text style={[styles.tableHeaderCell, styles.rateCol]}>Rate</Text>
@@ -335,7 +341,7 @@ export default function QuotationPDF({ data }) {
                         <View key={row.id}>
                             <View style={styles.tableRow}>
                                 <View style={[styles.tableCell, styles.itemCol]}>
-                                    <Text>{row.index}. {row.name}</Text>
+                                    <Text style={{ fontFamily: 'Helvetica-Bold' }}>{row.index}. {row.name}</Text>
                                 </View>
                                 <Text style={[styles.tableCell, styles.gstCol]}>{row.gstRate}%</Text>
                                 <Text style={[styles.tableCell, styles.qtyCol]}>{row.quantity}</Text>
@@ -347,7 +353,7 @@ export default function QuotationPDF({ data }) {
                                 <Text style={[styles.tableCell, styles.totalCol]}>{formatINR(row.total)}</Text>
                             </View>
                             {/* Product Description */}
-                            <View style={{ paddingHorizontal: 10, paddingBottom: 8 }}>
+                            <View style={{ paddingHorizontal: 10, paddingBottom: 10 }}>
                                 {row.description.map((desc, i) => (
                                     <Text key={i} style={styles.productDesc}>{desc}</Text>
                                 ))}
@@ -384,9 +390,8 @@ export default function QuotationPDF({ data }) {
                             <Text style={styles.grandTotalLabel}>Total (INR)</Text>
                             <Text style={styles.grandTotalValue}>{formatINR(grandTotal)}</Text>
                         </View>
-                        <Text style={styles.totalInWords}>
-                            Total (in words) : {numberToWords(Math.round(grandTotal))}
-                        </Text>
+                        <Text style={styles.totalInWords}>Total (in words) :</Text>
+                        <Text style={styles.totalInWordsValue}>{numberToWords(Math.round(grandTotal))}</Text>
                     </View>
                 </View>
 

@@ -151,10 +151,10 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-light flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-amber-400" />
+                        <FileText className="w-5 h-5 text-[#097dc4]" />
                         Create Quotation
                     </DialogTitle>
                     <DialogDescription className="text-zinc-500">
@@ -168,7 +168,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                         <div key={s} className="flex items-center">
                             <div className={cn(
                                 "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all",
-                                step >= s ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-500"
+                                step >= s ? "bg-[#097dc4] text-white" : "bg-zinc-800 text-zinc-500"
                             )}>
                                 {step > s ? <Check className="w-4 h-4" /> : s}
                             </div>
@@ -188,7 +188,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                                     key={product.id}
                                     className={cn(
                                         "bg-zinc-800/50 border-zinc-700 cursor-pointer transition-all",
-                                        selectedProducts[product.id] && "border-amber-500/50 bg-amber-500/5"
+                                        selectedProducts[product.id] && "border-[#097dc4]/50 bg-[#097dc4]/5"
                                     )}
                                     onClick={() => toggleProduct(product.id)}
                                 >
@@ -214,13 +214,13 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                                             </div>
                                             {selectedProducts[product.id] && (
                                                 <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                                                    <Label className="text-xs text-zinc-500">Qty:</Label>
+                                                    <Label className="text-xs text-zinc-400">Qty:</Label>
                                                     <Input
                                                         type="number"
                                                         min="1"
                                                         value={selectedProducts[product.id]}
                                                         onChange={(e) => updateQuantity(product.id, e.target.value)}
-                                                        className="w-16 h-8 bg-zinc-900 border-zinc-700 text-center text-sm"
+                                                        className="w-16 h-8 bg-zinc-800 border-zinc-600 text-white text-center text-sm"
                                                     />
                                                 </div>
                                             )}
@@ -234,7 +234,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                             <Button
                                 onClick={handleProceedToReview}
                                 disabled={selectedCount === 0}
-                                className="bg-amber-500 text-black hover:bg-amber-400"
+                                className="bg-[#097dc4] text-white hover:bg-[#0869a8]"
                             >
                                 Continue ({selectedCount} selected)
                                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -265,7 +265,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                                         <p className="text-white text-sm">{p.name}</p>
                                         <p className="text-zinc-500 text-xs">Qty: {p.quantity}</p>
                                     </div>
-                                    <p className="text-amber-400">{formatCurrency(p.rate * p.quantity)}</p>
+                                    <p className="text-[#097dc4]">{formatCurrency(p.rate * p.quantity)}</p>
                                 </div>
                             ))}
                         </div>
@@ -285,7 +285,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                             </div>
                             <div className="flex justify-between text-lg font-medium text-white pt-2 border-t border-zinc-700">
                                 <span>Total</span>
-                                <span className="text-amber-400">{formatCurrency(calculateTotals().total)}</span>
+                                <span className="text-[#097dc4]">{formatCurrency(calculateTotals().total)}</span>
                             </div>
                         </div>
 
@@ -309,7 +309,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                             <Button
                                 onClick={handleGeneratePDF}
                                 disabled={isGenerating}
-                                className="flex-1 bg-amber-500 text-black hover:bg-amber-400"
+                                className="flex-1 bg-[#097dc4] text-white hover:bg-[#0869a8]"
                             >
                                 {isGenerating ? (
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -414,7 +414,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
                             <Button
                                 onClick={handleGeneratePDF}
                                 disabled={isGenerating}
-                                className="flex-1 bg-amber-500 text-black hover:bg-amber-400"
+                                className="flex-1 bg-[#097dc4] text-white hover:bg-[#0869a8]"
                             >
                                 {isGenerating ? (
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

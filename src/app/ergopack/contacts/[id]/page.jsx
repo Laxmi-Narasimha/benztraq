@@ -239,7 +239,7 @@ export default function ContactDetailPage({ params }) {
                             variant="outline"
                             size="sm"
                             onClick={() => setShowQuotationModal(true)}
-                            className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 h-8"
+                            className="border-[#097dc4]/50 text-[#097dc4] hover:bg-[#097dc4]/20 hover:text-[#097dc4] h-8"
                         >
                             <FileText className="w-3.5 h-3.5 mr-1" />
                             Create Quote
@@ -398,8 +398,8 @@ export default function ContactDetailPage({ params }) {
                                                     handleChange('suggested_model', newModels.join(','));
                                                 }}
                                                 className={`px-2 py-1 text-xs rounded-md border transition-all ${isSelected
-                                                        ? 'bg-emerald-600 border-emerald-500 text-white'
-                                                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                                                    ? 'bg-emerald-600 border-emerald-500 text-white'
+                                                    : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
                                                     }`}
                                             >
                                                 {opt.label}
