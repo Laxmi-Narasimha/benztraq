@@ -13,12 +13,12 @@ import { COMPANY_INFO, QUOTATION_TERMS, formatCurrency, numberToWords } from '@/
 // Benz Blue color
 const BENZ_BLUE = '#097dc4';
 
-// Register Noto Sans font which supports Rupee symbol - using jsDelivr CDN
+// Register Noto Sans font which supports Rupee symbol
 Font.register({
     family: 'NotoSans',
     fonts: [
-        { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.8/files/noto-sans-latin-400-normal.woff', fontWeight: 400 },
-        { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.8/files/noto-sans-latin-700-normal.woff', fontWeight: 700 },
+        { src: 'https://unpkg.com/@fontsource/noto-sans@5.0.20/files/noto-sans-all-400-normal.woff', fontWeight: 400 },
+        { src: 'https://unpkg.com/@fontsource/noto-sans@5.0.20/files/noto-sans-all-700-normal.woff', fontWeight: 700 },
     ]
 });
 
