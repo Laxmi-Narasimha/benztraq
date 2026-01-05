@@ -75,20 +75,20 @@ const DEFAULT_USERS = [
         organization: 'benz_packaging',
         companies: ['benz']  // Benz only
     },
-    // ASMs - Benz only
+    // ASMs - Location-based names (Benz only)
     {
         email: 'abhishek@benz-packaging.com',
-        fullName: 'Abhishek',
+        fullName: 'Indore',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Gurgaon',
+        regionName: 'Indore',
         organization: 'benz_packaging',
         companies: ['benz']
     },
     {
         email: 'wh.jaipur@benz-packaging.com',
-        fullName: 'Mani Bhushan',
+        fullName: 'Jaipur',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
@@ -97,8 +97,18 @@ const DEFAULT_USERS = [
         companies: ['benz']
     },
     {
-        email: 'asm1@benz-packaging.com',
-        fullName: 'Sales Manager 1',
+        email: 'bangalore@benz-packaging.com',
+        fullName: 'Bangalore',
+        roleName: 'asm',
+        designation: 'Area Sales Manager',
+        phone: null,
+        regionName: 'Bangalore',
+        organization: 'benz_packaging',
+        companies: ['benz']
+    },
+    {
+        email: 'maharashtra@benz-packaging.com',
+        fullName: 'Maharashtra',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
@@ -107,22 +117,12 @@ const DEFAULT_USERS = [
         companies: ['benz']
     },
     {
-        email: 'asm2@benz-packaging.com',
-        fullName: 'Sales Manager 2',
+        email: 'delhi@benz-packaging.com',
+        fullName: 'Delhi-NCR',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Chennai',
-        organization: 'benz_packaging',
-        companies: ['benz']
-    },
-    {
-        email: 'asm3@benz-packaging.com',
-        fullName: 'Sales Manager 3',
-        roleName: 'asm',
-        designation: 'Area Sales Manager',
-        phone: null,
-        regionName: 'Indore',
+        regionName: 'Delhi',
         organization: 'benz_packaging',
         companies: ['benz']
     }
