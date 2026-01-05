@@ -231,6 +231,15 @@ function LoginFlow({ skipToLogin }) {
                         'Sign In'
                     )}
                 </Button>
+
+                <div className="text-center">
+                    <a
+                        href="/forgot-password"
+                        className="text-zinc-500 hover:text-white text-sm transition-colors"
+                    >
+                        Forgot your password?
+                    </a>
+                </div>
             </form>
         </div>
     );
