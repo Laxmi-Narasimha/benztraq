@@ -171,6 +171,10 @@ export async function sendOTPEmail(toEmail, otp, userName = 'User') {
  * Send email via Resend
  */
 async function sendViaResend(toEmail, htmlContent) {
+    console.log('[Resend] Sending email to:', toEmail);
+    console.log('[Resend] From:', `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.fromEmail}>`);
+    console.log('[Resend] API Key present:', !!EMAIL_CONFIG.apiKey);
+
     const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -187,9 +191,14 @@ async function sendViaResend(toEmail, htmlContent) {
 
     const data = await response.json();
 
+    console.log('[Resend] Response status:', response.status);
+    console.log('[Resend] Response data:', JSON.stringify(data));
+
     if (response.ok) {
+        console.log('[Resend] Email sent successfully, ID:', data.id);
         return { success: true, messageId: data.id };
     } else {
+        console.error('[Resend] Failed to send email:', data.message || data);
         return { success: false, error: data.message || 'Failed to send email' };
     }
 }
