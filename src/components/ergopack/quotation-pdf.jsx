@@ -7,27 +7,18 @@
  * @module components/ergopack/quotation-pdf
  */
 
-import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { COMPANY_INFO, QUOTATION_TERMS, formatCurrency, numberToWords } from '@/lib/ergopack/products';
 
 // Benz Blue color
 const BENZ_BLUE = '#097dc4';
 
-// Register Noto Sans font which supports Rupee symbol
-Font.register({
-    family: 'NotoSans',
-    fonts: [
-        { src: 'https://unpkg.com/@fontsource/noto-sans@5.0.20/files/noto-sans-all-400-normal.woff', fontWeight: 400 },
-        { src: 'https://unpkg.com/@fontsource/noto-sans@5.0.20/files/noto-sans-all-700-normal.woff', fontWeight: 700 },
-    ]
-});
-
-// Compact styles to fit on single page
+// Compact styles to fit on single page - using Helvetica (standard PDF font)
 const styles = StyleSheet.create({
     page: {
         padding: 25,
         fontSize: 8,
-        fontFamily: 'NotoSans',
+        fontFamily: 'Helvetica',
         backgroundColor: '#ffffff',
     },
     header: {
@@ -241,7 +232,7 @@ const styles = StyleSheet.create({
 });
 
 function formatINR(amount) {
-    return '₹' + new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+    return 'Rs.' + new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
 }
 
 export default function QuotationPDF({ data }) {
