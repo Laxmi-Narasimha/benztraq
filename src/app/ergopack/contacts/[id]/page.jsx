@@ -26,14 +26,12 @@ import {
 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
-    { value: 'new', label: 'New' },
+    { value: 'open', label: 'Open' },
     { value: 'contacted', label: 'Contacted' },
-    { value: 'interested', label: 'Interested' },
-    { value: 'negotiating', label: 'Negotiating' },
     { value: 'proposal_sent', label: 'Proposal Sent' },
-    { value: 'won', label: 'Won' },
+    { value: 'deal_done', label: 'Deal Done' },
     { value: 'lost', label: 'Lost' },
-    { value: 'dormant', label: 'Dormant' },
+    { value: 'not_serviceable', label: 'Not Serviceable' },
 ];
 
 const ACTIVITY_TYPES = [

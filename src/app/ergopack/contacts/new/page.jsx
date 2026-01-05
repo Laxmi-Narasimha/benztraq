@@ -1,7 +1,7 @@
 /**
- * New Contact Page - Premium Light Theme
+ * New Contact Page - Premium Dark Theme
  * 
- * Clean, modern form with light theme and premium aesthetics.
+ * High-end dark theme form for adding leads.
  * Fields: Company, Contact Person, Phone, Email, City, Designation, 
  * Product Interest, Additional Notes, Suggested Model, Status
  * All fields optional except Company Name.
@@ -22,8 +22,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Building2, Save, ArrowLeft, AlertCircle, Loader2, User, Phone, Mail, MapPin, Briefcase, Package, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-// Stages matching dashboard (from Image 4)
+// Stages matching dashboard
 const STATUS_OPTIONS = [
     { value: 'open', label: 'Open' },
     { value: 'contacted', label: 'Contacted' },
@@ -91,46 +92,46 @@ export default function NewContactPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <div className="p-6 md:p-8 max-w-2xl mx-auto">
+        <div className="min-h-screen bg-[#050505] font-sans text-zinc-300">
+            <div className="p-6 md:p-8 max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <Link href="/ergopack/contacts">
-                        <Button variant="ghost" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full w-10 h-10 p-0">
+                        <Button variant="ghost" className="text-zinc-500 hover:text-white hover:bg-zinc-900 rounded-full w-10 h-10 p-0 transition-colors">
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
+                        <h1 className="text-2xl font-light tracking-wide text-white flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center border border-zinc-800 shadow-lg">
                                 <Building2 className="w-5 h-5 text-white" />
                             </div>
                             Add New Lead
                         </h1>
-                        <p className="text-slate-500 mt-1 ml-[52px] text-sm">Enter lead details below</p>
+                        <p className="text-zinc-500 mt-1 ml-[52px] text-sm font-light">Create a new contact in your pipeline</p>
                     </div>
                 </div>
 
                 {error && (
-                    <Alert className="mb-6 border-red-200 bg-red-50">
-                        <AlertCircle className="w-4 h-4 text-red-600" />
-                        <AlertDescription className="text-red-800">{error}</AlertDescription>
+                    <Alert className="mb-6 border-red-500/20 bg-red-500/5 backdrop-blur-sm">
+                        <AlertCircle className="w-4 h-4 text-red-500" />
+                        <AlertDescription className="text-red-400">{error}</AlertDescription>
                     </Alert>
                 )}
 
                 <form onSubmit={handleSubmit}>
-                    <Card className="bg-white border-slate-200 shadow-sm">
-                        <CardHeader className="pb-4 border-b border-slate-100">
-                            <CardTitle className="text-lg text-slate-900 font-medium">Lead Information</CardTitle>
-                            <CardDescription className="text-slate-500">
+                    <Card className="bg-zinc-900/20 border-zinc-800/60 shadow-2xl backdrop-blur-sm">
+                        <CardHeader className="pb-4 border-b border-zinc-900 px-6 pt-6">
+                            <CardTitle className="text-lg text-white font-light tracking-wide">Lead Information</CardTitle>
+                            <CardDescription className="text-zinc-600">
                                 All fields are optional except Company Name
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-6 space-y-6">
+                        <CardContent className="p-6 space-y-6">
                             {/* Row 1: Company Name */}
                             <div className="space-y-2">
-                                <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-slate-400" />
+                                <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                    <Building2 className="w-3.5 h-3.5" />
                                     Company Name <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
@@ -138,27 +139,27 @@ export default function NewContactPage() {
                                     onChange={(e) => handleChange('companyName', e.target.value)}
                                     placeholder="e.g. ABC Packaging Pvt Ltd"
                                     required
-                                    className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-slate-400"
+                                    className="h-12 bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all text-base"
                                 />
                             </div>
 
                             {/* Row 2: Contact Person + Phone */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                        <User className="w-4 h-4 text-slate-400" />
+                                    <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                        <User className="w-3.5 h-3.5" />
                                         Contact Person
                                     </Label>
                                     <Input
                                         value={formData.contactPerson}
                                         onChange={(e) => handleChange('contactPerson', e.target.value)}
-                                        placeholder="Full name of contact"
-                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                        placeholder="Full name"
+                                        className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                        <Phone className="w-4 h-4 text-slate-400" />
+                                    <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                        <Phone className="w-3.5 h-3.5" />
                                         Phone
                                     </Label>
                                     <Input
@@ -166,16 +167,16 @@ export default function NewContactPage() {
                                         value={formData.phone}
                                         onChange={(e) => handleChange('phone', e.target.value)}
                                         placeholder="+91 98765 43210"
-                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                        className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                                     />
                                 </div>
                             </div>
 
                             {/* Row 3: Email + City */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                        <Mail className="w-4 h-4 text-slate-400" />
+                                    <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                        <Mail className="w-3.5 h-3.5" />
                                         Email
                                     </Label>
                                     <Input
@@ -183,52 +184,52 @@ export default function NewContactPage() {
                                         value={formData.email}
                                         onChange={(e) => handleChange('email', e.target.value)}
                                         placeholder="contact@company.com"
-                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                        className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-slate-400" />
+                                    <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                        <MapPin className="w-3.5 h-3.5" />
                                         City
                                     </Label>
                                     <Input
                                         value={formData.city}
                                         onChange={(e) => handleChange('city', e.target.value)}
-                                        placeholder="e.g. Mumbai, Delhi"
-                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                        placeholder="e.g. Mumbai"
+                                        className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                                     />
                                 </div>
                             </div>
 
                             {/* Row 4: Designation + Suggested Model */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                        <Briefcase className="w-4 h-4 text-slate-400" />
+                                    <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                        <Briefcase className="w-3.5 h-3.5" />
                                         Designation
                                     </Label>
                                     <Input
                                         value={formData.designation}
                                         onChange={(e) => handleChange('designation', e.target.value)}
                                         placeholder="e.g. Purchase Manager"
-                                        className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                        className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                        <Package className="w-4 h-4 text-slate-400" />
+                                    <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                        <Package className="w-3.5 h-3.5" />
                                         Suggested Model
                                     </Label>
                                     <Select value={formData.suggestedModel} onValueChange={(v) => handleChange('suggestedModel', v)}>
-                                        <SelectTrigger className="h-11 bg-white border-slate-200 text-slate-900 focus:border-slate-400">
+                                        <SelectTrigger className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all">
                                             <SelectValue placeholder="Select Model" />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-white border-slate-200">
+                                        <SelectContent className="bg-zinc-900 border-zinc-800">
                                             {MODEL_OPTIONS.slice(1).map((opt) => (
                                                 <SelectItem
                                                     key={opt.value}
                                                     value={opt.value}
-                                                    className="text-slate-900 focus:bg-slate-100"
+                                                    className="text-zinc-300 focus:bg-zinc-800 focus:text-white"
                                                 >
                                                     {opt.label}
                                                 </SelectItem>
@@ -240,21 +241,21 @@ export default function NewContactPage() {
 
                             {/* Row 5: Product Interest */}
                             <div className="space-y-2">
-                                <Label className="text-slate-700 text-sm font-medium flex items-center gap-2">
-                                    <FileText className="w-4 h-4 text-slate-400" />
+                                <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
+                                    <FileText className="w-3.5 h-3.5" />
                                     Product Interest / Requirement
                                 </Label>
                                 <Input
                                     value={formData.productInterest}
                                     onChange={(e) => handleChange('productInterest', e.target.value)}
-                                    placeholder="Brief 4-5 words on what they're looking for"
-                                    className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400"
+                                    placeholder="Brief details on requirement"
+                                    className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                                 />
                             </div>
 
                             {/* Row 6: Additional Notes */}
                             <div className="space-y-2">
-                                <Label className="text-slate-700 text-sm font-medium">
+                                <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold">
                                     Additional Notes
                                 </Label>
                                 <Textarea
@@ -262,23 +263,23 @@ export default function NewContactPage() {
                                     onChange={(e) => handleChange('additionalNotes', e.target.value)}
                                     placeholder="Any additional details, links, or context..."
                                     rows={3}
-                                    className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-slate-400 resize-none"
+                                    className="bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all resize-none"
                                 />
                             </div>
 
                             {/* Row 7: Status */}
                             <div className="space-y-2">
-                                <Label className="text-slate-700 text-sm font-medium">Stage</Label>
+                                <Label className="text-zinc-500 text-xs uppercase tracking-widest font-semibold">Stage</Label>
                                 <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
-                                    <SelectTrigger className="h-11 bg-white border-slate-200 text-slate-900 focus:border-slate-400">
+                                    <SelectTrigger className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white border-slate-200">
+                                    <SelectContent className="bg-zinc-900 border-zinc-800">
                                         {STATUS_OPTIONS.map((opt) => (
                                             <SelectItem
                                                 key={opt.value}
                                                 value={opt.value}
-                                                className="text-slate-900 focus:bg-slate-100"
+                                                className="text-zinc-300 focus:bg-zinc-800 focus:text-white"
                                             >
                                                 {opt.label}
                                             </SelectItem>
@@ -288,12 +289,12 @@ export default function NewContactPage() {
                             </div>
 
                             {/* Submit Buttons */}
-                            <div className="flex gap-3 pt-4 border-t border-slate-100">
+                            <div className="flex gap-4 pt-6 border-t border-zinc-900">
                                 <Link href="/ergopack/contacts" className="flex-1">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="w-full h-11 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                        className="w-full h-11 border-zinc-800 bg-transparent text-zinc-500 hover:bg-zinc-900 hover:text-white hover:border-zinc-700 transition-all"
                                     >
                                         Cancel
                                     </Button>
@@ -301,7 +302,7 @@ export default function NewContactPage() {
                                 <Button
                                     type="submit"
                                     disabled={isSubmitting || !formData.companyName.trim()}
-                                    className="flex-1 h-11 bg-slate-900 text-white hover:bg-slate-800 font-medium disabled:opacity-40"
+                                    className="flex-1 h-11 bg-white text-black hover:bg-zinc-200 font-medium tracking-wide disabled:opacity-40 transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]"
                                 >
                                     {isSubmitting ? (
                                         <>

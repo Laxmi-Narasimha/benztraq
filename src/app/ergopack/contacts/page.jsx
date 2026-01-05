@@ -1,8 +1,9 @@
 /**
- * Ergopack Contacts List Page - Premium Design
+ * Ergopack Contacts List Page - Premium Dark Data Grid
  * 
- * Elegant card-based contact list with excellent readability.
- * Premium light theme with proper spacing and visual hierarchy.
+ * High-end immersive dark theme design.
+ * Features a sleek data grid layout with columns: 
+ * Company, Status, Created By, Updated By, Activity, Last Updated.
  * 
  * @module app/ergopack/contacts/page
  */
@@ -20,7 +21,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Building2, Search, Plus, RefreshCw, ChevronRight,
-    User, Clock, Phone, Mail, FileText, MessageSquare, CalendarCheck, MapPin
+    User, Clock, Phone, Mail, FileText, MessageSquare, CalendarCheck, MapPin,
+    ArrowUpRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,16 +36,17 @@ const STATUS_OPTIONS = [
     { value: 'not_serviceable', label: 'Not Serviceable' },
 ];
 
+// Vibrant dark theme status colors
 const STATUS_CONFIG = {
-    open: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'Open' },
-    new: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'New' },
-    contacted: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', label: 'Contacted' },
-    proposal_sent: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'Proposal Sent' },
-    deal_done: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Deal Done' },
-    won: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Won' },
-    lost: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: 'Lost' },
-    not_serviceable: { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', label: 'Not Serviceable' },
-    dormant: { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', label: 'Dormant' },
+    open: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', label: 'Open' },
+    new: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', label: 'New' },
+    contacted: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20', label: 'Contacted' },
+    proposal_sent: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', label: 'Proposal Sent' },
+    deal_done: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', label: 'Deal Done' },
+    won: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', label: 'Won' },
+    lost: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20', label: 'Lost' },
+    not_serviceable: { bg: 'bg-zinc-800', text: 'text-zinc-500', border: 'border-zinc-700', label: 'Not Serviceable' },
+    dormant: { bg: 'bg-zinc-800', text: 'text-zinc-500', border: 'border-zinc-700', label: 'Dormant' },
 };
 
 const ACTIVITY_ICONS = {
@@ -116,42 +119,40 @@ export default function ContactsListPage() {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return '';
+        if (!dateString) return '-';
         return new Date(dateString).toLocaleDateString('en-IN', {
             day: '2-digit',
             month: 'short',
-            year: 'numeric'
         });
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/50">
-            <div className="max-w-6xl mx-auto p-6 md:p-8 space-y-6">
+        <div className="min-h-screen bg-[#050505] text-zinc-300 font-sans selection:bg-white/20">
+            <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-zinc-900 pb-8">
                     <div>
-                        <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
-                                <Building2 className="w-5 h-5 text-white" />
-                            </div>
-                            All Contacts
+                        <h1 className="text-3xl font-light tracking-wide text-white flex items-center gap-3">
+                            Contacts
+                            <span className="text-sm font-normal text-zinc-600 bg-zinc-900/50 px-3 py-1 rounded-full border border-zinc-800">
+                                {stats?.total || 0}
+                            </span>
                         </h1>
-                        <p className="text-slate-500 mt-1 ml-[52px]">
-                            {stats?.total || 0} total contacts
+                        <p className="text-zinc-500 mt-2 font-light">
+                            Manage your outreach pipeline and relationships.
                         </p>
                     </div>
                     <div className="flex gap-3">
                         <Button
                             variant="outline"
-                            size="icon"
                             onClick={fetchContacts}
                             disabled={isLoading}
-                            className="border-slate-200 text-slate-500 hover:bg-white hover:text-slate-900 rounded-xl h-10 w-10"
+                            className="bg-black border-zinc-800 text-zinc-400 hover:bg-zinc-900 hover:text-white hover:border-zinc-700 h-11 w-11 p-0 rounded-lg transition-all"
                         >
                             <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
                         </Button>
                         <Link href="/ergopack/contacts/new">
-                            <Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-xl h-10 px-4">
+                            <Button className="bg-white text-black hover:bg-zinc-200 h-11 px-6 rounded-lg font-medium tracking-wide transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Add Contact
                             </Button>
@@ -159,28 +160,28 @@ export default function ContactsListPage() {
                     </div>
                 </div>
 
-                {/* Search & Filter Bar */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                {/* Controls */}
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                    <div className="relative flex-1 w-full group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-zinc-400 transition-colors" />
                         <Input
-                            placeholder="Search company, person, city..."
+                            placeholder="Search by company, person..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && fetchContacts()}
-                            className="pl-11 h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:ring-2 focus:ring-slate-200 focus:border-slate-300"
+                            className="pl-11 h-12 bg-zinc-900/30 border-zinc-800 text-zinc-200 placeholder:text-zinc-700 rounded-xl focus:ring-1 focus:ring-white/20 focus:border-white/20 transition-all font-light"
                         />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-44 h-11 bg-white border-slate-200 text-slate-700 rounded-xl focus:ring-2 focus:ring-slate-200">
+                        <SelectTrigger className="w-full sm:w-56 h-12 bg-zinc-900/30 border-zinc-800 text-zinc-300 rounded-xl focus:ring-1 focus:ring-white/20 font-light hover:bg-zinc-900/50 transition-all">
                             <SelectValue placeholder="Filter by stage" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 rounded-xl">
+                        <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl shadow-2xl">
                             {STATUS_OPTIONS.map((opt) => (
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="text-slate-700 focus:bg-slate-50 rounded-lg"
+                                    className="text-zinc-300 focus:bg-zinc-800 focus:text-white rounded-lg my-1 cursor-pointer"
                                 >
                                     {opt.label}
                                 </SelectItem>
@@ -189,121 +190,135 @@ export default function ContactsListPage() {
                     </Select>
                 </div>
 
-                {/* Contacts List */}
-                <div className="space-y-3">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center py-16">
-                            <RefreshCw className="w-6 h-6 animate-spin text-slate-400 mr-3" />
-                            <span className="text-slate-500">Loading contacts...</span>
-                        </div>
-                    ) : filteredContacts.length === 0 ? (
-                        <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-                            <Building2 className="w-14 h-14 text-slate-200 mx-auto mb-4" />
-                            <p className="text-slate-500 mb-4 text-lg">
-                                {searchQuery || statusFilter !== 'all'
-                                    ? 'No contacts match your filters'
-                                    : 'No contacts yet'}
-                            </p>
-                            <Link href="/ergopack/contacts/new">
-                                <Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-xl">
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Add First Contact
-                                </Button>
-                            </Link>
-                        </div>
-                    ) : (
-                        filteredContacts.map((contact) => {
-                            const statusConfig = getStatusConfig(contact.status);
-                            const ActivityIcon = getActivityIcon(contact.latest_activity?.activity_type);
+                {/* Premium Data Grid */}
+                <div className="rounded-2xl border border-zinc-800/60 overflow-hidden bg-zinc-900/20 backdrop-blur-sm">
+                    {/* Grid Header */}
+                    <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-zinc-800/60 bg-zinc-900/40 text-xs font-medium text-zinc-500 uppercase tracking-widest">
+                        <div className="col-span-4 sm:col-span-3">Company</div>
+                        <div className="col-span-2 hidden sm:block">Status</div>
+                        <div className="col-span-2 hidden md:block">Created By</div>
+                        <div className="col-span-2 hidden lg:block">Updated By</div>
+                        <div className="col-span-3 hidden xl:block">Latest Activity</div>
+                        <div className="col-span-2 md:col-span-2 lg:col-span-1 text-right">Last Updated</div>
+                    </div>
 
-                            return (
-                                <Link
-                                    key={contact.id}
-                                    href={`/ergopack/contacts/${contact.id}`}
-                                    className="block group"
-                                >
-                                    <div className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-slate-300 transition-all duration-200">
-                                        <div className="flex items-start gap-4">
-                                            {/* Company Icon */}
-                                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-900 transition-colors">
-                                                <Building2 className="w-6 h-6 text-slate-600 group-hover:text-white transition-colors" />
-                                            </div>
+                    {/* Grid Body */}
+                    <div className="divide-y divide-zinc-800/40">
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center py-24 text-zinc-600">
+                                <RefreshCw className="w-6 h-6 animate-spin mb-3 text-zinc-700" />
+                                <span className="text-sm font-light">Loading data...</span>
+                            </div>
+                        ) : filteredContacts.length === 0 ? (
+                            <div className="text-center py-24">
+                                <div className="w-16 h-16 rounded-2xl bg-zinc-900/50 flex items-center justify-center mx-auto mb-4 border border-zinc-800">
+                                    <Building2 className="w-6 h-6 text-zinc-700" />
+                                </div>
+                                <p className="text-zinc-400 mb-6 font-light text-lg">No contacts found</p>
+                                <Link href="/ergopack/contacts/new">
+                                    <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add First Contact
+                                    </Button>
+                                </Link>
+                            </div>
+                        ) : (
+                            filteredContacts.map((contact) => {
+                                const statusConfig = getStatusConfig(contact.status);
+                                const ActivityIcon = getActivityIcon(contact.latest_activity?.activity_type);
 
-                                            {/* Main Content */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between gap-4">
-                                                    <div className="min-w-0">
-                                                        <h3 className="font-semibold text-slate-900 text-lg truncate group-hover:text-slate-700">
-                                                            {contact.company_name}
-                                                        </h3>
-                                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
-                                                            {contact.contact_person && (
-                                                                <span className="flex items-center gap-1.5">
-                                                                    <User className="w-3.5 h-3.5" />
-                                                                    {contact.contact_person}
-                                                                </span>
-                                                            )}
-                                                            {contact.city && (
-                                                                <span className="flex items-center gap-1.5">
-                                                                    <MapPin className="w-3.5 h-3.5" />
-                                                                    {contact.city}
-                                                                </span>
-                                                            )}
-                                                            {contact.email && (
-                                                                <span className="flex items-center gap-1.5">
-                                                                    <Mail className="w-3.5 h-3.5" />
-                                                                    {contact.email}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                return (
+                                    <Link
+                                        key={contact.id}
+                                        href={`/ergopack/contacts/${contact.id}`}
+                                        className="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-zinc-800/30 transition-all duration-200 group cursor-pointer relative"
+                                    >
+                                        {/* Hover Highlight Line */}
+                                        <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-white opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                                    {/* Status Badge */}
-                                                    <Badge className={cn(
-                                                        "px-3 py-1 text-xs font-medium rounded-full border flex-shrink-0",
-                                                        statusConfig.bg, statusConfig.text, statusConfig.border
-                                                    )}>
-                                                        {statusConfig.label}
-                                                    </Badge>
+                                        {/* Company */}
+                                        <div className="col-span-4 sm:col-span-3 overflow-hidden">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 text-zinc-500 group-hover:text-white group-hover:border-zinc-600 transition-all flex-shrink-0">
+                                                    <Building2 className="w-5 h-5" />
                                                 </div>
-
-                                                {/* Activity & Date Row */}
-                                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                                                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                                                        {contact.latest_activity ? (
-                                                            <>
-                                                                <ActivityIcon className="w-3.5 h-3.5" />
-                                                                <span className="capitalize">{contact.latest_activity.activity_type?.replace('_', ' ')}</span>
-                                                                {contact.latest_activity.title && (
-                                                                    <span className="text-slate-500">• {contact.latest_activity.title}</span>
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <span className="text-slate-400">No recent activity</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-xs text-slate-400">
-                                                            {formatDate(contact.updated_at)}
-                                                        </span>
-                                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" />
-                                                    </div>
+                                                <div className="min-w-0">
+                                                    <h3 className="text-sm font-medium text-zinc-200 group-hover:text-white truncate transition-colors">
+                                                        {contact.company_name}
+                                                    </h3>
+                                                    {contact.contact_person && (
+                                                        <p className="text-xs text-zinc-600 group-hover:text-zinc-500 truncate mt-0.5">
+                                                            {contact.contact_person}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </Link>
-                            );
-                        })
-                    )}
+
+                                        {/* Status */}
+                                        <div className="col-span-2 hidden sm:flex items-center">
+                                            <Badge className={cn(
+                                                "px-2.5 py-0.5 text-[10px] font-medium tracking-wide uppercase rounded-full border bg-transparent",
+                                                statusConfig.text, statusConfig.border
+                                            )}>
+                                                {statusConfig.label}
+                                            </Badge>
+                                        </div>
+
+                                        {/* Created By */}
+                                        <div className="col-span-2 hidden md:flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] text-zinc-400">
+                                                {contact.created_by_user?.full_name?.charAt(0) || 'U'}
+                                            </div>
+                                            <span className="text-xs text-zinc-400 truncate max-w-[100px]">
+                                                {contact.created_by_user?.full_name?.split(' ')[0] || 'Unknown'}
+                                            </span>
+                                        </div>
+
+                                        {/* Updated By */}
+                                        <div className="col-span-2 hidden lg:flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] text-zinc-400">
+                                                {contact.updated_by_user?.full_name?.charAt(0) || 'U'}
+                                            </div>
+                                            <span className="text-xs text-zinc-400 truncate max-w-[100px]">
+                                                {contact.updated_by_user?.full_name?.split(' ')[0] || 'Unknown'}
+                                            </span>
+                                        </div>
+
+                                        {/* Latest Activity */}
+                                        <div className="col-span-3 hidden xl:flex items-center gap-2 text-zinc-500 min-w-0">
+                                            {contact.latest_activity ? (
+                                                <>
+                                                    <ActivityIcon className="w-3.5 h-3.5 flex-shrink-0 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                                                    <span className="text-xs truncate group-hover:text-zinc-400 transition-colors">
+                                                        {contact.latest_activity.title || 'Activity Logged'}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-xs text-zinc-700 italic">No activity</span>
+                                            )}
+                                        </div>
+
+                                        {/* Last Updated */}
+                                        <div className="col-span-2 md:col-span-2 lg:col-span-1 text-right text-xs text-zinc-500 font-mono group-hover:text-zinc-400 transition-colors">
+                                            {formatDate(contact.updated_at)}
+                                        </div>
+                                    </Link>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer Note */}
-                {!isLoading && filteredContacts.length > 0 && (
-                    <p className="text-center text-xs text-slate-400 py-4">
-                        Auto-refreshes every 30 seconds
-                    </p>
-                )}
+                <div className="flex justify-between items-center text-xs text-zinc-700 px-2 font-mono">
+                    <span>
+                        Showing {filteredContacts.length} contacts
+                    </span>
+                    <span>
+                        Live Sync Active
+                    </span>
+                </div>
             </div>
         </div>
     );
