@@ -22,80 +22,81 @@ Font.register({
     ]
 });
 
+// Compact styles to fit on single page
 const styles = StyleSheet.create({
     page: {
-        padding: 30,
-        fontSize: 9,
+        padding: 25,
+        fontSize: 8,
         fontFamily: 'NotoSans',
         backgroundColor: '#ffffff',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20,
-        paddingBottom: 15,
+        marginBottom: 12,
+        paddingBottom: 8,
     },
     logo: {
-        width: 140,
-        height: 45,
+        width: 120,
+        height: 38,
         objectFit: 'contain',
     },
     titleSection: {
         alignItems: 'flex-end',
     },
     title: {
-        fontSize: 28,
+        fontSize: 24,
         color: '#333333',
-        fontFamily: 'Helvetica-Bold',
+        fontWeight: 700,
     },
     subtitle: {
-        fontSize: 10,
+        fontSize: 9,
         color: '#666666',
-        marginTop: 5,
+        marginTop: 3,
     },
     infoSection: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20,
-        marginTop: 10,
+        marginBottom: 12,
+        marginTop: 5,
     },
     infoBox: {
         width: '32%',
     },
     infoLabel: {
-        fontSize: 8,
+        fontSize: 7,
         color: '#666666',
-        marginBottom: 5,
+        marginBottom: 3,
     },
     infoValue: {
-        fontSize: 10,
+        fontSize: 9,
         color: '#333333',
-        fontFamily: 'Helvetica-Bold',
+        fontWeight: 700,
     },
     infoText: {
-        fontSize: 9,
+        fontSize: 8,
         color: '#555555',
-        marginTop: 3,
+        marginTop: 2,
     },
     detailsTable: {
-        marginTop: 5,
+        marginTop: 3,
     },
     detailRow: {
         flexDirection: 'row',
-        marginBottom: 3,
+        marginBottom: 2,
     },
     detailLabel: {
-        width: 100,
-        fontSize: 9,
+        width: 85,
+        fontSize: 8,
         color: '#666666',
     },
     detailValue: {
-        fontSize: 9,
+        fontSize: 8,
         color: '#333333',
-        fontFamily: 'Helvetica-Bold',
+        fontWeight: 700,
     },
     table: {
-        marginTop: 20,
+        marginTop: 10,
         borderWidth: 1,
         borderColor: '#dddddd',
     },
@@ -104,12 +105,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#f8f9fa',
         borderBottomWidth: 1,
         borderBottomColor: '#dddddd',
-        paddingVertical: 10,
-        paddingHorizontal: 5,
+        paddingVertical: 6,
+        paddingHorizontal: 4,
     },
     tableHeaderCell: {
-        fontSize: 9,
-        fontFamily: 'Helvetica-Bold',
+        fontSize: 7,
+        fontWeight: 700,
         color: '#333333',
         textAlign: 'center',
     },
@@ -117,32 +118,32 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: '#eeeeee',
-        paddingVertical: 10,
-        paddingHorizontal: 5,
+        paddingVertical: 5,
+        paddingHorizontal: 4,
     },
     tableCell: {
-        fontSize: 9,
+        fontSize: 7,
         color: '#333333',
         textAlign: 'center',
     },
-    itemCol: { width: '20%', textAlign: 'left', paddingLeft: 8 },
-    gstCol: { width: '7%' },
-    qtyCol: { width: '7%' },
-    uomCol: { width: '7%' },
-    rateCol: { width: '12%' },
-    amountCol: { width: '12%' },
+    itemCol: { width: '18%', textAlign: 'left', paddingLeft: 4 },
+    gstCol: { width: '6%' },
+    qtyCol: { width: '6%' },
+    uomCol: { width: '6%' },
+    rateCol: { width: '13%' },
+    amountCol: { width: '13%' },
     cgstCol: { width: '12%' },
     sgstCol: { width: '12%' },
-    totalCol: { width: '13%' },
+    totalCol: { width: '14%' },
     productDesc: {
-        fontSize: 8,
+        fontSize: 7,
         color: '#666666',
-        marginTop: 4,
-        paddingLeft: 15,
-        lineHeight: 1.4,
+        marginTop: 2,
+        paddingLeft: 12,
+        lineHeight: 1.3,
     },
     termsSection: {
-        marginTop: 25,
+        marginTop: 15,
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
@@ -150,16 +151,16 @@ const styles = StyleSheet.create({
         width: '50%',
     },
     termsTitle: {
-        fontSize: 11,
-        fontFamily: 'Helvetica-Bold',
+        fontSize: 9,
+        fontWeight: 700,
         color: '#333333',
-        marginBottom: 10,
+        marginBottom: 6,
     },
     termItem: {
-        fontSize: 9,
+        fontSize: 7,
         color: '#555555',
-        marginBottom: 5,
-        lineHeight: 1.4,
+        marginBottom: 3,
+        lineHeight: 1.3,
     },
     totalsBox: {
         width: '40%',
@@ -169,72 +170,72 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
-        marginBottom: 5,
+        marginBottom: 3,
     },
     totalLabel: {
-        fontSize: 10,
+        fontSize: 8,
         color: '#666666',
     },
     totalValue: {
-        fontSize: 10,
+        fontSize: 8,
         color: '#333333',
         textAlign: 'right',
     },
     grandTotal: {
         backgroundColor: BENZ_BLUE,
-        padding: '10 15',
-        borderRadius: 4,
-        marginTop: 8,
+        padding: '6 10',
+        borderRadius: 3,
+        marginTop: 5,
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
     },
     grandTotalLabel: {
-        fontSize: 11,
+        fontSize: 9,
         color: '#ffffff',
-        fontFamily: 'Helvetica-Bold',
+        fontWeight: 700,
     },
     grandTotalValue: {
-        fontSize: 13,
+        fontSize: 11,
         color: '#ffffff',
-        fontFamily: 'Helvetica-Bold',
+        fontWeight: 700,
     },
     totalInWords: {
-        marginTop: 12,
-        fontSize: 9,
+        marginTop: 8,
+        fontSize: 7,
         color: '#555555',
     },
     totalInWordsValue: {
-        fontSize: 9,
+        fontSize: 7,
         color: '#333333',
-        fontFamily: 'Helvetica-Bold',
-        marginTop: 3,
+        fontWeight: 700,
+        marginTop: 2,
     },
     signatureSection: {
-        marginTop: 40,
+        marginTop: 25,
         alignItems: 'flex-end',
     },
     signature: {
-        width: 100,
-        height: 40,
+        width: 80,
+        height: 30,
         objectFit: 'contain',
     },
     signatureLabel: {
-        fontSize: 9,
+        fontSize: 8,
         color: '#333333',
-        marginTop: 5,
+        marginTop: 3,
     },
     footer: {
         position: 'absolute',
-        bottom: 20,
-        left: 30,
-        right: 30,
+        bottom: 15,
+        left: 25,
+        right: 25,
         backgroundColor: '#f5f5f5',
-        padding: 10,
+        padding: 8,
         textAlign: 'center',
     },
     footerText: {
-        fontSize: 8,
+        fontSize: 7,
         color: '#666666',
     },
 });
@@ -318,11 +319,7 @@ export default function QuotationPDF({ data }) {
                                 <Text style={styles.detailValue}>{QUOTATION_TERMS.currency}</Text>
                             </View>
                             <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Country of Supply</Text>
-                                <Text style={styles.detailValue}>India</Text>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Place of Supply:</Text>
+                                <Text style={styles.detailLabel}>Place of Supply</Text>
                                 <Text style={styles.detailValue}>{COMPANY_INFO.placeOfSupply}</Text>
                             </View>
                         </View>
@@ -334,8 +331,8 @@ export default function QuotationPDF({ data }) {
                     {/* Header */}
                     <View style={styles.tableHeader}>
                         <Text style={[styles.tableHeaderCell, styles.itemCol]}>Item</Text>
-                        <Text style={[styles.tableHeaderCell, styles.gstCol]}>GST{'\n'}Rate</Text>
-                        <Text style={[styles.tableHeaderCell, styles.qtyCol]}>Quantity</Text>
+                        <Text style={[styles.tableHeaderCell, styles.gstCol]}>GST Rate</Text>
+                        <Text style={[styles.tableHeaderCell, styles.qtyCol]}>Qty</Text>
                         <Text style={[styles.tableHeaderCell, styles.uomCol]}>UoM</Text>
                         <Text style={[styles.tableHeaderCell, styles.rateCol]}>Rate</Text>
                         <Text style={[styles.tableHeaderCell, styles.amountCol]}>Amount</Text>
@@ -349,7 +346,7 @@ export default function QuotationPDF({ data }) {
                         <View key={row.id}>
                             <View style={styles.tableRow}>
                                 <View style={[styles.tableCell, styles.itemCol]}>
-                                    <Text style={{ fontFamily: 'Helvetica-Bold' }}>{row.index}. {row.name}</Text>
+                                    <Text style={{ fontWeight: 700 }}>{row.index}. {row.name}</Text>
                                 </View>
                                 <Text style={[styles.tableCell, styles.gstCol]}>{row.gstRate}%</Text>
                                 <Text style={[styles.tableCell, styles.qtyCol]}>{row.quantity}</Text>
@@ -361,7 +358,7 @@ export default function QuotationPDF({ data }) {
                                 <Text style={[styles.tableCell, styles.totalCol]}>{formatINR(row.total)}</Text>
                             </View>
                             {/* Product Description */}
-                            <View style={{ paddingHorizontal: 10, paddingBottom: 10 }}>
+                            <View style={{ paddingHorizontal: 8, paddingBottom: 6 }}>
                                 {row.description.map((desc, i) => (
                                     <Text key={i} style={styles.productDesc}>{desc}</Text>
                                 ))}
