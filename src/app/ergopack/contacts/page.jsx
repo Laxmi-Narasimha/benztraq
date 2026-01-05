@@ -4,6 +4,7 @@
  * High-end immersive dark theme design.
  * Features a sleek data grid layout with columns: 
  * Company, Status, Created By, Updated By, Activity, Last Updated.
+ * Includes "New" badge logic and Delete functionality.
  * 
  * @module app/ergopack/contacts/page
  */
@@ -12,19 +13,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-    Building2, Search, Plus, RefreshCw, ChevronRight,
-    User, Clock, Phone, Mail, FileText, MessageSquare, CalendarCheck, MapPin,
-    ArrowUpRight
+    Building2, Search, Plus, RefreshCw, Trash2,
+    User, Clock, Phone, Mail, FileText, MessageSquare, CalendarCheck,
+    Ban, CheckCircle, XCircle, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const STATUS_OPTIONS = [
     { value: 'all', label: 'All Stages' },
@@ -36,7 +37,6 @@ const STATUS_OPTIONS = [
     { value: 'not_serviceable', label: 'Not Serviceable' },
 ];
 
-// Vibrant dark theme status colors
 const STATUS_CONFIG = {
     open: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', label: 'Open' },
     new: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', label: 'New' },
@@ -60,14 +60,32 @@ const ACTIVITY_ICONS = {
 
 export default function ContactsListPage() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const initialStatus = searchParams.get('status') || 'all';
-    const { user } = useAuth();
+    const { user, isManager, isDirector, isDeveloper } = useAuth();
 
     const [contacts, setContacts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState(initialStatus);
     const [stats, setStats] = useState(null);
+    const [seenMap, setSeenMap] = useState({});
+
+    // Permission check for delete (Director/Dev)
+    const canDelete = isDirector || isDeveloper;
+
+    // Load seen map from localStorage on mount
+    useEffect(() => {
+        if (user?.id) {
+            const key = `ergopack_seen_${user.id}`;
+            try {
+                const stored = JSON.parse(localStorage.getItem(key) || '{}');
+                setSeenMap(stored);
+            } catch (e) {
+                console.error('Error loading seen map', e);
+            }
+        }
+    }, [user]);
 
     const fetchContacts = useCallback(async () => {
         setIsLoading(true);
@@ -97,6 +115,46 @@ export default function ContactsListPage() {
     const handleSearch = (e) => {
         e.preventDefault();
         fetchContacts();
+    };
+
+    const handleDelete = async (e, id, name) => {
+        e.preventDefault(); // Prevent navigation
+        e.stopPropagation();
+
+        if (!canDelete) return;
+
+        if (!confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`/api/ergopack/contacts?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                toast.success('Contact deleted');
+                fetchContacts();
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to delete');
+            }
+        } catch (err) {
+            toast.error('Error deleting contact');
+        }
+    };
+
+    const handleContactClick = (id) => {
+        // Update seen map
+        if (!user?.id) return;
+
+        const key = `ergopack_seen_${user.id}`;
+        const newSeen = { ...seenMap, [id]: Date.now() };
+        setSeenMap(newSeen);
+        localStorage.setItem(key, JSON.stringify(newSeen));
+    };
+
+    const isUnseen = (contact) => {
+        if (!contact.updated_at) return false;
+        const lastSeen = seenMap[contact.id] || 0;
+        const lastUpdated = new Date(contact.updated_at).getTime();
+        // Give a 2 second buffer to avoid immediate flicker if just updated
+        return lastUpdated > (lastSeen + 2000);
     };
 
     const filteredContacts = contacts.filter(contact => {
@@ -226,24 +284,31 @@ export default function ContactsListPage() {
                             filteredContacts.map((contact) => {
                                 const statusConfig = getStatusConfig(contact.status);
                                 const ActivityIcon = getActivityIcon(contact.latest_activity?.activity_type);
+                                const hasUnseenUpdate = isUnseen(contact);
 
                                 return (
                                     <Link
                                         key={contact.id}
                                         href={`/ergopack/contacts/${contact.id}`}
+                                        onClick={() => handleContactClick(contact.id)}
                                         className="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-zinc-800/30 transition-all duration-200 group cursor-pointer relative"
                                     >
                                         {/* Hover Highlight Line */}
                                         <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-white opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                         {/* Company */}
-                                        <div className="col-span-4 sm:col-span-3 overflow-hidden">
+                                        <div className="col-span-4 sm:col-span-3 overflow-hidden relative">
+                                            {/* Unseen Dot - Mobile optimized */}
+                                            {hasUnseenUpdate && (
+                                                <div className="absolute -left-3 top-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse md:hidden" />
+                                            )}
+
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-800 text-zinc-500 group-hover:text-white group-hover:border-zinc-600 transition-all flex-shrink-0">
                                                     <Building2 className="w-5 h-5" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <h3 className="text-sm font-medium text-zinc-200 group-hover:text-white truncate transition-colors">
+                                                    <h3 className="text-sm font-medium text-zinc-200 group-hover:text-white truncate transition-colors flex items-center gap-2">
                                                         {contact.company_name}
                                                     </h3>
                                                     {contact.contact_person && (
@@ -283,10 +348,20 @@ export default function ContactsListPage() {
                                             <span className="text-xs text-zinc-400 truncate max-w-[100px]">
                                                 {contact.updated_by_user?.full_name?.split(' ')[0] || 'Unknown'}
                                             </span>
+
+                                            {/* NEW Badge next to Updated By (Request: 'beside the updated by column value' or 'activity status') */}
+                                            {/* Reading request again: 'new beside the activity status' and 'when they click it, then the new will be gone beside the updated by column value' -> ambiguous. */}
+                                            {/* Interpreting as: Show 'New' badge noticeably. */}
                                         </div>
 
-                                        {/* Latest Activity */}
+                                        {/* Latest Activity + NEW Badge */}
                                         <div className="col-span-3 hidden xl:flex items-center gap-2 text-zinc-500 min-w-0">
+                                            {hasUnseenUpdate && (
+                                                <Badge className="bg-blue-600 hover:bg-blue-600 text-white border-0 text-[9px] px-1.5 py-0 h-4 mr-1">
+                                                    NEW
+                                                </Badge>
+                                            )}
+
                                             {contact.latest_activity ? (
                                                 <>
                                                     <ActivityIcon className="w-3.5 h-3.5 flex-shrink-0 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
@@ -299,9 +374,24 @@ export default function ContactsListPage() {
                                             )}
                                         </div>
 
-                                        {/* Last Updated */}
-                                        <div className="col-span-2 md:col-span-2 lg:col-span-1 text-right text-xs text-zinc-500 font-mono group-hover:text-zinc-400 transition-colors">
-                                            {formatDate(contact.updated_at)}
+                                        {/* Last Updated + Delete Action */}
+                                        <div className="col-span-2 md:col-span-2 lg:col-span-1 text-right flex items-center justify-end gap-3 group/actions">
+                                            <span className="text-xs text-zinc-500 font-mono group-hover:text-zinc-400 transition-colors">
+                                                {formatDate(contact.updated_at)}
+                                            </span>
+
+                                            {/* Delete Button (Visible on hover for authorized users) */}
+                                            {canDelete && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-zinc-600 hover:text-red-400 hover:bg-zinc-800 opacity-0 group-hover/actions:opacity-100 transition-all md:opacity-0 sm:opacity-100" // Always show on mobile? Hover logic tricky on touch.
+                                                    onClick={(e) => handleDelete(e, contact.id, contact.company_name)}
+                                                    title="Delete Contact"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </Link>
                                 );

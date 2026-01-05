@@ -3,6 +3,7 @@
  * 
  * View and edit contact details with activity timeline.
  * Clean, minimal interface with no boxy elements.
+ * Includes Delete functionality for Directors and Developers.
  * 
  * @module app/ergopack/contacts/[id]/page
  */
@@ -20,10 +21,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import {
-    Save, ArrowLeft, Loader2,
+    Save, ArrowLeft, Loader2, Trash2,
     Phone, Mail, Calendar, Clock,
     Plus, MessageSquare, Activity
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const STATUS_OPTIONS = [
     { value: 'open', label: 'Open' },
@@ -54,13 +56,16 @@ const ACTIVITY_ICONS = {
 export default function ContactDetailPage({ params }) {
     const { id } = use(params);
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, isDirector, isDeveloper } = useAuth();
 
     const [contact, setContact] = useState(null);
     const [activities, setActivities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [showActivityForm, setShowActivityForm] = useState(false);
+
+    // Deletion Permission
+    const canDelete = isDirector || isDeveloper;
 
     const [newActivity, setNewActivity] = useState({
         activityType: 'note',
@@ -72,9 +77,13 @@ export default function ContactDetailPage({ params }) {
     useEffect(() => {
         if (!user?.id) return; // Wait for user to load
         const seenKey = `ergopack_seen_${user.id}`;
-        const seen = JSON.parse(localStorage.getItem(seenKey) || '{}');
-        seen[id] = Date.now();
-        localStorage.setItem(seenKey, JSON.stringify(seen));
+        try {
+            const seen = JSON.parse(localStorage.getItem(seenKey) || '{}');
+            seen[id] = Date.now();
+            localStorage.setItem(seenKey, JSON.stringify(seen));
+        } catch (e) {
+            console.error('Error updating seen status', e);
+        }
     }, [id, user?.id]);
 
     useEffect(() => {
@@ -131,11 +140,32 @@ export default function ContactDetailPage({ params }) {
             const data = await response.json();
             if (data.success) {
                 fetchActivities();
+                toast.success('Contact updated');
+            } else {
+                toast.error('Failed to update contact');
             }
         } catch (err) {
+            toast.error('Error saving changes');
             console.error('Failed to save');
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm(`Are you sure you want to delete ${contact.company_name}? This cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`/api/ergopack/contacts?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                toast.success('Contact deleted');
+                router.push('/ergopack/contacts');
+            } else {
+                const data = await res.json();
+                toast.error(data.error || 'Failed to delete');
+            }
+        } catch (err) {
+            toast.error('Error deleting contact');
         }
     };
 
@@ -155,9 +185,11 @@ export default function ContactDetailPage({ params }) {
                 setActivities([data.activity, ...activities]);
                 setShowActivityForm(false);
                 setNewActivity({ activityType: 'note', title: '', description: '' });
+                toast.success('Activity logged');
             }
         } catch (err) {
             console.error('Failed to add activity:', err);
+            toast.error('Failed to log activity');
         }
     };
 
@@ -198,14 +230,28 @@ export default function ContactDetailPage({ params }) {
                             </Badge>
                         </div>
                     </div>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="bg-white text-black hover:bg-zinc-200 font-light"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                        Save
-                    </Button>
+
+                    <div className="flex gap-3">
+                        {canDelete && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleDelete}
+                                className="text-zinc-500 hover:text-red-400 hover:bg-zinc-900"
+                                title="Delete Contact"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        )}
+                        <Button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="bg-white text-black hover:bg-zinc-200 font-light"
+                        >
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                            Save
+                        </Button>
+                    </div>
                 </div>
             </div>
 

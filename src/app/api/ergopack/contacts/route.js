@@ -267,6 +267,12 @@ export async function DELETE(request) {
             return NextResponse.json({ error: 'Contact ID is required' }, { status: 400 });
         }
 
+        // Check permissions
+        const isAllowed = user.role === 'director' || user.role === 'vp' || user.role === 'developer';
+        if (!isAllowed) {
+            return NextResponse.json({ error: 'Access restricted: Only Directors and Admins can delete contacts' }, { status: 403 });
+        }
+
         const supabase = createAdminClient();
 
         const { error } = await supabase

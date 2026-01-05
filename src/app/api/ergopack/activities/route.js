@@ -91,10 +91,13 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Failed to create activity' }, { status: 500 });
         }
 
-        // Update contact's updated_by
+        // Update contact's updated_by and updated_at
         await supabase
             .from('ergopack_contacts')
-            .update({ updated_by: user.id })
+            .update({
+                updated_by: user.id,
+                updated_at: new Date().toISOString()
+            })
             .eq('id', contactId);
 
         return NextResponse.json({ activity, success: true });

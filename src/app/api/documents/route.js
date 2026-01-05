@@ -347,7 +347,7 @@ export async function DELETE(request) {
 
         // Only allow deletion if the user is the owner or a manager
         const isOwner = doc.salesperson_user_id === currentUser.id;
-        const isManager = currentUser.role === 'vp' || currentUser.role === 'director';
+        const isManager = currentUser.role === 'vp' || currentUser.role === 'director' || currentUser.role === 'developer';
 
         if (!isOwner && !isManager) {
             return NextResponse.json(
