@@ -15,7 +15,7 @@ const CHOPRA_PASSWORD = 'Hound@1102';
 const DEFAULT_USERS = [
     {
         email: 'laxmi@benz-packaging.com',
-        fullName: 'Laxmi (Developer)',
+        fullName: 'Laxmi',
         roleName: 'developer',
         designation: 'System Developer',
         phone: null,
