@@ -7,18 +7,27 @@
  * @module components/ergopack/quotation-pdf
  */
 
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { COMPANY_INFO, QUOTATION_TERMS, formatCurrency, numberToWords } from '@/lib/ergopack/products';
 
 // Benz Blue color
 const BENZ_BLUE = '#097dc4';
+
+// Register Noto Sans font which supports Rupee symbol - using jsDelivr CDN
+Font.register({
+    family: 'NotoSans',
+    fonts: [
+        { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.8/files/noto-sans-latin-400-normal.woff', fontWeight: 400 },
+        { src: 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans@5.0.8/files/noto-sans-latin-700-normal.woff', fontWeight: 700 },
+    ]
+});
 
 // Compact styles to fit on single page
 const styles = StyleSheet.create({
     page: {
         padding: 25,
         fontSize: 8,
-        fontFamily: 'Helvetica',
+        fontFamily: 'NotoSans',
         backgroundColor: '#ffffff',
     },
     header: {
