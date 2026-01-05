@@ -151,7 +151,7 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-5xl w-[90vw] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-light flex items-center gap-2">
                         <FileText className="w-5 h-5 text-[#097dc4]" />
