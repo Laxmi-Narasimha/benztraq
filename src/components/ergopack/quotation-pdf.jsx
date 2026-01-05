@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
 });
 
 function formatINR(amount) {
-    return 'Rs.' + new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+    return '₹' + new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
 }
 
 export default function QuotationPDF({ data }) {
