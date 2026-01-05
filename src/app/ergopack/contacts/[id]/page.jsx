@@ -381,20 +381,32 @@ export default function ContactDetailPage({ params }) {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <Package className="w-3 h-3" /> Suggested Model
+                                    <Package className="w-3 h-3" /> Suggested Models
                                 </Label>
-                                <Select value={contact.suggested_model || undefined} onValueChange={(v) => handleChange('suggested_model', v)}>
-                                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800 text-white h-9">
-                                        <SelectValue placeholder="Select Model" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-800">
-                                        {SUGGESTED_MODELS.filter(opt => opt.value).map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value} className="text-white focus:bg-zinc-800">
+                                <div className="flex flex-wrap gap-2 p-2 bg-zinc-900/50 border border-zinc-800 rounded-md min-h-[36px]">
+                                    {SUGGESTED_MODELS.filter(opt => opt.value).map((opt) => {
+                                        const models = (contact.suggested_model || '').split(',').filter(Boolean);
+                                        const isSelected = models.includes(opt.value);
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                onClick={() => {
+                                                    const newModels = isSelected
+                                                        ? models.filter(m => m !== opt.value)
+                                                        : [...models, opt.value];
+                                                    handleChange('suggested_model', newModels.join(','));
+                                                }}
+                                                className={`px-2 py-1 text-xs rounded-md border transition-all ${isSelected
+                                                        ? 'bg-emerald-600 border-emerald-500 text-white'
+                                                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                                                    }`}
+                                            >
                                                 {opt.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             <div className="space-y-1">
                                 <Label className="text-zinc-500 text-[10px] uppercase tracking-widest">Product Interest</Label>
