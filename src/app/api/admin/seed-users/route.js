@@ -79,54 +79,64 @@ const DEFAULT_USERS = [
         organization: 'benz_packaging',
         companies: ['benz']  // Benz only
     },
-    // ASMs - 5 Location-based users (Benz only)
+    // ASMs - 6 Location-based users (Benz only)
     {
         email: 'abhishek@benz-packaging.com',
-        fullName: 'Indore',
+        fullName: 'Madhya Pradesh',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Indore',
+        regionName: 'Madhya Pradesh',
         organization: 'benz_packaging',
         companies: ['benz']
     },
     {
         email: 'wh.jaipur@benz-packaging.com',
-        fullName: 'Jaipur',
+        fullName: 'Rajasthan',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Jaipur',
+        regionName: 'Rajasthan',
         organization: 'benz_packaging',
         companies: ['benz']
     },
     {
         email: 'banglore@benz-packaging.com',
-        fullName: 'Bangalore',
+        fullName: 'Karnataka',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Bangalore',
+        regionName: 'Karnataka',
         organization: 'benz_packaging',
         companies: ['benz']
     },
     {
-        email: 'pune@benz-packaging.com',
-        fullName: 'Pune',
+        email: 'rfq@benz-packaging.com',
+        fullName: 'Maharashtra',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Pune',
+        regionName: 'Maharashtra',
         organization: 'benz_packaging',
         companies: ['benz']
     },
     {
-        email: 'delhi@benz-packaging.com',
-        fullName: 'Delhi-NCR',
+        email: 'it@benz-packaging.com',
+        fullName: 'Noida',
         roleName: 'asm',
         designation: 'Area Sales Manager',
         phone: null,
-        regionName: 'Delhi',
+        regionName: 'Noida',
+        organization: 'benz_packaging',
+        companies: ['benz']
+    },
+    {
+        email: 'west@benz-packaging.com',
+        fullName: 'West Zone',
+        roleName: 'asm',
+        designation: 'Area Sales Manager',
+        phone: null,
+        regionName: 'West Zone',
         organization: 'benz_packaging',
         companies: ['benz']
     }

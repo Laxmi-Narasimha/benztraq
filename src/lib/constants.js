@@ -144,11 +144,13 @@ export const REPORT_SUBJECT_TYPES = Object.freeze({
  */
 export const SEEDED_REGIONS = Object.freeze([
     'Gurgaon',
-    'Jaipur',
+    'Madhya Pradesh',
+    'Rajasthan',
+    'Karnataka',
     'Maharashtra',
-    'Chennai',
-    'Indore',
     'Noida',
+    'West Zone',
+    'Chennai',
 ]);
 
 /**
@@ -258,6 +260,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     {
         title: 'Analytics',
         items: [
+            { title: 'Analytics Dashboard', href: '/analytics', icon: 'BarChart3' },
             { title: 'Quote Comparison', href: '/comparison', icon: 'GitCompare' },
             { title: 'Customers', href: '/customers', icon: 'Users' },
             { title: 'Products', href: '/products', icon: 'Package' },

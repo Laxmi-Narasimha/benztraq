@@ -349,8 +349,13 @@ export default function DocumentCenterPage() {
                             <SelectContent>
                                 <SelectItem value="all">All Regions</SelectItem>
                                 <SelectItem value="Gurgaon">Gurgaon</SelectItem>
-                                <SelectItem value="Jaipur">Jaipur</SelectItem>
-                                <SelectItem value="Indore">Indore</SelectItem>
+                                <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
+                                <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                                <SelectItem value="Karnataka">Karnataka</SelectItem>
+                                <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                                <SelectItem value="Noida">Noida</SelectItem>
+                                <SelectItem value="West Zone">West Zone</SelectItem>
+                                <SelectItem value="Chennai">Chennai</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
