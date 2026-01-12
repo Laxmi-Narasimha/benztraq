@@ -163,12 +163,14 @@ export function AuthProvider({ children }) {
         return permissions[resource]?.scope || 'none';
     }, [permissions]);
 
-    // Role helpers
-    const isDeveloper = user?.role === 'developer';
-    const isDirector = user?.role === 'director';
-    const isHeadOfSales = user?.role === 'head_of_sales';
-    const isASM = user?.role === 'asm';
-    const isManager = isDeveloper || isDirector || isHeadOfSales;
+    // Role helpers - case insensitive checks
+    const roleLower = (user?.role || '').toLowerCase();
+    const isDeveloper = roleLower === 'developer';
+    const isDirector = roleLower === 'director';
+    const isHeadOfSales = roleLower === 'head_of_sales' || roleLower === 'head of sales';
+    const isVP = roleLower === 'vp';
+    const isASM = roleLower === 'asm';
+    const isManager = isDeveloper || isDirector || isHeadOfSales || isVP;
 
     // Create profile object for backwards compatibility with sidebar
     const profile = useMemo(() => {
@@ -199,6 +201,7 @@ export function AuthProvider({ children }) {
         isDeveloper,
         isDirector,
         isHeadOfSales,
+        isVP,
         isASM,
         isManager,
     };

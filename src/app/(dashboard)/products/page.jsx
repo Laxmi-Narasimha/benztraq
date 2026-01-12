@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
     Table,
@@ -30,7 +29,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Plus,
     Search,
@@ -50,10 +48,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import ProductForm from "@/components/products/ProductForm";
 
 /**
  * Products Management Page
- * Full CRUD interface for product catalog
+ * Enterprise-grade product catalog with 6,448+ products
  */
 export default function ProductsPage() {
     // State
@@ -75,13 +74,15 @@ export default function ProductsPage() {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+
+    // Form state - kept in parent for controlled form
     const [formData, setFormData] = useState({
         item_code: "",
         item_name: "",
         description: "",
         item_group_id: "",
         brand_id: "",
-        stock_uom: "Nos",
+        stock_uom: "PCS",
         standard_rate: 0,
         hsn_sac_code: "",
         gst_rate: 18,
@@ -177,25 +178,24 @@ export default function ProductsPage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setPagination(prev => ({ ...prev, page: 1 }));
-            fetchProducts();
         }, 300);
         return () => clearTimeout(timer);
     }, [search]);
 
-    // Handle form input change
-    const handleInputChange = (field, value) => {
+    // Handle form field change - stable callback
+    const handleFieldChange = useCallback((field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-    };
+    }, []);
 
     // Reset form
-    const resetForm = () => {
+    const resetForm = useCallback(() => {
         setFormData({
             item_code: "",
             item_name: "",
             description: "",
             item_group_id: "",
             brand_id: "",
-            stock_uom: "Nos",
+            stock_uom: "PCS",
             standard_rate: 0,
             hsn_sac_code: "",
             gst_rate: 18,
@@ -207,10 +207,15 @@ export default function ProductsPage() {
             gsm: "",
             ply_count: ""
         });
-    };
+    }, []);
 
     // Create product
     const handleCreate = async () => {
+        if (!formData.item_code || !formData.item_name) {
+            toast.error("Part Code and Item Name are required");
+            return;
+        }
+
         try {
             const res = await fetch("/api/products", {
                 method: "POST",
@@ -255,7 +260,7 @@ export default function ProductsPage() {
             description: product.description || "",
             item_group_id: product.item_group_id || "",
             brand_id: product.brand_id || "",
-            stock_uom: product.stock_uom || "Nos",
+            stock_uom: product.stock_uom || "PCS",
             standard_rate: product.standard_rate || 0,
             hsn_sac_code: product.hsn_sac_code || "",
             gst_rate: product.gst_rate || 18,
@@ -352,226 +357,6 @@ export default function ProductsPage() {
         }).format(amount || 0);
     };
 
-    // Product Form Component
-    const ProductForm = ({ onSubmit, submitLabel }) => (
-        <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto">
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="item_code">Item Code *</Label>
-                    <Input
-                        id="item_code"
-                        value={formData.item_code}
-                        onChange={(e) => handleInputChange("item_code", e.target.value)}
-                        placeholder="VCI-BAG-001"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="item_name">Item Name *</Label>
-                    <Input
-                        id="item_name"
-                        value={formData.item_name}
-                        onChange={(e) => handleInputChange("item_name", e.target.value)}
-                        placeholder="VCI 3D Bag 1200x800x800mm"
-                    />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
-                    placeholder="Product description..."
-                    rows={2}
-                />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="item_group_id">Category</Label>
-                    <Select
-                        value={formData.item_group_id}
-                        onValueChange={(v) => handleInputChange("item_group_id", v)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {itemGroups.map((group) => (
-                                <SelectItem key={group.id} value={group.id}>
-                                    {group.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="brand_id">Brand</Label>
-                    <Select
-                        value={formData.brand_id}
-                        onValueChange={(v) => handleInputChange("brand_id", v)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select brand" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {brands.map((brand) => (
-                                <SelectItem key={brand.id} value={brand.id}>
-                                    {brand.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="stock_uom">Unit of Measure</Label>
-                    <Select
-                        value={formData.stock_uom}
-                        onValueChange={(v) => handleInputChange("stock_uom", v)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Nos">Nos</SelectItem>
-                            <SelectItem value="Kg">Kg</SelectItem>
-                            <SelectItem value="Roll">Roll</SelectItem>
-                            <SelectItem value="Pcs">Pcs</SelectItem>
-                            <SelectItem value="Box">Box</SelectItem>
-                            <SelectItem value="Set">Set</SelectItem>
-                            <SelectItem value="Mtr">Mtr</SelectItem>
-                            <SelectItem value="SqMtr">SqMtr</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="standard_rate">Standard Rate (₹)</Label>
-                    <Input
-                        id="standard_rate"
-                        type="number"
-                        value={formData.standard_rate}
-                        onChange={(e) => handleInputChange("standard_rate", e.target.value)}
-                        placeholder="0.00"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="hsn_sac_code">HSN Code</Label>
-                    <Select
-                        value={formData.hsn_sac_code}
-                        onValueChange={(v) => handleInputChange("hsn_sac_code", v)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select HSN" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {hsnCodes.map((hsn) => (
-                                <SelectItem key={hsn.hsn_code} value={hsn.hsn_code}>
-                                    {hsn.hsn_code} - {hsn.description?.substring(0, 30)}...
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="gst_rate">GST Rate (%)</Label>
-                    <Select
-                        value={formData.gst_rate.toString()}
-                        onValueChange={(v) => handleInputChange("gst_rate", v)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="0">0%</SelectItem>
-                            <SelectItem value="5">5%</SelectItem>
-                            <SelectItem value="12">12%</SelectItem>
-                            <SelectItem value="18">18%</SelectItem>
-                            <SelectItem value="28">28%</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-
-            <div className="border-t pt-4 mt-2">
-                <h4 className="font-medium mb-3">Dimensions</h4>
-                <div className="grid grid-cols-5 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="length">Length</Label>
-                        <Input
-                            id="length"
-                            type="number"
-                            value={formData.length}
-                            onChange={(e) => handleInputChange("length", e.target.value)}
-                            placeholder="0"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="width">Width</Label>
-                        <Input
-                            id="width"
-                            type="number"
-                            value={formData.width}
-                            onChange={(e) => handleInputChange("width", e.target.value)}
-                            placeholder="0"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="height">Height</Label>
-                        <Input
-                            id="height"
-                            type="number"
-                            value={formData.height}
-                            onChange={(e) => handleInputChange("height", e.target.value)}
-                            placeholder="0"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="dimension_uom">Unit</Label>
-                        <Select
-                            value={formData.dimension_uom}
-                            onValueChange={(v) => handleInputChange("dimension_uom", v)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="mm">mm</SelectItem>
-                                <SelectItem value="cm">cm</SelectItem>
-                                <SelectItem value="inch">inch</SelectItem>
-                                <SelectItem value="mtr">mtr</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="thickness_micron">Micron</Label>
-                        <Input
-                            id="thickness_micron"
-                            type="number"
-                            value={formData.thickness_micron}
-                            onChange={(e) => handleInputChange("thickness_micron", e.target.value)}
-                            placeholder="75"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <DialogFooter className="mt-4">
-                <Button variant="outline" onClick={() => {
-                    setIsCreateOpen(false);
-                    setIsEditOpen(false);
-                    resetForm();
-                }}>
-                    Cancel
-                </Button>
-                <Button onClick={onSubmit}>{submitLabel}</Button>
-            </DialogFooter>
-        </div>
-    );
-
     return (
         <div className="p-6 space-y-6">
             {/* Header */}
@@ -579,7 +364,7 @@ export default function ProductsPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Products</h1>
                     <p className="text-muted-foreground">
-                        Manage your product catalog with dimensions, pricing, and GST compliance
+                        Manage your product catalog with Part Codes, dimensions, and GST compliance
                     </p>
                 </div>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -596,7 +381,22 @@ export default function ProductsPage() {
                                 Add a new product to your catalog
                             </DialogDescription>
                         </DialogHeader>
-                        <ProductForm onSubmit={handleCreate} submitLabel="Create Product" />
+                        <ProductForm
+                            formData={formData}
+                            onFieldChange={handleFieldChange}
+                            itemGroups={itemGroups}
+                            brands={brands}
+                            hsnCodes={hsnCodes}
+                        />
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => {
+                                setIsCreateOpen(false);
+                                resetForm();
+                            }}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleCreate}>Create Product</Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
@@ -604,20 +404,20 @@ export default function ProductsPage() {
             {/* Filters */}
             <Card>
                 <CardContent className="pt-6">
-                    <div className="flex gap-4 items-center">
-                        <div className="relative flex-1 max-w-md">
+                    <div className="flex items-center gap-4">
+                        <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search by code, name, or description..."
+                                placeholder="Search by Part Code, Name, or Description..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="pl-9"
+                                className="pl-10"
                             />
                         </div>
                         <Select value={selectedGroup} onValueChange={setSelectedGroup}>
                             <SelectTrigger className="w-[200px]">
                                 <Filter className="h-4 w-4 mr-2" />
-                                <SelectValue placeholder="Filter by category" />
+                                <SelectValue placeholder="All Categories" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Categories</SelectItem>
@@ -628,8 +428,9 @@ export default function ProductsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Button variant="outline" size="icon" onClick={fetchProducts}>
-                            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                        <Button variant="outline" onClick={fetchProducts} className="gap-2">
+                            <RefreshCw className="h-4 w-4" />
+                            Refresh
                         </Button>
                     </div>
                 </CardContent>
@@ -647,88 +448,87 @@ export default function ProductsPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Part Code</TableHead>
+                                <TableHead>Item Name</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>UOM</TableHead>
+                                <TableHead>Dimensions</TableHead>
+                                <TableHead>HSN</TableHead>
+                                <TableHead className="text-right">Rate</TableHead>
+                                <TableHead className="text-right">GST</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
                                 <TableRow>
-                                    <TableHead>Item Code</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Dimensions</TableHead>
-                                    <TableHead>HSN</TableHead>
-                                    <TableHead className="text-right">Rate</TableHead>
-                                    <TableHead className="text-right">GST</TableHead>
-                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableCell colSpan={9} className="text-center py-10">
+                                        Loading products...
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-8">
-                                            <RefreshCw className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                            ) : products.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+                                        No products found. Add your first product.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                products.map((product) => (
+                                    <TableRow key={product.id}>
+                                        <TableCell className="font-mono text-sm">
+                                            {product.item_code}
+                                        </TableCell>
+                                        <TableCell className="font-medium max-w-[250px] truncate">
+                                            {product.item_name}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                            {product.item_group?.name || "-"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline">{product.stock_uom}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {formatDimensions(product)}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-xs">
+                                            {product.hsn_sac_code || "-"}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {formatCurrency(product.standard_rate)}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {product.gst_rate}%
+                                        </TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => handleEdit(product)}>
+                                                        <Edit className="h-4 w-4 mr-2" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleDelete(product)}
+                                                        className="text-destructive"
+                                                    >
+                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                        Disable
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
-                                ) : products.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                                            No products found. Create your first product to get started.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    products.map((product) => (
-                                        <TableRow key={product.id}>
-                                            <TableCell className="font-mono text-sm">
-                                                {product.item_code}
-                                            </TableCell>
-                                            <TableCell className="font-medium max-w-[200px] truncate">
-                                                {product.item_name}
-                                            </TableCell>
-                                            <TableCell>
-                                                {product.item_group?.name || "-"}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-muted-foreground">
-                                                {formatDimensions(product)}
-                                                {product.thickness_micron && (
-                                                    <span className="ml-1">({product.thickness_micron}μ)</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="font-mono text-sm">
-                                                {product.hsn_sac_code || "-"}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {formatCurrency(product.standard_rate)}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                {product.gst_rate}%
-                                            </TableCell>
-                                            <TableCell>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEdit(product)}>
-                                                            <Edit className="h-4 w-4 mr-2" />
-                                                            Edit
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            onClick={() => handleDelete(product)}
-                                                            className="text-destructive"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 mr-2" />
-                                                            Disable
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
 
                     {/* Pagination */}
                     {pagination.totalPages > 1 && (
@@ -743,7 +543,7 @@ export default function ProductsPage() {
                                     onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
                                     disabled={pagination.page <= 1}
                                 >
-                                    <ChevronLeft className="h-4 w-4 mr-1" />
+                                    <ChevronLeft className="h-4 w-4" />
                                     Previous
                                 </Button>
                                 <Button
@@ -753,7 +553,7 @@ export default function ProductsPage() {
                                     disabled={pagination.page >= pagination.totalPages}
                                 >
                                     Next
-                                    <ChevronRight className="h-4 w-4 ml-1" />
+                                    <ChevronRight className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
@@ -770,7 +570,23 @@ export default function ProductsPage() {
                             Update product details
                         </DialogDescription>
                     </DialogHeader>
-                    <ProductForm onSubmit={handleUpdate} submitLabel="Save Changes" />
+                    <ProductForm
+                        formData={formData}
+                        onFieldChange={handleFieldChange}
+                        itemGroups={itemGroups}
+                        brands={brands}
+                        hsnCodes={hsnCodes}
+                    />
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => {
+                            setIsEditOpen(false);
+                            setEditingProduct(null);
+                            resetForm();
+                        }}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleUpdate}>Update Product</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

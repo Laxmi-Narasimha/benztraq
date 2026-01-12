@@ -36,6 +36,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { NotificationsBell } from '@/components/notifications/NotificationsBell';
 
 /**
  * TopBar component with global filters.
@@ -180,6 +181,9 @@ export function TopBar({ title, actions }) {
                 >
                     <RefreshCw className="h-4 w-4" />
                 </Button>
+
+                {/* Notifications Bell */}
+                <NotificationsBell />
 
                 {/* Custom Actions */}
                 {actions && (

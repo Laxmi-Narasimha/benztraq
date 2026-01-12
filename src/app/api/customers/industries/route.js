@@ -4,17 +4,19 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { getUserFromRequest } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/utils/session';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
 
         const { data, error } = await supabase
             .from('industries')

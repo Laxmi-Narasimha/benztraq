@@ -347,8 +347,9 @@ export default function DashboardPage() {
         fetchAnalytics();
     }, [fetchAnalytics]);
 
-    // Derived data
-    const isManager = stats?.isManager ?? (profile?.role && ['vp', 'director', 'head_of_sales'].includes(profile.role));
+    // Derived data - use isManager from auth context
+    const { isManager: authIsManager } = useAuth();
+    const isManager = stats?.isManager ?? authIsManager;
     const summary = stats?.summaryMetrics || {};
     const accessibleUsers = stats?.accessibleUsers || [];
 

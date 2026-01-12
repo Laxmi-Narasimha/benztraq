@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { RevenueTrendChart } from '@/components/charts/RevenueTrendChart';
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -150,27 +151,45 @@ function MonthlyBreakdown({ annualTarget, achieved }) {
 }
 
 /**
- * Set Target Dialog
+ * Set Target Dialog with Confirmation for Existing Targets
  */
 function SetTargetDialog({ open, onOpenChange, onSave, salespeople, existingTargets }) {
     const [selectedSalesperson, setSelectedSalesperson] = useState('');
     const [year, setYear] = useState(currentYear.toString());
     const [annualTarget, setAnnualTarget] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+
+    // Find existing target for selected salesperson/year
+    const existingTarget = existingTargets.find(
+        t => t.salespersonId === selectedSalesperson && t.year === parseInt(year)
+    );
 
     // Pre-fill target if editing existing
     useEffect(() => {
         if (selectedSalesperson && year) {
-            const existing = existingTargets.find(
-                t => t.salespersonId === selectedSalesperson && t.year === parseInt(year)
-            );
-            if (existing) {
-                setAnnualTarget(existing.annualTarget.toString());
+            if (existingTarget) {
+                setAnnualTarget(existingTarget.annualTarget.toString());
             } else {
                 setAnnualTarget('');
             }
         }
-    }, [selectedSalesperson, year, existingTargets]);
+    }, [selectedSalesperson, year, existingTarget]);
+
+    const handleSaveClick = () => {
+        if (!selectedSalesperson || !year || !annualTarget) return;
+
+        // If target exists and value changed, show confirmation
+        if (existingTarget && existingTarget.annualTarget !== parseFloat(annualTarget)) {
+            setShowConfirmation(true);
+        } else if (!existingTarget) {
+            // New target, save directly
+            handleSave();
+        } else {
+            // No change, just close
+            onOpenChange(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!selectedSalesperson || !year || !annualTarget) return;
@@ -181,14 +200,18 @@ function SetTargetDialog({ open, onOpenChange, onSave, salespeople, existingTarg
                 salespersonId: selectedSalesperson,
                 year: parseInt(year),
                 annualTarget: parseFloat(annualTarget),
+                oldTarget: existingTarget?.annualTarget || null,
             });
             onOpenChange(false);
             setSelectedSalesperson('');
             setAnnualTarget('');
+            setShowConfirmation(false);
         } finally {
             setIsSaving(false);
         }
     };
+
+    const selectedName = salespeople.find(sp => sp.id === selectedSalesperson)?.name || '';
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -200,66 +223,128 @@ function SetTargetDialog({ open, onOpenChange, onSave, salespeople, existingTarg
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label>Salesperson</Label>
-                        <Select value={selectedSalesperson} onValueChange={setSelectedSalesperson}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select salesperson" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {salespeople.map((sp) => (
-                                    <SelectItem key={sp.id} value={sp.id}>
-                                        {sp.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                {!showConfirmation ? (
+                    <>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label>Salesperson (Region)</Label>
+                                <Select value={selectedSalesperson} onValueChange={setSelectedSalesperson}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select region/salesperson" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {salespeople.map((sp) => (
+                                            <SelectItem key={sp.id} value={sp.id}>
+                                                {sp.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label>Year</Label>
-                        <Select value={year} onValueChange={setYear}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
-                                    <SelectItem key={y} value={y.toString()}>
-                                        {y}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            <div className="space-y-2">
+                                <Label>Year</Label>
+                                <Select value={year} onValueChange={setYear}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+                                            <SelectItem key={y} value={y.toString()}>
+                                                {y}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label>Annual Target (₹)</Label>
-                        <Input
-                            type="number"
-                            placeholder="e.g., 6000000"
-                            value={annualTarget}
-                            onChange={(e) => setAnnualTarget(e.target.value)}
-                        />
-                        {annualTarget && (
-                            <p className="text-xs text-muted-foreground">
-                                Monthly target: {formatCurrency(parseFloat(annualTarget) / 12, true)}
+                            {/* Existing Target Warning */}
+                            {existingTarget && (
+                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <div className="flex items-start gap-2">
+                                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-amber-800">
+                                                Existing Target Found
+                                            </p>
+                                            <p className="text-sm text-amber-700">
+                                                <strong>{selectedName}</strong> already has a target of{' '}
+                                                <strong>{formatCurrency(existingTarget.annualTarget)}</strong>{' '}
+                                                for {year}.
+                                            </p>
+                                            <p className="text-xs text-amber-600 mt-1">
+                                                Changing this will update the existing target and notify the ASM.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <Label>Annual Target (₹)</Label>
+                                <Input
+                                    type="number"
+                                    placeholder="e.g., 6000000"
+                                    value={annualTarget}
+                                    onChange={(e) => setAnnualTarget(e.target.value)}
+                                />
+                                {annualTarget && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Monthly target: {formatCurrency(parseFloat(annualTarget) / 12, true)}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => onOpenChange(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleSaveClick} disabled={!selectedSalesperson || !annualTarget || isSaving}>
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                {existingTarget ? 'Update Target' : 'Set Target'}
+                            </Button>
+                        </DialogFooter>
+                    </>
+                ) : (
+                    /* Confirmation View */
+                    <>
+                        <div className="py-4">
+                            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                                    <p className="font-semibold text-amber-800">Confirm Target Change</p>
+                                </div>
+                                <div className="space-y-2 text-sm">
+                                    <p><strong>Salesperson:</strong> {selectedName}</p>
+                                    <p><strong>Year:</strong> {year}</p>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-red-600 line-through">
+                                            Old: {formatCurrency(existingTarget?.annualTarget || 0)}
+                                        </span>
+                                        <span>→</span>
+                                        <span className="text-emerald-600 font-semibold">
+                                            New: {formatCurrency(parseFloat(annualTarget))}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                This will notify <strong>{selectedName}</strong> and all Directors about the change.
                             </p>
-                        )}
-                    </div>
-                </div>
+                        </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    <Button onClick={handleSave} disabled={!selectedSalesperson || !annualTarget || isSaving}>
-                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        {existingTargets.find(t => t.salespersonId === selectedSalesperson && t.year === parseInt(year))
-                            ? 'Update Target'
-                            : 'Set Target'}
-                    </Button>
-                </DialogFooter>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setShowConfirmation(false)}>
+                                Back
+                            </Button>
+                            <Button onClick={handleSave} disabled={isSaving} variant="destructive">
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                Confirm Change
+                            </Button>
+                        </DialogFooter>
+                    </>
+                )}
             </DialogContent>
         </Dialog>
     );
@@ -415,6 +500,11 @@ export default function TargetsPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Revenue Trend Chart */}
+            {targets.length > 0 && (
+                <RevenueTrendChart targets={targets} year={selectedYear} />
+            )}
 
             {/* Salesperson Targets */}
             <div className="space-y-4">

@@ -7,22 +7,47 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { getUserFromRequest } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/utils/session';
+
+export const dynamic = 'force-dynamic';
+
+// Roles that can see all data
+const ADMIN_ROLES = ['developer', 'director', 'vp', 'head_of_sales'];
 
 /**
  * GET /api/customers
  * List customers with optional filters
+ * 
+ * STRICT DATA ISOLATION:
+ * - ASMs only see customers from their assigned region
+ * - Directors/VP/Developers see all data
  */
 export async function GET(request) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
         const { searchParams } = new URL(request.url);
+
+        // Get user's profile to get role and region
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*, role:roles(id, name), region:regions(id, name)')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (profileError) {
+            console.error('Profile fetch error:', profileError);
+        }
+
+        const userRole = profile?.role?.name || currentUser.role;
+        const userRegionId = profile?.region_id;
+        const userRegionName = profile?.region?.name;
+        const canSeeAllData = ADMIN_ROLES.includes(userRole);
 
         // Parse query parameters
         const page = parseInt(searchParams.get('page') || '1', 10);
@@ -44,6 +69,19 @@ export async function GET(request) {
                 account_manager:profiles!customers_account_manager_id_fkey(user_id, full_name, email),
                 region:regions(id, name)
             `, { count: 'exact' });
+
+        // ======= STRICT DATA ISOLATION =======
+        // ASMs can ONLY see customers from their region
+        if (!canSeeAllData && userRegionId) {
+            query = query.eq('region_id', userRegionId);
+        } else if (!canSeeAllData && !userRegionId) {
+            // ASM without region assignment - show no data
+            return NextResponse.json({
+                customers: [],
+                pagination: { page, limit, total: 0, totalPages: 0 },
+                userInfo: { role: userRole, region: null, canSeeAllData: false }
+            });
+        }
 
         // Apply filters
         if (search) {
@@ -88,6 +126,11 @@ export async function GET(request) {
                 limit,
                 total: count || 0,
                 totalPages: Math.ceil((count || 0) / limit)
+            },
+            userInfo: {
+                role: userRole,
+                region: userRegionName,
+                canSeeAllData
             }
         });
     } catch (error) {
@@ -102,12 +145,12 @@ export async function GET(request) {
  */
 export async function POST(request) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
         const body = await request.json();
 
         // Validate required fields
@@ -160,7 +203,7 @@ export async function POST(request) {
             status: body.status || 'Active',
             email: body.email || null,
             phone: body.phone || null,
-            created_by: user.id
+            created_by: currentUser.id
         };
 
         const { data, error } = await supabase

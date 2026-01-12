@@ -212,15 +212,38 @@ function DocumentTable({ documents, docType, loading, onView, onEdit, onDelete }
  */
 export default function DocumentCenterPage() {
     const router = useRouter();
-    const { profile } = useAuth(); // Get current user profile
+    const { profile, isManager } = useAuth(); // Get current user profile and isManager flag
     const [activeTab, setActiveTab] = useState('quotations');
     const [searchQuery, setSearchQuery] = useState('');
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState(null);
 
+    // Manager-specific state
+    const [salespeople, setSalespeople] = useState([]);
+    const [selectedSalesperson, setSelectedSalesperson] = useState('all');
+    const [selectedRegion, setSelectedRegion] = useState('all');
+
     const supabase = createClient();
+
+    // Fetch salespeople for managers
+    useEffect(() => {
+        const fetchSalespeople = async () => {
+            if (!isManager) return;
+
+            try {
+                const response = await fetch('/api/users?type=salespeople');
+                const data = await response.json();
+                if (response.ok && data.users) {
+                    setSalespeople(data.users);
+                }
+            } catch (err) {
+                console.error('Failed to fetch salespeople:', err);
+            }
+        };
+
+        fetchSalespeople();
+    }, [isManager]);
 
     // Fetch documents based on role and tab
     useEffect(() => {
@@ -241,6 +264,12 @@ export default function DocumentCenterPage() {
                 const params = new URLSearchParams();
                 if (docType) params.append('doc_type', docType);
                 if (searchQuery) params.append('search', searchQuery);
+                if (selectedSalesperson && selectedSalesperson !== 'all') {
+                    params.append('salesperson_id', selectedSalesperson);
+                }
+                if (selectedRegion && selectedRegion !== 'all') {
+                    params.append('region', selectedRegion);
+                }
 
                 const response = await fetch(`/api/documents?${params.toString()}`);
                 const resData = await response.json();
@@ -265,7 +294,7 @@ export default function DocumentCenterPage() {
         if (profile) {
             fetchDocuments();
         }
-    }, [activeTab, searchQuery, profile]);
+    }, [activeTab, searchQuery, selectedSalesperson, selectedRegion, profile]);
 
     const getTabIcon = (tab) => {
         switch (tab) {
@@ -334,28 +363,41 @@ export default function DocumentCenterPage() {
                     />
                 </div>
 
-                {/* Management Filters */}
-                {profile && ['director', 'developer', 'head_of_sales', 'vp'].includes(profile.role) && (
-                    <div className="flex gap-2">
+                {/* Management Filters - Only visible to Directors/Head of Sales */}
+                {isManager && (
+                    <div className="flex gap-2 flex-wrap">
+                        {/* Salesperson Filter */}
                         <Select
-                            onValueChange={(value) => {
-                                // TODO: Add filter logic to state
-                                console.log("Filter by region:", value);
-                            }}
+                            value={selectedSalesperson}
+                            onValueChange={setSelectedSalesperson}
+                        >
+                            <SelectTrigger className="w-[200px]">
+                                <SelectValue placeholder="All Salespeople" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Salespeople</SelectItem>
+                                {salespeople.map((sp) => (
+                                    <SelectItem key={sp.id || sp.user_id} value={sp.id || sp.user_id}>
+                                        {sp.full_name || sp.name || sp.email}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {/* Region Filter */}
+                        <Select
+                            value={selectedRegion}
+                            onValueChange={setSelectedRegion}
                         >
                             <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Filter by Region" />
+                                <SelectValue placeholder="All Regions" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Regions</SelectItem>
-                                <SelectItem value="Gurgaon">Gurgaon</SelectItem>
-                                <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
-                                <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                                <SelectItem value="Karnataka">Karnataka</SelectItem>
-                                <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                                <SelectItem value="Noida">Noida</SelectItem>
+                                <SelectItem value="North Zone">North Zone</SelectItem>
+                                <SelectItem value="South Zone">South Zone</SelectItem>
+                                <SelectItem value="East Zone">East Zone</SelectItem>
                                 <SelectItem value="West Zone">West Zone</SelectItem>
-                                <SelectItem value="Chennai">Chennai</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

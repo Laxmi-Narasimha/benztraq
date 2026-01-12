@@ -1,0 +1,256 @@
+'use client';
+
+import { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatCurrencyCompact(value) {
+    if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
+    if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+    if (value >= 1000) return `₹${(value / 1000).toFixed(0)}K`;
+    return `₹${value}`;
+}
+
+/**
+ * RevenueTrendChart - Shows monthly actual vs target revenue with immersive visualization
+ */
+export function RevenueTrendChart({ targets, year }) {
+    const currentMonth = new Date().getMonth() + 1;
+
+    // Calculate monthly data
+    const chartData = useMemo(() => {
+        // Aggregate all targets into monthly totals
+        const monthlyTarget = targets.reduce((sum, t) => sum + (t.annualTarget || 0), 0) / 12;
+
+        // Aggregate monthly achievements across all salespeople
+        const monthlyActual = {};
+        targets.forEach(t => {
+            Object.entries(t.achieved || {}).forEach(([month, value]) => {
+                const m = parseInt(month);
+                monthlyActual[m] = (monthlyActual[m] || 0) + value;
+            });
+        });
+
+        // Build monthly data array with cumulative values
+        let cumulativeTarget = 0;
+        let cumulativeActual = 0;
+
+        return MONTHS.map((month, idx) => {
+            const monthNum = idx + 1;
+            const target = monthlyTarget;
+            const actual = monthlyActual[monthNum] || 0;
+
+            cumulativeTarget += target;
+            cumulativeActual += actual;
+
+            return {
+                month,
+                monthNum,
+                target: Math.round(target),
+                actual: Math.round(actual),
+                cumulativeTarget: Math.round(cumulativeTarget),
+                cumulativeActual: Math.round(cumulativeActual),
+                isPast: monthNum <= currentMonth,
+            };
+        });
+    }, [targets, currentMonth]);
+
+    // Calculate YTD stats
+    const ytdStats = useMemo(() => {
+        const ytdActual = chartData
+            .filter(d => d.isPast)
+            .reduce((sum, d) => sum + d.actual, 0);
+        const ytdTarget = chartData
+            .filter(d => d.isPast)
+            .reduce((sum, d) => sum + d.target, 0);
+        const performance = ytdTarget > 0 ? ((ytdActual - ytdTarget) / ytdTarget) * 100 : 0;
+
+        return { ytdActual, ytdTarget, performance };
+    }, [chartData]);
+
+    // Find max value for scaling
+    const maxValue = useMemo(() => {
+        const max = Math.max(
+            ...chartData.map(d => Math.max(d.actual, d.target))
+        );
+        // Round up to nice number
+        const magnitude = Math.pow(10, Math.floor(Math.log10(max || 1)));
+        return Math.ceil(max / magnitude) * magnitude || 1000000;
+    }, [chartData]);
+
+    // Generate Y-axis labels
+    const yLabels = [0, maxValue * 0.25, maxValue * 0.5, maxValue * 0.75, maxValue];
+
+    // SVG dimensions
+    const width = 800;
+    const height = 300;
+    const padding = { top: 20, right: 20, bottom: 40, left: 60 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+
+    // Calculate point positions
+    const getX = (idx) => padding.left + (idx / (MONTHS.length - 1)) * chartWidth;
+    const getY = (value) => padding.top + chartHeight - (value / maxValue) * chartHeight;
+
+    // Generate path for line
+    const generatePath = (dataKey) => {
+        return chartData
+            .map((d, i) => {
+                const x = getX(i);
+                const y = getY(d[dataKey]);
+                return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+            })
+            .join(' ');
+    };
+
+    return (
+        <Card className="bg-slate-900 border-slate-800 text-white overflow-hidden">
+            <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-lg font-semibold text-white">Revenue Trend</CardTitle>
+                        <p className="text-sm text-slate-400">Monthly revenue vs target for {year}</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                        <span className="flex items-center gap-1">
+                            <span className="w-3 h-0.5 bg-cyan-400 rounded"></span>
+                            <span className="text-slate-400">Actual Revenue</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <span className="w-3 h-0.5 bg-blue-500 rounded border-dashed"></span>
+                            <span className="text-slate-400">Target Revenue</span>
+                        </span>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+                {/* SVG Chart */}
+                <div className="relative w-full overflow-x-auto">
+                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full min-w-[600px]" preserveAspectRatio="xMidYMid meet">
+                        {/* Grid lines */}
+                        {yLabels.map((label, i) => (
+                            <g key={i}>
+                                <line
+                                    x1={padding.left}
+                                    y1={getY(label)}
+                                    x2={width - padding.right}
+                                    y2={getY(label)}
+                                    stroke="#334155"
+                                    strokeWidth="1"
+                                    strokeDasharray={i === 0 ? "0" : "4,4"}
+                                />
+                                <text
+                                    x={padding.left - 10}
+                                    y={getY(label)}
+                                    textAnchor="end"
+                                    alignmentBaseline="middle"
+                                    className="fill-slate-500 text-xs"
+                                    fontSize="11"
+                                >
+                                    {formatCurrencyCompact(label)}
+                                </text>
+                            </g>
+                        ))}
+
+                        {/* Target line (dashed) */}
+                        <path
+                            d={generatePath('target')}
+                            fill="none"
+                            stroke="#3b82f6"
+                            strokeWidth="2"
+                            strokeDasharray="6,4"
+                            className="drop-shadow-sm"
+                        />
+
+                        {/* Actual line (solid with glow) */}
+                        <path
+                            d={generatePath('actual')}
+                            fill="none"
+                            stroke="#22d3ee"
+                            strokeWidth="3"
+                            className="drop-shadow-lg"
+                            filter="url(#glow)"
+                        />
+
+                        {/* Gradient glow filter */}
+                        <defs>
+                            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        {/* Data points - Actual */}
+                        {chartData.map((d, i) => (
+                            <g key={`actual-${i}`}>
+                                <circle
+                                    cx={getX(i)}
+                                    cy={getY(d.actual)}
+                                    r="5"
+                                    fill={d.isPast ? "#22d3ee" : "#475569"}
+                                    stroke="#0f172a"
+                                    strokeWidth="2"
+                                    className="cursor-pointer hover:r-7 transition-all"
+                                />
+                                {/* Tooltip on hover would require state, simplified here */}
+                            </g>
+                        ))}
+
+                        {/* Data points - Target */}
+                        {chartData.map((d, i) => (
+                            <circle
+                                key={`target-${i}`}
+                                cx={getX(i)}
+                                cy={getY(d.target)}
+                                r="4"
+                                fill="#3b82f6"
+                                stroke="#0f172a"
+                                strokeWidth="2"
+                            />
+                        ))}
+
+                        {/* X-axis labels */}
+                        {MONTHS.map((month, i) => (
+                            <text
+                                key={month}
+                                x={getX(i)}
+                                y={height - 10}
+                                textAnchor="middle"
+                                className="fill-slate-400 text-xs"
+                                fontSize="11"
+                            >
+                                {month}
+                            </text>
+                        ))}
+                    </svg>
+                </div>
+
+                {/* YTD Stats */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-800">
+                    <div>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider">YTD Revenue</p>
+                        <p className="text-xl font-bold text-cyan-400">{formatCurrencyCompact(ytdStats.ytdActual)}</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider">YTD Target</p>
+                        <p className="text-xl font-bold text-blue-400">{formatCurrencyCompact(ytdStats.ytdTarget)}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider">Performance</p>
+                        <p className={cn(
+                            "text-xl font-bold",
+                            ytdStats.performance >= 0 ? "text-emerald-400" : "text-red-400"
+                        )}>
+                            {ytdStats.performance >= 0 ? '+' : ''}{ytdStats.performance.toFixed(1)}%
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}

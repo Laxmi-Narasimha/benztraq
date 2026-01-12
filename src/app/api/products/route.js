@@ -7,8 +7,10 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { getUserFromRequest } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/utils/session';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/products
@@ -16,12 +18,12 @@ import { getUserFromRequest } from '@/lib/auth';
  */
 export async function GET(request) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
         const { searchParams } = new URL(request.url);
 
         // Parse query parameters
@@ -95,12 +97,12 @@ export async function GET(request) {
  */
 export async function POST(request) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
         const body = await request.json();
 
         // Validate required fields
@@ -147,7 +149,7 @@ export async function POST(request) {
             is_sales_item: body.is_sales_item ?? true,
             is_purchase_item: body.is_purchase_item ?? true,
             maintain_stock: body.maintain_stock ?? true,
-            created_by: user.id
+            created_by: currentUser.id
         };
 
         const { data, error } = await supabase

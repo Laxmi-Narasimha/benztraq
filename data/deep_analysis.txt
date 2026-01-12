@@ -1,0 +1,454 @@
+====================================================================================================
+BENZ PACKAGING - DEEP PRODUCT DATA ANALYSIS
+====================================================================================================
+
+================================================================================
+PART 1: ITEMACTIVE CSV (6,448 Active Products)
+================================================================================
+
+Total Products: 6448
+Columns: ['ITEMCODE', 'ITEMNAME', 'IT_PARTNO', 'IT_PARTNAME', 'UOM']
+
+--- SAMPLE PRODUCTS (first 30) ---
+                        nan | Corrugated Box - Benz - Printed                    | PCS
+                        nan | Corrugated Box - Benz - Printed                    | PCS
+                        nan | Corrugated Box - Brake Shoe  - Printed             | PCS
+                        nan | Corrugated Box - Brake Shoe  - Printed             | PCS
+                        nan | Corrugated Box - Chain Set  - Printed              | PCS
+                        nan | Corrugated Box - Printed                           | PCS
+                        nan | Corrugated Box - Relay  - Printed                  | PCS
+                        nan | Corrugated Box - Relay - Printed                   | PCS
+  ALLIECB                   | CORRUGATED BOX                                     | PCS
+  ASKAUCB110                | CORRUGATED BOX                                     | PCS
+  ASKAUCB111                | CORRUGATED BOX                                     | PCS
+  BUSCHCB161                | CORRUGATED BOX                                     | PCS
+  CAPARCB119                | CORRUGATED BOX                                     | PCS
+  CAPARCB380                | CORRUGATED BOX                                     | PCS
+  DAIDOCB175                | CORRUGATED BOX                                     | PCS
+  HGIAUCB                   | CORRUGATED BOX With Wooden Pallet                  | PCS
+  HGIAUCB                   | CORRUGATED BOX With Wooden Pallet                  | PCS
+  HGIAUCB101                | CORRUGATED BOX                                     | PCS
+  HGIAUCB104                | CORRUGATED BOX                                     | PCS
+  HGIAUCB109                | CORRUGATED BOX                                     | PCS
+                        nan | HDPE Paper                                         | KGS
+                        nan | HDPE Paper                                         | KGS
+                        nan | HDPE Paper                                         | SQM
+                        nan | HDPE Paper                                         | SQM
+  UNITEVP36                 | VCI HD PAPER_                                      | SQM
+  UNITEVP750                | VCI HDPE PAPER                                     | PCS
+  AMTEKHR60                 | HDPE TAPE                                          | SQM
+  ARGLLHT                   | HDPE TAPE                                          | ROLL
+  DUROSHT65                 | HDPE TAPE                                          | ROLL
+  INDICHT26                 | BROWN TAPE                                         | PCS
+
+--- UNIQUE UNITS OF MEASURE (UOM) ---
+  PCS: 4447 products
+  KGS: 1672 products
+  ROLL: 114 products
+  SQM: 53 products
+  MTR: 53 products
+  LTR: 40 products
+  SET: 22 products
+  NOS: 21 products
+  BOX: 9 products
+  COILS: 5 products
+  SQFT: 3 products
+  CAN: 3 products
+  FT: 2 products
+  PKT: 2 products
+  RIM: 1 products
+  RMT: 1 products
+
+--- PART CODE PATTERNS (IT_PARTNO) ---
+Sample Part Codes:
+  ALLIECB
+  ASKAUCB110
+  ASKAUCB111
+  BUSCHCB161
+  CAPARCB119
+  CAPARCB380
+  DAIDOCB175
+  HGIAUCB
+  HGIAUCB101
+  HGIAUCB104
+  HGIAUCB109
+  UNITEVP36
+  UNITEVP750
+  AMTEKHR60
+  ARGLLHT
+  DUROSHT65
+  INDICHT26
+  INDICHT265
+  OCAPCHP65
+  PRIMEHDR25
+  PVCLEHT65
+  UNITECHT65
+  VECOMHT17
+  VECOMHT50
+  VECOMHT65
+  AIRAEKP280
+  JCBKP650
+  SHREEKP600
+  HONDALB450
+  AMALGLB46
+  AMALGLB69
+  ASPSELB
+  AVGOLLB100
+  BALAJLB34
+  BALAJLB45
+  BALAJLB47
+  BANCOLB190
+  BSCORLB45
+  BSCORLB46
+  BSCORLB57
+  BSCORLB69
+  CASTELB16
+  CASTELB20
+  CASTELB22
+  CLAASLB15
+  CLAASLB17
+  CLAASLB18
+  CONTILB72
+  DAIDOLB95
+  DGSENLB50
+
+--- PRODUCT TYPE ANALYSIS (from IT_PARTNAME) ---
+
+Top 50 Product Types (by first word):
+  VCI: 214 products
+  LD: 87 products
+  CORRUGATED: 43 products
+  LD-: 18 products
+  HDPE: 16 products
+  DESICCANT: 15 products
+  PAPER: 14 products
+  EPE: 14 products
+  PROPATECH: 13 products
+  LAMINATED: 12 products
+  POLY: 10 products
+  BOPP: 9 products
+  PLASTIC: 9 products
+  AIR: 8 products
+  WOODEN: 8 products
+  PET: 7 products
+  ALUMINUM: 7 products
+  OIL: 7 products
+  RUST: 6 products
+  PACKING: 6 products
+  LDPE: 6 products
+  JCB: 5 products
+  PROPASEC: 5 products
+  BUBBLE: 5 products
+  COTTON: 5 products
+  PU: 5 products
+  BE: 5 products
+  CRAFT: 5 products
+  COMPLETE: 5 products
+  STRETCH: 4 products
+  EP: 4 products
+  C: 4 products
+  HONEY: 3 products
+  NON: 3 products
+  PLYWOOD: 3 products
+  PTFE: 3 products
+  HONEYCOMB: 3 products
+  PP: 3 products
+  WIRE: 3 products
+  FLOOR: 3 products
+  ZIPPER: 2 products
+  LOC: 2 products
+  MINI: 2 products
+  CORD: 2 products
+  LASHING: 2 products
+  DESICCANTS: 2 products
+  ANGLE: 2 products
+  COMMERCIAL: 2 products
+  ANTISTATIC: 2 products
+  SAFEDA: 2 products
+
+================================================================================
+PART 2: COMMERCIAL MASTER EXCEL - DEEP DIVE
+================================================================================
+
+--- ITEM CATEGORIES (Full List) ---
+Total Unique Categories: 288
+
+All Categories:
+  1. Unit- 
+  2. Item Category
+  3. RAW MATERIALS
+  4. ROLL 
+  5. VCI ROLL ( IMT ) 
+  6. VCI ROLL Printed
+  7. VCI ROLL Printed OSC
+  8. VCI ROLL Printed BSC
+  9. VCI ROLL UN Printed
+  10. VCI ROLL UN Printed OSC
+  11. VCI ROLL UN Printed BSC
+  12. LD ROLL ( IMT ) 
+  13. LD ROLL Printed
+  14. LD ROLL Printed OSC
+  15. LD ROLL Printed BSC
+  16. LD  ROLL UN Printed
+  17. LD ROLL UN Printed OSC
+  18. LD ROLL UN Printed BSC
+  19. PAPER ROLL 
+  20. HDPE PAPER ROLL ( IMT ) 
+  21. STRETCH VCI FILM ROLL 
+  22. STRETCH LD  FILM ROLL 
+  23. VCI HD PAPER ( IMT ) 
+  24. VCI PAPER ROLL ( IMT )
+  25. VCI PAPER LAMINATED ROLL ( IMT ) 
+  26. KRAFT PAPER ROLL
+  27. BOPP TAPE ROLL 
+  28. AIR BUBBLE ROLL ( IMT ) 
+  29. ALUMINUM BARRIER FOIL  ( IMT ) 
+  30. AIR PLUS ROLL  ( IMT ) 
+  31. CLEAR POLY POLISTER TAPE 
+  32. COIL NAIL ROLL 
+  33. COTTON FABRIC ROLL 
+  34. COTTON NIVAR ROLL 
+  35. PET STRAP ROLL 
+  36. EPE FOAM ROLL 
+  37. PAPER BUBBLE WRAP ROLL
+  38. PAPER  WRAP ROLL
+  39. VCI FILM ROLL  ( IMT )
+  40. LD  FILM ROLL  ( IMT ) 
+  41. MULTI LAYER LAMINATED ROLL 
+  42. NON WOVEN ROLL
+  43. ROLL OTHER  ( IMT ) 
+  44. BAG 
+  45. VCI BAG PRINTED  ( IMT ) 
+  46. VCI BAG  UN PRINTED  ( IMT ) 
+  47. LD  BAG PRINTED  ( IMT ) 
+  48. LD  BAG  UN PRINTED  ( IMT ) 
+  49. PAPER BAG 
+  50. HDPE PAPER BAG
+  51. AIR BUBBLE BAG ( IMT ) 
+  52. VCI  HD LAMINATED BAG  ( IMT ) FGS
+  53. VCI PAPER BAG 
+  54. PLASTIC BAG 
+  55. ALUMINUM BAG ( IMT ) 
+  56. PP WOVEN BAG
+  57. COTTON BAG  ( IMT ) 
+  58. OTHER BAG
+  59. SHEET 
+  60. VCI SHEET ( IMT )
+  61. LD SHEET  ( IMT ) 
+  62. VCI PAPER SHEET (IMT) 
+  63. VCI PAPER LAMINATED SHEET ( IMT ) 
+  64. NON WOVEN SHEET 
+  65. PP SHEET 
+  66. PVC SHEET 
+  67. SLIP SHEET 
+  68. ACRYLIC SHEET 
+  69. PLASTIC SHEET 
+  70. OTHER SHEET 
+  71. DESSICANT
+  72. INDIAN DESSICANT 
+  73. OTHER DESSICANT 
+  74. MASTER BATCH 
+  75. INDIAN MASTER  BATCH 
+  76. OTHER MASTER BATCH 
+  77. HONEYCOMB
+  78. HONEYCOMB ALL 
+  79. HONEYCOMB OTHER 
+  80. IMPORT RM 
+  81. IMPORT MASTER BATCH 
+  82. IMPORT DESSICANT ( IMT ) 
+  83. OIL
+  84. RP OIL
+  85. MINERAL OIL
+  86. DEWATERING OIL
+  87. RUST MUKT
+  88. FERROSEAL OIL
+  89. ULTRA CLEAN OIL
+  90. DEOIL OIL
+  91. OTHER OIL 
+  92. PLY
+  93. COMMERCIAL PLY
+  94. OTHER PLY
+  95. WOODEN PLANKS 
+  96. PIPE PLANKS 
+  97. Wooden Box ( IMT ) 
+  98. Wooden Pallet  ( IMT ) 
+  99. PLY ( IMT ) 
+  100. OTHER WOODEN PLANKS 
+
+--- ITEM MASTER DEEP ANALYSIS ---
+Total Items in Item Master: 2381
+
+Column Analysis:
+  Sr. No: 2380 values, 1575 unique
+  Item Cat./Lowest Category : 2380 values, 92 unique
+  Part No.: 1569 values, 1540 unique
+  Customer  Part No.: 918 values, 832 unique
+  Customer  Description : 1203 values, 804 unique
+  Customer  Party: 1575 values, 292 unique
+  Part Name: 2380 values, 346 unique
+  Size: 2054 values, 1948 unique
+  Drawing no: 0 values, 0 unique
+  HSN Code: 2378 values, 37 unique
+  SGST Rate: 2379 values, 3 unique
+  CGST Rate: 2379 values, 3 unique
+  IGST Rate: 2379 values, 3 unique
+  Store Location: 2379 values, 1 unique
+  Row No: 2380 values, 2379 unique
+  Rack No: 2380 values, 2379 unique
+  Bin No: 2380 values, 2379 unique
+  Description: 0 values, 0 unique
+  Item Unit: 2378 values, 17 unique
+  Packing Type: 0 values, 0 unique
+  Packing Size: 0 values, 0 unique
+  Refernce: 0 values, 0 unique
+  Deviation(%): 0 values, 0 unique
+  Deferment: 0 values, 0 unique
+  ACTIVATE WIP : 2379 values, 1 unique
+  ACTIVATE PROJECT : 2379 values, 1 unique
+  Purchase Item: 2379 values, 2 unique
+  Sale Item: 2379 values, 1 unique
+  Order Compulsory: 2379 values, 1 unique
+  Purchase Job Work Item: 2379 values, 1 unique
+  Sale Job Work Item: 2379 values, 1 unique
+  Quotation Compulsory: 2379 values, 1 unique
+  MRN Required: 2379 values, 2 unique
+  Issue Slip: 2379 values, 1 unique
+  Control No: 2379 values, 1 unique
+  Restrict For Returnable Issue: 0 values, 0 unique
+  Restrict Bill Clearing with: 0 values, 0 unique
+  QC Required: 2379 values, 1 unique
+  Stockable: 2379 values, 1 unique
+  Shelf Life: 2379 values, 1 unique
+  FIFO: 2379 values, 1 unique
+  FEFO: 2379 values, 1 unique
+  Options: 0 values, 0 unique
+  Alt UOM: 0 values, 0 unique
+  Covertion Ration: 0 values, 0 unique
+  Customer ID: 2379 values, 1 unique
+  Prod. Ref: 0 values, 0 unique
+
+--- HSN CODE DISTRIBUTION ---
+  39232100.0: 1435 products
+  39172110.0: 163 products
+  39201012.0: 100 products
+  44152000.0: 88 products
+  39191000.0: 78 products
+  39239090.0: 73 products
+  28421000.0: 71 products
+  39232990.0: 63 products
+  48239013.0: 49 products
+  48191010.0: 41 products
+  39211900.0: 35 products
+  27101980.0: 27 products
+  48239090.0: 26 products
+  76071999.0: 21 products
+  48239012.0: 14 products
+  39199090.0: 13 products
+  63053900.0: 11 products
+  39206290.0: 10 products
+  44123190.0: 7 products
+  25081090.0: 7 products
+
+--- CATEGORIES USED IN ITEM MASTER ---
+  VCI BAG  ( IMT ) FGS: 770 items
+  LD BAG  ( IMT ) FGS: 219 items
+  VCI BAG PRINTED  ( IMT ) : 190 items
+  LD  BAG  UN PRINTED  ( IMT ) : 110 items
+  VCI BAG  UN PRINTED  ( IMT ) : 88 items
+  Wooden Box (IMT) FGS: 74 items
+  LD  BAG PRINTED  ( IMT ) : 61 items
+  VCI ROLL ( IMT ) FGS: 59 items
+  IMPORT DESSICANT ( IMT ) FGS: 55 items
+  EP FOAM SHEET ( IMT ) FGS: 43 items
+  VCI SHEET  ( IMT ) FGS: 38 items
+  LD ROLL Printed OSC: 36 items
+  VCI  HD LAMINATED BAG  ( IMT ) FGS: 34 items
+  VCI SHEET ( IMT ): 33 items
+  VCI PAPER SHEET  ( IMT ) FGS: 32 items
+  CORRUGATED BOX  ( IMT ) FGS: 31 items
+  VCI ROLL Printed OSC: 29 items
+  LOC RUST OIL ( IMT ) FGS: 26 items
+  LD ROLL UN Printed OSC: 26 items
+  ANGLE BOARD ( IMT ) : 23 items
+  ALUMINUM BAG ( IMT ) FGS: 21 items
+  INDIAN DESSICANT : 20 items
+  VCI ROLL UN Printed OSC: 18 items
+  LD ROLL Printed BSC: 16 items
+  VCI ROLL Printed BSC: 16 items
+  AIR BUBBLE ROLL ( IMT ) FGS: 16 items
+  LD ROLL ( IMT ) FGS: 15 items
+  Wooden Pallet  (IMT) FGS: 14 items
+  VCI PAPER LAMINATED ROLL ( IMT ) FGS: 14 items
+  AIR BUBBLE ROLL ( IMT ) : 14 items
+
+--- GST RATE DISTRIBUTION ---
+  18.0%: 2278 products
+  12.0%: 90 products
+  5.0%: 11 products
+
+--- PARTY MASTER (CUSTOMERS) ANALYSIS ---
+Columns: ['Unnamed: 0', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4', 'Unnamed: 5', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8', 'If Yes', 'Unnamed: 10', 'Unnamed: 11', 'Unnamed: 12', 'Unnamed: 13']
+
+Sample customers (first 20):
+  Category
+  MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+  WITHOUT MSME FOR GOODS
+
+--- ZONE MASTER (Sales Territories) ---
+Columns: ['Unit Name', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4']
+
+Zone Details:
+  ['Zone Name' 'Zone Type' 'Compulsory Form' 'State' nan]
+  ['North Zone' 'Intra State' 'Not Required' 'Haryana' nan]
+  ['East Zone' 'Inter State' 'Required' 'Bihar' nan]
+  ['East Zone' 'Inter State' 'Required' 'Sikkim' nan]
+  ['East Zone' 'Inter State' 'Required' 'Arunachal Pradesh' nan]
+  ['East Zone' 'Inter State' 'Required' 'Nagaland' nan]
+  ['East Zone' 'Inter State' 'Required' 'Manipur' nan]
+  ['East Zone' 'Inter State' 'Required' 'MIzoram' nan]
+  ['East Zone' 'Inter State' 'Required' 'Tripura' nan]
+  ['East Zone' 'Inter State' 'Required' 'Meghalaya' nan]
+  ['East Zone' 'Inter State' 'Required' 'Assam' nan]
+  ['East Zone' 'Inter State' 'Required' 'West Bengal' nan]
+  ['East Zone' 'Inter State' 'Required' 'Jharkhand' nan]
+  ['East Zone' 'Inter State' 'Required' 'Odisha' nan]
+  ['East Zone' 'Inter State' 'Required' 'Chhattisgarh' 'OK']
+  ['West Zone' 'Inter State' 'Required' 'Rajasthan' nan]
+  ['West Zone' 'Inter State' 'Required' 'Madhya Pradesh' nan]
+  ['West Zone' 'Inter State' 'Required' 'Gujarat' nan]
+  ['West Zone' 'Inter State' 'Required' 'Daman & Diu' nan]
+  ['West Zone' 'Inter State' 'Required'
+ 'Dadra & Nagar Haveli and Daman & Diu' nan]
+  ['West Zone' 'Inter State' 'Required' 'Maharashtra' nan]
+  ['West Zone' 'Inter State' 'Required' 'Goa' nan]
+  ['North Zone' 'Inter State' 'Required' 'Chandigarh' nan]
+  ['North Zone' 'Inter State' 'Required' 'DELHI' nan]
+  ['North Zone' 'Inter State' 'Required' 'Himachal Pradesh' nan]
+  ['North Zone' 'Inter State' 'Required' 'Jammu & Kashmir' nan]
+  ['North Zone' 'Inter State' 'Required' 'Punjab' nan]
+  ['North Zone' 'Inter State' 'Required' 'Uttar Pradesh' nan]
+  ['North Zone' 'Inter State' 'Required' 'Uttarakhand' nan]
+  ['South Zone' 'Inter State' 'Required' 'Andhra Pradesh' nan]
+  ['South Zone' 'Inter State' 'Required' 'Karnataka' nan]
+  ['South Zone' 'Inter State' 'Required' 'Tamil Nadu' nan]
+  ['South Zone' 'Inter State' 'Required' 'Lakshadweep' nan]
+  ['South Zone' 'Inter State' 'Required' 'Puducherry' nan]
+  ['South Zone' 'Inter State' 'Required' 'Kerala' nan]
+  ['South Zone' 'Inter State' 'Required' 'Andaman & Nicobar' nan]

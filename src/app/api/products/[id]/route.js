@@ -8,8 +8,10 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { getUserFromRequest } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/utils/session';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/products/[id]
@@ -17,13 +19,13 @@ import { getUserFromRequest } from '@/lib/auth';
  */
 export async function GET(request, { params }) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { id } = await params;
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
 
         const { data, error } = await supabase
             .from('products')
@@ -65,13 +67,13 @@ export async function GET(request, { params }) {
  */
 export async function PUT(request, { params }) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { id } = await params;
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
         const body = await request.json();
 
         // Remove fields that shouldn't be updated directly
@@ -122,13 +124,13 @@ export async function PUT(request, { params }) {
  */
 export async function DELETE(request, { params }) {
     try {
-        const user = await getUserFromRequest(request);
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { id } = await params;
-        const supabase = await createServerClient();
+        const supabase = createAdminClient();
 
         // Soft delete - just mark as disabled
         const { data, error } = await supabase

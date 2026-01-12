@@ -44,7 +44,8 @@ import {
     Building2,
     MapPin,
     Phone,
-    Mail
+    Mail,
+    Target
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -57,6 +58,10 @@ import { toast } from "sonner";
 /**
  * Customers Management Page
  * Full CRUD interface for customer management
+ * 
+ * STRICT DATA ISOLATION:
+ * - ASMs only see customers from their assigned region
+ * - Directors/VP/Developers see all data
  */
 export default function CustomersPage() {
     // State
@@ -67,6 +72,7 @@ export default function CustomersPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [selectedIndustry, setSelectedIndustry] = useState("all");
+    const [userInfo, setUserInfo] = useState({ role: '', region: '', canSeeAllData: false });
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 25,
@@ -116,6 +122,10 @@ export default function CustomersPage() {
                     total: data.pagination?.total || 0,
                     totalPages: data.pagination?.totalPages || 0
                 }));
+                // Set user info for region indicator banner
+                if (data.userInfo) {
+                    setUserInfo(data.userInfo);
+                }
             } else {
                 toast.error(data.error || "Failed to fetch customers");
             }
@@ -538,6 +548,35 @@ export default function CustomersPage() {
 
     return (
         <div className="p-6 space-y-6">
+            {/* Region Indicator Banner */}
+            {userInfo.region && !userInfo.canSeeAllData && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+                    <MapPin className="h-5 w-5 text-blue-600" />
+                    <div>
+                        <p className="font-medium text-blue-900">
+                            Viewing data for: <span className="font-bold">{userInfo.region}</span>
+                        </p>
+                        <p className="text-sm text-blue-700">
+                            You can only see customers from your assigned region.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {userInfo.canSeeAllData && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
+                    <Target className="h-5 w-5 text-emerald-600" />
+                    <div>
+                        <p className="font-medium text-emerald-900">
+                            Viewing: <span className="font-bold">All Regions</span>
+                        </p>
+                        <p className="text-sm text-emerald-700">
+                            You have access to view customers from all regions.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>

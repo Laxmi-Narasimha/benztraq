@@ -1,0 +1,162 @@
+﻿================================================================================
+BENZ PACKAGING - COMMERCIAL MASTER DATA ANALYSIS
+================================================================================
+
+============================================================
+1. ITEM TYPE-CATEGORY (Product Categories) - 291 rows
+============================================================
+Columns: ['Item Type/Category', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4', 'Unnamed: 5', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8', 'Unnamed: 9', 'Unnamed: 10', 'Unnamed: 11', 'Unnamed: 12', 'Unnamed: 13', 'Unnamed: 14', 'Unnamed: 15', 'Unnamed: 16']
+
+Unique Categories (first 50):
+
+============================================================
+2. ITEM MASTER (Products) - 2381 rows
+============================================================
+Columns: ['Sr. No', 'Item Cat./Lowest Category ', 'Part No.', 'Customer  Part No.', 'Customer  Description ', 'Customer  Party', 'Part Name', 'Size', 'Drawing no', 'HSN Code', 'SGST Rate', 'CGST Rate', 'IGST Rate', 'Store Location', 'Row No', 'Rack No', 'Bin No', 'Description', 'Item Unit', 'Packing Type', 'Packing Size', 'Refernce', 'Deviation(%)', 'Deferment', 'ACTIVATE WIP ', 'ACTIVATE PROJECT ', 'Purchase Item', 'Sale Item', 'Order Compulsory', 'Purchase Job Work Item', 'Sale Job Work Item', 'Quotation Compulsory', 'MRN Required', 'Issue Slip', 'Control No', 'Restrict For Returnable Issue', 'Restrict Bill Clearing with', 'QC Required', 'Stockable', 'Shelf Life', 'FIFO', 'FEFO', 'Options', 'Alt UOM', 'Covertion Ration', 'Customer ID', 'Prod. Ref']
+
+Sample product row (first complete row):
+Sr. No                                            1.0
+Item Cat./Lowest Category        Wooden Box (IMT) FGS
+Part No.                                 ACTIVEWB2450
+Customer  Part No.                                NaN
+Customer  Description                             NaN
+Customer  Party                        ACTIVE SYSTEMS
+Part Name                                  Wooden Box
+Size                             2450 X 550 X 2150 MM
+Drawing no                                        NaN
+HSN Code                                   44152000.0
+SGST Rate                                         6.0
+CGST Rate                                         6.0
+IGST Rate                                        12.0
+Store Location                                  STORE
+Row No                                             A1
+Rack No                                            B1
+Bin No                                             C1
+Description                                       NaN
+Item Unit                                         PCS
+Packing Type                                      NaN
+Packing Size                                      NaN
+Refernce                                          NaN
+Deviation(%)                                      NaN
+Deferment                                         NaN
+ACTIVATE WIP                                     YES 
+ACTIVATE PROJECT                                   NO
+Purchase Item                                      No
+Sale Item                                         Yes
+Order Compulsory                                  Yes
+Purchase Job Work Item                             No
+Sale Job Work Item                                 No
+Quotation Compulsory                              Yes
+MRN Required                                       No
+Issue Slip                                        Yes
+Control No                                        Yes
+Restrict For Returnable Issue                     NaN
+Restrict Bill Clearing with                       NaN
+QC Required                                       YES
+Stockable                         Stockable(Valuable)
+Shelf Life                                         NO
+FIFO                                              Yes
+FEFO                                              Yes
+Options                                           NaN
+Alt UOM                                           NaN
+Covertion Ration                                  NaN
+Customer ID                                       YES
+Prod. Ref                                         NaN
+Name: 0, dtype: object
+
+============================================================
+3. HSN MASTER - 90 rows
+============================================================
+Columns: ['HSN Master', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4']
+
+Sample HSN codes:
+  HSN Master             Unnamed: 1  Unnamed: 2  Unnamed: 3 Unnamed: 4
+0        NaN                    NaN         NaN         NaN        NaN
+1   HSN Code            Description         NaN         NaN        NaN
+2   25081090  ADDITIVE MASTER BATCH         NaN         NaN        NaN
+3   44152000             WOODEN BOX         NaN         NaN        NaN
+4   48041900        PAPER WRAP ROLL         NaN         NaN        NaN
+5   48043100            Kraft Paper         NaN         NaN        NaN
+6   48043900            Kraft Paper         NaN         NaN        NaN
+7   48089000       CORRUGATED SHEET         NaN         NaN        NaN
+8   56039300      NON WOVEN FABRICS         NaN         NaN        NaN
+9   83014090              DOOR LOCK         NaN         NaN        NaN
+
+============================================================
+4. PARTY MASTER (Customers) - 1634 rows
+============================================================
+Columns: ['Party Master', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4', 'Unnamed: 5', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8', 'Unnamed: 9', 'Unnamed: 10', 'Unnamed: 11', 'Unnamed: 12', 'Unnamed: 13']
+
+Sample customer:
+Party Master       NaN
+Unnamed: 1         NaN
+Unnamed: 2         NaN
+Unnamed: 3         NaN
+Unnamed: 4         NaN
+Unnamed: 5         NaN
+Unnamed: 6         NaN
+Unnamed: 7         NaN
+Unnamed: 8         NaN
+Unnamed: 9      If Yes
+Unnamed: 10        NaN
+Unnamed: 11        NaN
+Unnamed: 12        NaN
+Unnamed: 13        NaN
+Name: 0, dtype: object
+
+============================================================
+5. GST MASTER - 26 rows
+============================================================
+Columns: ['GST Master', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4', 'Unnamed: 5', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8']
+   GST Master        Unnamed: 1  ... Unnamed: 7 Unnamed: 8
+0         NaN               NaN  ...        NaN        NaN
+1         NaN          GST Name  ...        NaN        NaN
+2         NaN   INPUT- CGST@14%  ...        NaN        NaN
+3         NaN   INPUT- SGST@14%  ...        NaN        NaN
+4         NaN    INPUT- CGST@6%  ...        NaN        NaN
+5         NaN    INPUT- SGST@6%  ...        NaN        NaN
+6         NaN    INPUT- CGST@9%  ...        NaN        NaN
+7         NaN    INPUT- SGST@9%  ...        NaN        NaN
+8         NaN  INPUT- CGST@2.5%  ...        NaN        NaN
+9         NaN  INPUT- SGST@2.5%  ...        NaN        NaN
+
+[10 rows x 9 columns]
+
+============================================================
+6. ZONE MASTER - 37 rows
+============================================================
+Columns: ['Zone Master', 'Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4']
+   Zone Master   Unnamed: 1       Unnamed: 2         Unnamed: 3 Unnamed: 4
+0    Unit Name          NaN              NaN                NaN        NaN
+1    Zone Name    Zone Type  Compulsory Form              State        NaN
+2   North Zone  Intra State     Not Required            Haryana        NaN
+3    East Zone  Inter State         Required              Bihar        NaN
+4    East Zone  Inter State         Required             Sikkim        NaN
+5    East Zone  Inter State         Required  Arunachal Pradesh        NaN
+6    East Zone  Inter State         Required           Nagaland        NaN
+7    East Zone  Inter State         Required            Manipur        NaN
+8    East Zone  Inter State         Required            MIzoram        NaN
+9    East Zone  Inter State         Required            Tripura        NaN
+10   East Zone  Inter State         Required          Meghalaya        NaN
+11   East Zone  Inter State         Required              Assam        NaN
+12   East Zone  Inter State         Required        West Bengal        NaN
+13   East Zone  Inter State         Required          Jharkhand        NaN
+14   East Zone  Inter State         Required             Odisha        NaN
+
+============================================================
+7. STATE MASTER - 36 rows
+============================================================
+Columns: ['Unnamed: 0', 'State Master', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4', 'Unnamed: 5', 'Unnamed: 6', 'Unnamed: 7', 'Unnamed: 8']
+   Unnamed: 0       State Master Unnamed: 2  ... Unnamed: 6  Unnamed: 7  Unnamed: 8
+0         NaN          Unit Name        NaN  ...        NaN         NaN         NaN
+1         NaN              State    Country  ...        NaN         NaN         NaN
+2         NaN     Andhra Pradesh      INDIA  ...        NaN         NaN         NaN
+3         NaN  Arunachal Pradesh      INDIA  ...        NaN         NaN         NaN
+4         NaN              Assam      INDIA  ...        NaN         NaN         NaN
+5         NaN              Bihar      INDIA  ...        NaN         NaN         NaN
+6         NaN        Chattisgarh      INDIA  ...        NaN         NaN         NaN
+7         NaN              Delhi      INDIA  ...        NaN         NaN         NaN
+8         NaN                Goa      INDIA  ...        NaN         NaN         NaN
+9         NaN            Gujarat      INDIA  ...        NaN         NaN         NaN
+
+[10 rows x 9 columns]
