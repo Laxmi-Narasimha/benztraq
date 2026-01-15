@@ -1,818 +1,761 @@
-/**
- * Professional Quotation Form
- * 
- * Industry-grade quotation/sales order creation matching Odoo format.
- * Features:
- * - Multiple line items with HSN codes
- * - GST breakdown (CGST + SGST)
- * - Payment terms and validity
- * - Auto-calculate totals
- * 
- * @module app/(dashboard)/documents/new/page
- */
-
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/providers/auth-provider';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue,
+    SelectValue
 } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
 import {
-    FileText,
-    ShoppingCart,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import {
     ArrowLeft,
-    Save,
-    Loader2,
-    AlertCircle,
-    CheckCircle,
     Plus,
     Trash2,
+    Save,
+    Send,
+    FileText,
     Calculator,
+    Building2,
+    Package,
+    Loader2,
+    Check,
+    AlertCircle
 } from 'lucide-react';
-import Link from 'next/link';
-import { format, addDays } from 'date-fns';
+import {
+    computeLineAmounts,
+    computeDocumentTotals,
+    determineFiscalPosition,
+    prepareLineForSave,
+    getNextSequence,
+    amountToWords,
+    GST_RATES,
+    COMPANY_STATE_CODE
+} from '@/lib/services/tax-computation';
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const UOM_OPTIONS = [
-    { value: 'Pcs', label: 'Pieces (Pcs)' },
-    { value: 'Kgs', label: 'Kilograms (Kgs)' },
-    { value: 'Roll', label: 'Rolls' },
-    { value: 'Sqm', label: 'Square Meters' },
-    { value: 'Mtr', label: 'Meters' },
-    { value: 'Set', label: 'Sets' },
-    { value: 'Box', label: 'Boxes' },
-];
-
-const GST_RATES = [
-    { value: 0, label: '0%' },
-    { value: 5, label: '5%' },
-    { value: 12, label: '12%' },
-    { value: 18, label: '18%' },
-    { value: 28, label: '28%' },
-];
-
-const PAYMENT_TERMS = [
-    { value: '100% Advance', label: '100% Advance' },
-    { value: '50% Advance', label: '50% Advance' },
-    { value: 'Net 15', label: 'Net 15 Days' },
-    { value: 'Net 30', label: 'Net 30 Days' },
-    { value: 'Net 45', label: 'Net 45 Days' },
-    { value: 'Net 60', label: 'Net 60 Days' },
-];
-
+// Indian States for Place of Supply
 const INDIAN_STATES = [
-    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
-    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-    'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Puducherry', 'Chandigarh',
+    { code: 'AN', name: 'Andaman and Nicobar Islands' },
+    { code: 'AP', name: 'Andhra Pradesh' },
+    { code: 'AR', name: 'Arunachal Pradesh' },
+    { code: 'AS', name: 'Assam' },
+    { code: 'BR', name: 'Bihar' },
+    { code: 'CG', name: 'Chhattisgarh' },
+    { code: 'CH', name: 'Chandigarh' },
+    { code: 'DL', name: 'Delhi' },
+    { code: 'GA', name: 'Goa' },
+    { code: 'GJ', name: 'Gujarat' },
+    { code: 'HP', name: 'Himachal Pradesh' },
+    { code: 'HR', name: 'Haryana' },
+    { code: 'JH', name: 'Jharkhand' },
+    { code: 'JK', name: 'Jammu and Kashmir' },
+    { code: 'KA', name: 'Karnataka' },
+    { code: 'KL', name: 'Kerala' },
+    { code: 'LA', name: 'Ladakh' },
+    { code: 'MH', name: 'Maharashtra' },
+    { code: 'ML', name: 'Meghalaya' },
+    { code: 'MN', name: 'Manipur' },
+    { code: 'MP', name: 'Madhya Pradesh' },
+    { code: 'MZ', name: 'Mizoram' },
+    { code: 'NL', name: 'Nagaland' },
+    { code: 'OD', name: 'Odisha' },
+    { code: 'PB', name: 'Punjab' },
+    { code: 'PY', name: 'Puducherry' },
+    { code: 'RJ', name: 'Rajasthan' },
+    { code: 'SK', name: 'Sikkim' },
+    { code: 'TN', name: 'Tamil Nadu' },
+    { code: 'TS', name: 'Telangana' },
+    { code: 'TR', name: 'Tripura' },
+    { code: 'UK', name: 'Uttarakhand' },
+    { code: 'UP', name: 'Uttar Pradesh' },
+    { code: 'WB', name: 'West Bengal' },
 ];
 
-const DEFAULT_TERMS = `1. This quote is valid for 15 days from the date of making.
-2. Freight: Extra as applicable.
-3. Delivery: 7-10 working days from order confirmation.
-4. Taxes: GST as applicable.`;
+// Default payment terms
+const PAYMENT_TERMS = [
+    { value: 'immediate', label: 'Immediate Payment' },
+    { value: 'advance', label: '100% Advance' },
+    { value: 'advance_50', label: '50% Advance' },
+    { value: 'net15', label: '15 Days' },
+    { value: 'net30', label: '30 Days' },
+    { value: 'net45', label: '45 Days' },
+    { value: 'net60', label: '60 Days' },
+];
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-function generateQuotationNumber() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `QT-${year}${month}${day}-${random}`;
-}
-
-function numberToWords(num) {
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-        'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
-        'Seventeen', 'Eighteen', 'Nineteen'];
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-
-    if (num === 0) return 'Zero';
-
-    const crore = Math.floor(num / 10000000);
-    const lakh = Math.floor((num % 10000000) / 100000);
-    const thousand = Math.floor((num % 100000) / 1000);
-    const hundred = Math.floor((num % 1000) / 100);
-    const remainder = Math.floor(num % 100);
-    const paise = Math.round((num % 1) * 100);
-
-    let words = '';
-
-    if (crore > 0) words += convertLessThanHundred(crore) + ' Crore ';
-    if (lakh > 0) words += convertLessThanHundred(lakh) + ' Lakh ';
-    if (thousand > 0) words += convertLessThanHundred(thousand) + ' Thousand ';
-    if (hundred > 0) words += ones[hundred] + ' Hundred ';
-    if (remainder > 0) words += convertLessThanHundred(remainder) + ' ';
-
-    words += 'Rupees';
-    if (paise > 0) words += ' And ' + convertLessThanHundred(paise) + ' Paise';
-    words += ' Only';
-
-    function convertLessThanHundred(n) {
-        if (n < 20) return ones[n];
-        return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '');
-    }
-
-    return words.trim();
-}
-
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: 2,
-    }).format(amount);
-}
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-
-export default function NewDocumentPage() {
+export default function OdooQuotationForm() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const { profile } = useAuth();
-
-    const typeFromUrl = searchParams.get('type') || 'quotation';
-    const convertFrom = searchParams.get('convert');
-
-    // Form state
-    const [docType, setDocType] = useState(typeFromUrl);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
-
-    // Header fields
-    const [quotationNumber, setQuotationNumber] = useState('');
-    const [docDate, setDocDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-    const [dueDate, setDueDate] = useState(format(addDays(new Date(), 15), 'yyyy-MM-dd'));
-    const [paymentTerms, setPaymentTerms] = useState('100% Advance');
-    const [validityDays, setValidityDays] = useState(15);
-    const [placeOfSupply, setPlaceOfSupply] = useState('Haryana');
-
-    // Customer fields
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [customers, setCustomers] = useState([]);
-    const [selectedCustomerId, setSelectedCustomerId] = useState('');
-    const [customerName, setCustomerName] = useState('');
-    const [customerAddress, setCustomerAddress] = useState('');
-    const [customerGstin, setCustomerGstin] = useState('');
-    const [customerSearch, setCustomerSearch] = useState('');
-    const [loadingCustomers, setLoadingCustomers] = useState(true);
-
-    // Products
     const [products, setProducts] = useState([]);
-    const [loadingProducts, setLoadingProducts] = useState(true);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
-    // Line items - array of items
-    const [lineItems, setLineItems] = useState([createEmptyLineItem()]);
+    // Document header state (Odoo-style)
+    const [document, setDocument] = useState({
+        name: '',                    // Auto-generated
+        partner_id: '',
+        partner_name: '',
+        partner_gstin: '',
+        partner_state_code: '',
+        invoice_address: '',
+        shipping_address: '',
+        date_order: new Date().toISOString().split('T')[0],
+        validity_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        commitment_date: '',
+        state: 'draft',
+        fiscal_position: 'intrastate',
+        place_of_supply: '',
+        currency_id: 'INR',
+        payment_term_note: 'advance',
+        note: '',
+        internal_note: '',
+        client_order_ref: '',
+    });
 
-    // Footer
-    const [termsAndConditions, setTermsAndConditions] = useState(DEFAULT_TERMS);
-    const [authorizedSignatory, setAuthorizedSignatory] = useState('');
+    // Line items state
+    const [lines, setLines] = useState([]);
 
-    // Create empty line item
-    function createEmptyLineItem() {
-        return {
-            id: Date.now(),
-            productId: '',
-            productName: '',
-            productDescription: '',
-            hsnCode: '39232100',
-            gstRate: 18,
-            quantity: '',
-            uom: 'Pcs',
-            unitPrice: '',
-            baseAmount: 0,
-            cgstAmount: 0,
-            sgstAmount: 0,
-            lineTotal: 0,
-        };
-    }
+    // Computed totals
+    const [totals, setTotals] = useState({
+        amount_untaxed: 0,
+        amount_tax: 0,
+        amount_total: 0,
+        cgst_total: 0,
+        sgst_total: 0,
+        igst_total: 0,
+    });
 
-    // Generate quotation number on mount
+    // Load customers and products on mount
     useEffect(() => {
-        if (!quotationNumber) {
-            setQuotationNumber(generateQuotationNumber());
+        loadCustomers();
+        loadProducts();
+    }, []);
+
+    // Recompute totals when lines change
+    useEffect(() => {
+        const newTotals = computeDocumentTotals(lines);
+        setTotals(newTotals);
+    }, [lines]);
+
+    const loadCustomers = async () => {
+        try {
+            const res = await fetch('/api/customers');
+            const data = await res.json();
+            setCustomers(data.customers || data || []);
+        } catch (err) {
+            console.error('Failed to load customers:', err);
         }
-    }, [quotationNumber]);
+    };
 
-    // Fetch customers
-    useEffect(() => {
-        const fetchCustomers = async () => {
-            try {
-                const res = await fetch('/api/customers?limit=1000');
-                const data = await res.json();
-                if (res.ok) {
-                    setCustomers(data.customers || []);
-                }
-            } catch (err) {
-                console.error('Failed to fetch customers:', err);
-            } finally {
-                setLoadingCustomers(false);
-            }
-        };
-        fetchCustomers();
-    }, []);
-
-    // Fetch products
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const res = await fetch('/api/products?limit=1000');
-                const data = await res.json();
-                if (res.ok) {
-                    setProducts(data.products || []);
-                }
-            } catch (err) {
-                console.error('Failed to fetch products:', err);
-            } finally {
-                setLoadingProducts(false);
-            }
-        };
-        fetchProducts();
-    }, []);
-
-    // Filtered customers
-    const filteredCustomers = useMemo(() => {
-        if (!customerSearch) return customers.slice(0, 50);
-        const search = customerSearch.toLowerCase();
-        return customers.filter(c =>
-            c.name?.toLowerCase().includes(search)
-        ).slice(0, 50);
-    }, [customers, customerSearch]);
+    const loadProducts = async () => {
+        try {
+            const res = await fetch('/api/products?limit=500');
+            const data = await res.json();
+            setProducts(data.products || data || []);
+        } catch (err) {
+            console.error('Failed to load products:', err);
+        }
+    };
 
     // Handle customer selection
-    const handleCustomerSelect = useCallback((customerId) => {
-        setSelectedCustomerId(customerId);
+    const handleCustomerChange = useCallback((customerId) => {
         const customer = customers.find(c => c.id === customerId);
         if (customer) {
-            setCustomerName(customer.name);
-            setCustomerAddress(customer.address || '');
-            setCustomerGstin(customer.gstin || '');
+            const stateCode = customer.state_code || '';
+            const fiscalPosition = determineFiscalPosition(COMPANY_STATE_CODE, stateCode);
+
+            setDocument(prev => ({
+                ...prev,
+                partner_id: customer.id,
+                partner_name: customer.name || customer.customer_name,
+                partner_gstin: customer.gstin || prev.partner_gstin,
+                partner_state_code: stateCode,
+                invoice_address: customer.billing_address || customer.address || '',
+                shipping_address: customer.shipping_address || customer.address || '',
+                place_of_supply: stateCode,
+                fiscal_position: fiscalPosition,
+            }));
+
+            // Recompute all line items with new fiscal position
+            if (lines.length > 0) {
+                setLines(prevLines => prevLines.map(line => ({
+                    ...line,
+                    ...computeLineAmounts(line, fiscalPosition)
+                })));
+            }
         }
-    }, [customers]);
+    }, [customers, lines]);
 
-    // Handle line item changes
-    const updateLineItem = (index, field, value) => {
-        setLineItems(prev => {
-            const updated = [...prev];
-            updated[index] = { ...updated[index], [field]: value };
+    // Handle place of supply change
+    const handlePlaceOfSupplyChange = useCallback((stateCode) => {
+        const fiscalPosition = determineFiscalPosition(COMPANY_STATE_CODE, stateCode);
 
-            // Recalculate amounts
-            const qty = parseFloat(updated[index].quantity) || 0;
-            const price = parseFloat(updated[index].unitPrice) || 0;
-            const gstRate = parseFloat(updated[index].gstRate) || 0;
+        setDocument(prev => ({
+            ...prev,
+            place_of_supply: stateCode,
+            partner_state_code: stateCode,
+            fiscal_position: fiscalPosition,
+        }));
 
-            const baseAmount = qty * price;
-            const gstAmount = (baseAmount * gstRate) / 100;
-            const cgstAmount = gstAmount / 2;
-            const sgstAmount = gstAmount / 2;
-            const lineTotal = baseAmount + gstAmount;
-
-            updated[index] = {
-                ...updated[index],
-                baseAmount,
-                cgstAmount,
-                sgstAmount,
-                lineTotal,
-            };
-
-            return updated;
-        });
-    };
-
-    // Handle product selection for line item
-    const handleProductSelectForLine = (index, productId) => {
-        const product = products.find(p => p.id === productId);
-        if (product) {
-            setLineItems(prev => {
-                const updated = [...prev];
-                updated[index] = {
-                    ...updated[index],
-                    productId,
-                    productName: product.item_name || product.name,
-                    productDescription: product.description || `${product.item_name || ''}`,
-                    hsnCode: product.hsn_code || '39232100',
-                    gstRate: product.default_gst_rate || 18,
-                    uom: product.stock_uom || 'Pcs',
-                    unitPrice: product.standard_rate?.toString() || '',
-                };
-                return updated;
-            });
+        // Recompute all line items with new fiscal position
+        if (lines.length > 0) {
+            setLines(prevLines => prevLines.map(line => ({
+                ...line,
+                ...computeLineAmounts(line, fiscalPosition)
+            })));
         }
-    };
+    }, [lines]);
 
-    // Add line item
-    const addLineItem = () => {
-        setLineItems(prev => [...prev, createEmptyLineItem()]);
+    // Add new line item
+    const addLine = () => {
+        const sequence = getNextSequence(lines);
+        setLines([...lines, {
+            id: `temp_${Date.now()}`,
+            sequence,
+            product_id: '',
+            name: '',
+            hsn_code: '',
+            product_uom: 'Units',
+            product_uom_qty: 1,
+            price_unit: 0,
+            discount: 0,
+            gst_rate: 18,
+            price_subtotal: 0,
+            price_tax: 0,
+            price_total: 0,
+            cgst_amount: 0,
+            sgst_amount: 0,
+            igst_amount: 0,
+        }]);
     };
 
     // Remove line item
-    const removeLineItem = (index) => {
-        if (lineItems.length > 1) {
-            setLineItems(prev => prev.filter((_, i) => i !== index));
-        }
+    const removeLine = (index) => {
+        setLines(lines.filter((_, i) => i !== index));
     };
 
-    // Calculate totals
-    const totals = useMemo(() => {
-        const subtotal = lineItems.reduce((sum, item) => sum + item.baseAmount, 0);
-        const cgstTotal = lineItems.reduce((sum, item) => sum + item.cgstAmount, 0);
-        const sgstTotal = lineItems.reduce((sum, item) => sum + item.sgstAmount, 0);
-        const grandTotal = subtotal + cgstTotal + sgstTotal;
+    // Handle line item change
+    const updateLine = (index, field, value) => {
+        setLines(prevLines => {
+            const newLines = [...prevLines];
+            const line = { ...newLines[index], [field]: value };
 
-        return { subtotal, cgstTotal, sgstTotal, grandTotal };
-    }, [lineItems]);
-
-    // Submit form
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setIsSubmitting(true);
-
-        try {
-            // Validation
-            if (!customerName.trim()) {
-                throw new Error('Please select a customer');
+            // If product changed, update product-related fields
+            if (field === 'product_id' && value) {
+                const product = products.find(p => p.id === value);
+                if (product) {
+                    line.name = product.item_name || product.name || '';
+                    line.hsn_code = product.hsn_code || '39232100';
+                    line.gst_rate = product.default_gst_rate || 18;
+                    line.price_unit = product.selling_price || 0;
+                    line.product_uom = product.product_uom || 'Units';
+                }
             }
 
-            const validItems = lineItems.filter(item =>
-                item.productName && item.quantity && item.unitPrice
-            );
+            // Recompute amounts if quantity, price, discount, or gst_rate changed
+            if (['product_uom_qty', 'price_unit', 'discount', 'gst_rate', 'product_id'].includes(field)) {
+                const computed = computeLineAmounts(line, document.fiscal_position);
+                Object.assign(line, computed);
+            }
 
-            if (validItems.length === 0) {
+            newLines[index] = line;
+            return newLines;
+        });
+    };
+
+    // Save document
+    const handleSave = async (newState = 'draft') => {
+        setError('');
+        setSuccess('');
+        setSaving(true);
+
+        try {
+            // Validate
+            if (!document.partner_id && !document.partner_name) {
+                throw new Error('Please select a customer');
+            }
+            if (lines.length === 0) {
                 throw new Error('Please add at least one line item');
             }
 
             const payload = {
-                doc_type: docType,
-                quotation_number: quotationNumber,
-                doc_date: docDate,
-                due_date: dueDate,
-                customer_id: selectedCustomerId || null,
-                customer_name: customerName.trim(),
-                customer_address: customerAddress,
-                customer_gstin: customerGstin,
-                payment_terms: paymentTerms,
-                validity_days: validityDays,
-                country_of_supply: 'India',
-                place_of_supply: placeOfSupply,
-                terms_and_conditions: termsAndConditions,
-                authorized_signatory: authorizedSignatory || profile?.name,
-                subtotal: totals.subtotal,
-                cgst_total: totals.cgstTotal,
-                sgst_total: totals.sgstTotal,
-                grand_total: totals.grandTotal,
-                salesperson_user_id: profile?.id,
-                line_items: validItems.map(item => ({
-                    product_id: item.productId || null,
-                    product_name_raw: item.productName,
-                    product_description: item.productDescription,
-                    hsn_code: item.hsnCode,
-                    gst_rate: item.gstRate,
-                    qty: parseFloat(item.quantity),
-                    uom: item.uom,
-                    unit_price: parseFloat(item.unitPrice),
-                    base_amount: item.baseAmount,
-                    cgst_amount: item.cgstAmount,
-                    sgst_amount: item.sgstAmount,
-                    line_total: item.lineTotal,
+                ...document,
+                state: newState,
+                doc_type: newState === 'sale' ? 'sales_order' : 'quotation',
+                customer_name: document.partner_name,
+                customer_id: document.partner_id,
+                customer_gstin: document.partner_gstin,
+                customer_address: document.invoice_address,
+                ...totals,
+                order_line: lines.map(line => ({
+                    ...line,
+                    product_name_raw: line.name,
+                    qty: line.product_uom_qty,
+                    unit_price: line.price_unit,
+                    base_amount: line.price_subtotal,
+                    line_total: line.price_total,
                 })),
             };
 
-            const response = await fetch('/api/documents', {
+            const res = await fetch('/api/documents', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
-            const data = await response.json();
+            const data = await res.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to create document');
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to save document');
             }
 
-            setSuccess(true);
+            setSuccess(`Document ${data.name || data.document?.name} saved successfully!`);
+
+            // Redirect after short delay
             setTimeout(() => {
-                router.push('/documents');
+                router.push(`/documents/${data.id || data.document?.id}`);
             }, 1500);
 
         } catch (err) {
             setError(err.message);
         } finally {
-            setIsSubmitting(false);
+            setSaving(false);
         }
     };
 
-    const isQuotation = docType === 'quotation';
+    // Format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+        }).format(amount || 0);
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-            <div className="max-w-6xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/documents">
-                            <Button variant="ghost" size="icon">
-                                <ArrowLeft className="h-5 w-5" />
-                            </Button>
-                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => router.push('/documents')}
+                        >
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
                         <div>
-                            <h1 className="text-2xl font-bold">
-                                {isQuotation ? 'Create Quotation' : 'Create Sales Order'}
+                            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                New Quotation
                             </h1>
-                            <p className="text-muted-foreground">
-                                Professional document with GST breakdown
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Create professional quotation with GST breakdown
                             </p>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                         <Button
-                            variant={isQuotation ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setDocType('quotation')}
+                            variant="outline"
+                            onClick={() => handleSave('draft')}
+                            disabled={saving}
                         >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Quotation
+                            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save Draft
                         </Button>
                         <Button
-                            variant={!isQuotation ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setDocType('sales_order')}
+                            onClick={() => handleSave('sale')}
+                            disabled={saving}
+                            className="bg-green-600 hover:bg-green-700"
                         >
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Sales Order
+                            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                            Confirm Order
                         </Button>
                     </div>
                 </div>
+            </div>
 
-                {/* Alerts */}
-                {error && (
-                    <Alert variant="destructive">
+            {/* Messages */}
+            {error && (
+                <div className="max-w-7xl mx-auto px-4 py-2">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center gap-2 text-red-700 dark:text-red-300">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
+                        {error}
+                    </div>
+                </div>
+            )}
+            {success && (
+                <div className="max-w-7xl mx-auto px-4 py-2">
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 flex items-center gap-2 text-green-700 dark:text-green-300">
+                        <Check className="h-4 w-4" />
+                        {success}
+                    </div>
+                </div>
+            )}
 
-                {success && (
-                    <Alert className="border-green-500 bg-green-50">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800">
-                            {isQuotation ? 'Quotation' : 'Sales Order'} created successfully!
-                        </AlertDescription>
-                    </Alert>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Document Details Card */}
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+                {/* Customer & Order Details */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Customer Card */}
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Document Details</CardTitle>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Building2 className="h-4 w-4" />
+                                Customer Details
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Customer *</Label>
+                                <Select
+                                    value={document.partner_id}
+                                    onValueChange={handleCustomerChange}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select customer..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {customers.map(c => (
+                                            <SelectItem key={c.id} value={c.id}>
+                                                {c.name || c.customer_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Quotation No.</Label>
+                                    <Label>GSTIN</Label>
                                     <Input
-                                        value={quotationNumber}
-                                        onChange={(e) => setQuotationNumber(e.target.value)}
-                                        className="font-mono"
+                                        value={document.partner_gstin}
+                                        onChange={(e) => setDocument(prev => ({ ...prev, partner_gstin: e.target.value }))}
+                                        placeholder="22AAAAA0000A1Z5"
                                     />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Date</Label>
-                                    <Input
-                                        type="date"
-                                        value={docDate}
-                                        onChange={(e) => setDocDate(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Due Date</Label>
-                                    <Input
-                                        type="date"
-                                        value={dueDate}
-                                        onChange={(e) => setDueDate(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Validity (Days)</Label>
-                                    <Input
-                                        type="number"
-                                        value={validityDays}
-                                        onChange={(e) => setValidityDays(parseInt(e.target.value) || 15)}
-                                        min={1}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Payment Terms</Label>
-                                    <Select value={paymentTerms} onValueChange={setPaymentTerms}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {PAYMENT_TERMS.map(term => (
-                                                <SelectItem key={term.value} value={term.value}>
-                                                    {term.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Place of Supply</Label>
-                                    <Select value={placeOfSupply} onValueChange={setPlaceOfSupply}>
+                                    <Select
+                                        value={document.place_of_supply}
+                                        onValueChange={handlePlaceOfSupplyChange}
+                                    >
                                         <SelectTrigger>
-                                            <SelectValue />
+                                            <SelectValue placeholder="Select state..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {INDIAN_STATES.map(state => (
-                                                <SelectItem key={state} value={state}>
-                                                    {state}
+                                            {INDIAN_STATES.map(s => (
+                                                <SelectItem key={s.code} value={s.code}>
+                                                    {s.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Customer Card */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Customer Details</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Customer *</Label>
-                                    <Select
-                                        value={selectedCustomerId}
-                                        onValueChange={handleCustomerSelect}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select customer..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <div className="p-2">
-                                                <Input
-                                                    placeholder="Search customers..."
-                                                    value={customerSearch}
-                                                    onChange={(e) => setCustomerSearch(e.target.value)}
-                                                    className="mb-2"
-                                                />
-                                            </div>
-                                            {loadingCustomers ? (
-                                                <div className="p-4 text-center">Loading...</div>
-                                            ) : (
-                                                filteredCustomers.map(customer => (
-                                                    <SelectItem key={customer.id} value={customer.id}>
-                                                        {customer.name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Customer GSTIN</Label>
-                                    <Input
-                                        value={customerGstin}
-                                        onChange={(e) => setCustomerGstin(e.target.value)}
-                                        placeholder="Enter GSTIN"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <Label>Address</Label>
-                                    <Textarea
-                                        value={customerAddress}
-                                        onChange={(e) => setCustomerAddress(e.target.value)}
-                                        placeholder="Customer address"
-                                        rows={2}
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <Label>Billing Address</Label>
+                                <Textarea
+                                    value={document.invoice_address}
+                                    onChange={(e) => setDocument(prev => ({ ...prev, invoice_address: e.target.value }))}
+                                    rows={2}
+                                    placeholder="Customer billing address..."
+                                />
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Line Items Card */}
+                    {/* Order Details Card */}
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Line Items</CardTitle>
-                            <Button type="button" variant="outline" size="sm" onClick={addLineItem}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Item
-                            </Button>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <FileText className="h-4 w-4" />
+                                Order Details
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b bg-slate-50">
-                                            <th className="p-2 text-left w-8">#</th>
-                                            <th className="p-2 text-left min-w-[200px]">Product</th>
-                                            <th className="p-2 text-left w-28">HSN</th>
-                                            <th className="p-2 text-left w-20">GST %</th>
-                                            <th className="p-2 text-left w-20">Qty</th>
-                                            <th className="p-2 text-left w-20">UoM</th>
-                                            <th className="p-2 text-right w-28">Rate (₹)</th>
-                                            <th className="p-2 text-right w-28">Amount</th>
-                                            <th className="p-2 w-10"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {lineItems.map((item, index) => (
-                                            <tr key={item.id} className="border-b hover:bg-slate-50">
-                                                <td className="p-2 text-muted-foreground">{index + 1}</td>
-                                                <td className="p-2">
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Order Date</Label>
+                                    <Input
+                                        type="date"
+                                        value={document.date_order}
+                                        onChange={(e) => setDocument(prev => ({ ...prev, date_order: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Validity Date</Label>
+                                    <Input
+                                        type="date"
+                                        value={document.validity_date}
+                                        onChange={(e) => setDocument(prev => ({ ...prev, validity_date: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Payment Terms</Label>
+                                    <Select
+                                        value={document.payment_term_note}
+                                        onValueChange={(v) => setDocument(prev => ({ ...prev, payment_term_note: v }))}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select terms..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {PAYMENT_TERMS.map(t => (
+                                                <SelectItem key={t.value} value={t.value}>
+                                                    {t.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Customer Reference</Label>
+                                    <Input
+                                        value={document.client_order_ref}
+                                        onChange={(e) => setDocument(prev => ({ ...prev, client_order_ref: e.target.value }))}
+                                        placeholder="PO Number..."
+                                    />
+                                </div>
+                            </div>
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-blue-700 dark:text-blue-300">Tax Position:</span>
+                                    <span className="font-medium text-blue-800 dark:text-blue-200">
+                                        {document.fiscal_position === 'interstate' ? 'Inter-State (IGST)' : 'Intra-State (CGST + SGST)'}
+                                    </span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Line Items */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Package className="h-4 w-4" />
+                                Order Lines
+                            </CardTitle>
+                            <Button size="sm" onClick={addLine}>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add Line
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-12">#</TableHead>
+                                        <TableHead className="min-w-[200px]">Product</TableHead>
+                                        <TableHead className="w-24">HSN</TableHead>
+                                        <TableHead className="w-20">Qty</TableHead>
+                                        <TableHead className="w-20">UoM</TableHead>
+                                        <TableHead className="w-28">Price</TableHead>
+                                        <TableHead className="w-20">Disc %</TableHead>
+                                        <TableHead className="w-20">GST %</TableHead>
+                                        <TableHead className="w-28 text-right">Subtotal</TableHead>
+                                        <TableHead className="w-28 text-right">
+                                            {document.fiscal_position === 'interstate' ? 'IGST' : 'CGST + SGST'}
+                                        </TableHead>
+                                        <TableHead className="w-28 text-right">Total</TableHead>
+                                        <TableHead className="w-12"></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {lines.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={12} className="text-center py-8 text-gray-500">
+                                                No line items. Click "Add Line" to add products.
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        lines.map((line, idx) => (
+                                            <TableRow key={line.id}>
+                                                <TableCell className="text-gray-500">{idx + 1}</TableCell>
+                                                <TableCell>
                                                     <Select
-                                                        value={item.productId}
-                                                        onValueChange={(val) => handleProductSelectForLine(index, val)}
+                                                        value={line.product_id}
+                                                        onValueChange={(v) => updateLine(idx, 'product_id', v)}
                                                     >
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select..." />
+                                                        <SelectTrigger className="h-8">
+                                                            <SelectValue placeholder="Select product..." />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            {products.slice(0, 100).map(p => (
+                                                            {products.map(p => (
                                                                 <SelectItem key={p.id} value={p.id}>
                                                                     {p.item_name || p.name}
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
+                                                </TableCell>
+                                                <TableCell>
                                                     <Input
-                                                        className="mt-1 text-xs"
-                                                        placeholder="Description..."
-                                                        value={item.productDescription}
-                                                        onChange={(e) => updateLineItem(index, 'productDescription', e.target.value)}
+                                                        className="h-8 w-20"
+                                                        value={line.hsn_code}
+                                                        onChange={(e) => updateLine(idx, 'hsn_code', e.target.value)}
                                                     />
-                                                </td>
-                                                <td className="p-2">
+                                                </TableCell>
+                                                <TableCell>
                                                     <Input
-                                                        value={item.hsnCode}
-                                                        onChange={(e) => updateLineItem(index, 'hsnCode', e.target.value)}
-                                                        className="font-mono text-xs"
+                                                        type="number"
+                                                        className="h-8 w-16"
+                                                        value={line.product_uom_qty}
+                                                        onChange={(e) => updateLine(idx, 'product_uom_qty', parseFloat(e.target.value) || 0)}
                                                     />
-                                                </td>
-                                                <td className="p-2">
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        className="h-8 w-16"
+                                                        value={line.product_uom}
+                                                        onChange={(e) => updateLine(idx, 'product_uom', e.target.value)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        className="h-8 w-24"
+                                                        value={line.price_unit}
+                                                        onChange={(e) => updateLine(idx, 'price_unit', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        className="h-8 w-16"
+                                                        value={line.discount}
+                                                        onChange={(e) => updateLine(idx, 'discount', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
                                                     <Select
-                                                        value={item.gstRate.toString()}
-                                                        onValueChange={(val) => updateLineItem(index, 'gstRate', parseFloat(val))}
+                                                        value={String(line.gst_rate)}
+                                                        onValueChange={(v) => updateLine(idx, 'gst_rate', parseFloat(v))}
                                                     >
-                                                        <SelectTrigger>
+                                                        <SelectTrigger className="h-8 w-16">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            {GST_RATES.map(rate => (
-                                                                <SelectItem key={rate.value} value={rate.value.toString()}>
-                                                                    {rate.label}
+                                                            {GST_RATES.map(r => (
+                                                                <SelectItem key={r.value} value={String(r.value)}>
+                                                                    {r.value}%
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
-                                                </td>
-                                                <td className="p-2">
-                                                    <Input
-                                                        type="number"
-                                                        value={item.quantity}
-                                                        onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
-                                                        min={0}
-                                                    />
-                                                </td>
-                                                <td className="p-2">
-                                                    <Select
-                                                        value={item.uom}
-                                                        onValueChange={(val) => updateLineItem(index, 'uom', val)}
-                                                    >
-                                                        <SelectTrigger>
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {UOM_OPTIONS.map(u => (
-                                                                <SelectItem key={u.value} value={u.value}>
-                                                                    {u.value}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </td>
-                                                <td className="p-2">
-                                                    <Input
-                                                        type="number"
-                                                        value={item.unitPrice}
-                                                        onChange={(e) => updateLineItem(index, 'unitPrice', e.target.value)}
-                                                        className="text-right"
-                                                        min={0}
-                                                        step="0.01"
-                                                    />
-                                                </td>
-                                                <td className="p-2 text-right font-medium">
-                                                    {formatCurrency(item.lineTotal)}
-                                                </td>
-                                                <td className="p-2">
+                                                </TableCell>
+                                                <TableCell className="text-right font-medium">
+                                                    {formatCurrency(line.price_subtotal)}
+                                                </TableCell>
+                                                <TableCell className="text-right text-gray-600 dark:text-gray-400">
+                                                    {document.fiscal_position === 'interstate'
+                                                        ? formatCurrency(line.igst_amount)
+                                                        : formatCurrency(line.cgst_amount + line.sgst_amount)
+                                                    }
+                                                </TableCell>
+                                                <TableCell className="text-right font-semibold">
+                                                    {formatCurrency(line.price_total)}
+                                                </TableCell>
+                                                <TableCell>
                                                     <Button
-                                                        type="button"
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => removeLineItem(index)}
-                                                        disabled={lineItems.length === 1}
+                                                        className="h-8 w-8 text-red-500 hover:text-red-700"
+                                                        onClick={() => removeLine(idx)}
                                                     >
-                                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                                        <Trash2 className="h-4 w-4" />
                                                     </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                            {/* Totals */}
-                            <div className="mt-6 flex justify-end">
-                                <div className="w-80 space-y-2">
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Subtotal:</span>
-                                        <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">CGST:</span>
-                                        <span>{formatCurrency(totals.cgstTotal)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">SGST:</span>
-                                        <span>{formatCurrency(totals.sgstTotal)}</span>
-                                    </div>
-                                    <Separator />
-                                    <div className="flex justify-between text-lg font-bold">
-                                        <span>Grand Total:</span>
-                                        <span className="text-primary">{formatCurrency(totals.grandTotal)}</span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground italic">
-                                        {numberToWords(totals.grandTotal)}
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Terms Card */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Terms & Conditions</CardTitle>
+                {/* Totals & Summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Terms & Notes */}
+                    <Card className="lg:col-span-2">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base">Terms & Conditions</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Textarea
-                                value={termsAndConditions}
-                                onChange={(e) => setTermsAndConditions(e.target.value)}
+                                value={document.note}
+                                onChange={(e) => setDocument(prev => ({ ...prev, note: e.target.value }))}
                                 rows={4}
+                                placeholder="Enter terms and conditions..."
                             />
                         </CardContent>
                     </Card>
 
-                    {/* Submit Button */}
-                    <div className="flex justify-end gap-4">
-                        <Button type="button" variant="outline" onClick={() => router.back()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting} className="min-w-[150px]">
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Creating...
-                                </>
+                    {/* Totals Card */}
+                    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Calculator className="h-4 w-4" />
+                                Order Summary
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">Untaxed Amount:</span>
+                                <span className="font-medium">{formatCurrency(totals.amount_untaxed)}</span>
+                            </div>
+                            {document.fiscal_position === 'interstate' ? (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600 dark:text-gray-400">IGST:</span>
+                                    <span className="font-medium">{formatCurrency(totals.igst_total)}</span>
+                                </div>
                             ) : (
                                 <>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    Create {isQuotation ? 'Quotation' : 'Sales Order'}
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600 dark:text-gray-400">CGST:</span>
+                                        <span className="font-medium">{formatCurrency(totals.cgst_total)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600 dark:text-gray-400">SGST:</span>
+                                        <span className="font-medium">{formatCurrency(totals.sgst_total)}</span>
+                                    </div>
                                 </>
                             )}
-                        </Button>
-                    </div>
-                </form>
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                                <div className="flex justify-between items-end">
+                                    <span className="text-lg font-medium text-gray-900 dark:text-white">Total:</span>
+                                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                        {formatCurrency(totals.amount_total)}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    {amountToWords(totals.amount_total)}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

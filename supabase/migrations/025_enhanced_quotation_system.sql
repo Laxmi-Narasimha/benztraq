@@ -78,18 +78,22 @@ CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can only see their own notifications
-CREATE POLICY IF NOT EXISTS "Users can view own notifications" 
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
+CREATE POLICY "Users can view own notifications" 
     ON notifications FOR SELECT 
     USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update own notifications" 
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
+CREATE POLICY "Users can update own notifications" 
     ON notifications FOR UPDATE 
     USING (auth.uid() = user_id);
 
 -- Service role can insert notifications for any user
-CREATE POLICY IF NOT EXISTS "Service role can insert notifications" 
+DROP POLICY IF EXISTS "Service role can insert notifications" ON notifications;
+CREATE POLICY "Service role can insert notifications" 
     ON notifications FOR INSERT 
     WITH CHECK (TRUE);
+
 
 -- ============================================================================
 -- UPDATE EXISTING PRODUCTS WITH COMMON HSN CODES
