@@ -151,9 +151,6 @@ export default function ErgopackLayout({ children }) {
                             <p className="text-sm font-medium text-zinc-300 group-hover:text-white truncate transition-colors">
                                 {user?.fullName || 'User'}
                             </p>
-                            <p className="text-[10px] text-zinc-600 uppercase tracking-wider truncate">
-                                {user?.designation || user?.role}
-                            </p>
                         </div>
                         <Button
                             variant="ghost"

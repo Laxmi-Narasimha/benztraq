@@ -45,7 +45,7 @@ export default function ErgopackDashboard() {
             const response = await fetch('/api/ergopack/contacts');
             const data = await response.json();
             if (data.stats) setStats(data.stats);
-            if (data.contacts) setRecentContacts(data.contacts.slice(0, 4));
+            if (data.contacts) setRecentContacts(data.contacts);
         } catch (error) {
             console.error('Error:', error);
         } finally {
@@ -133,7 +133,7 @@ export default function ErgopackDashboard() {
                     <CardHeader className="py-3 px-4 border-b border-zinc-900 flex flex-row items-center justify-between">
                         <CardTitle className="text-sm font-light text-white">Recent Leads</CardTitle>
                         <Link href="/ergopack/contacts">
-                            <Button variant="ghost" size="sm" className="text-zinc-500 hover:text-white h-6 text-[10px]">
+                            <Button variant="ghost" size="sm" className="text-zinc-500 hover:text-white hover:bg-zinc-800 h-6 text-[10px]">
                                 View All <ArrowRight className="w-3 h-3 ml-1" />
                             </Button>
                         </Link>
