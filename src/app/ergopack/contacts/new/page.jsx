@@ -180,10 +180,10 @@ export default function NewContactPage() {
                                         Email
                                     </Label>
                                     <Input
-                                        type="email"
+                                        type="text"
                                         value={formData.email}
                                         onChange={(e) => handleChange('email', e.target.value)}
-                                        placeholder="contact@company.com"
+                                        placeholder="email@company.com, email2@company.com"
                                         className="h-11 bg-zinc-900/50 border-zinc-800 text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                                     />
                                 </div>
@@ -235,8 +235,8 @@ export default function NewContactPage() {
                                                         handleChange('suggestedModel', newModels.join(','));
                                                     }}
                                                     className={`px-3 py-1.5 text-sm rounded-md border transition-all ${isSelected
-                                                            ? 'bg-emerald-600 border-emerald-500 text-white'
-                                                            : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                                                        ? 'bg-emerald-600 border-emerald-500 text-white'
+                                                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
                                                         }`}
                                                 >
                                                     {opt.label}
