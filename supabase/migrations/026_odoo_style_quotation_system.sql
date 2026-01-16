@@ -134,14 +134,14 @@ ALTER TABLE documents ADD COLUMN IF NOT EXISTS note TEXT;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS internal_note TEXT;
 
 -- Salesperson and team (Odoo: user_id, team_id)
-ALTER TABLE documents ADD COLUMN IF NOT EXISTS salesperson_id UUID REFERENCES users(id);
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS salesperson_id UUID REFERENCES auth.users(id);
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS sales_team TEXT;
 
 -- Tracking fields
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ;
-ALTER TABLE documents ADD COLUMN IF NOT EXISTS confirmed_by UUID REFERENCES users(id);
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS confirmed_by UUID REFERENCES auth.users(id);
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
-ALTER TABLE documents ADD COLUMN IF NOT EXISTS cancelled_by UUID REFERENCES users(id);
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS cancelled_by UUID REFERENCES auth.users(id);
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS cancel_reason TEXT;
 
 -- ============================================================================

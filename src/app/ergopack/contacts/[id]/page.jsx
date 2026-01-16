@@ -23,7 +23,8 @@ import { Badge } from '@/components/ui/badge';
 import {
     Save, ArrowLeft, Loader2, Trash2, FileText,
     Phone, Mail, Calendar, Clock, Building2,
-    Plus, MessageSquare, Activity, MapPin, User, Package, Briefcase
+    Plus, MessageSquare, Activity, MapPin, User, Package, Briefcase,
+    Upload, Download, Eye, X, FilePlus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -74,6 +75,14 @@ export default function ContactDetailPage({ params }) {
     const [showActivityForm, setShowActivityForm] = useState(false);
     const [showQuotationModal, setShowQuotationModal] = useState(false);
 
+    // Presentation upload state
+    const [presentationInfo, setPresentationInfo] = useState(null);
+    const [isUploadingPresentation, setIsUploadingPresentation] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    // Quotation state
+    const [quotationInfo, setQuotationInfo] = useState(null);
+
     const canDelete = isDirector || isDeveloper;
 
     const [newActivity, setNewActivity] = useState({
@@ -98,7 +107,33 @@ export default function ContactDetailPage({ params }) {
     useEffect(() => {
         fetchContact();
         fetchActivities();
+        fetchPresentationInfo();
+        fetchQuotationInfo();
     }, [id]);
+
+    const fetchPresentationInfo = async () => {
+        try {
+            const response = await fetch(`/api/ergopack/presentations?contactId=${id}`);
+            const data = await response.json();
+            if (data.success) {
+                setPresentationInfo(data);
+            }
+        } catch (err) {
+            console.error('Failed to load presentation info:', err);
+        }
+    };
+
+    const fetchQuotationInfo = async () => {
+        try {
+            const response = await fetch(`/api/ergopack/quotations?contactId=${id}`);
+            const data = await response.json();
+            if (data.success) {
+                setQuotationInfo(data);
+            }
+        } catch (err) {
+            console.error('Failed to load quotation info:', err);
+        }
+    };
 
     const fetchContact = async () => {
         try {
@@ -193,6 +228,115 @@ export default function ContactDetailPage({ params }) {
             }
         } catch (err) {
             toast.error('Failed to log activity');
+        }
+    };
+
+    // Presentation handlers
+    const handlePresentationUpload = async (file) => {
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+            toast.error('Only PDF files are allowed');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('File size must be less than 10MB');
+            return;
+        }
+
+        setIsUploadingPresentation(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('contactId', id);
+
+            const response = await fetch('/api/ergopack/presentations', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Presentation uploaded successfully');
+                fetchPresentationInfo();
+                fetchActivities();
+            } else {
+                toast.error(data.error || 'Failed to upload presentation');
+            }
+        } catch (err) {
+            console.error('Upload error:', err);
+            toast.error('Error uploading presentation');
+        } finally {
+            setIsUploadingPresentation(false);
+        }
+    };
+
+    const handlePresentationDelete = async () => {
+        if (!confirm('Delete this presentation? This cannot be undone.')) return;
+
+        try {
+            const response = await fetch(`/api/ergopack/presentations?contactId=${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Presentation deleted');
+                setPresentationInfo({ success: true, hasPresentation: false });
+                fetchActivities();
+            } else {
+                toast.error(data.error || 'Failed to delete presentation');
+            }
+        } catch (err) {
+            toast.error('Error deleting presentation');
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            handlePresentationUpload(file);
+        }
+    };
+
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handlePresentationUpload(file);
+        }
+    };
+
+    const handleQuotationDelete = async () => {
+        if (!confirm('Delete this quotation? This cannot be undone.')) return;
+
+        try {
+            const response = await fetch(`/api/ergopack/quotations?contactId=${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success('Quotation deleted');
+                setQuotationInfo({ success: true, hasQuotation: false });
+                fetchActivities();
+            } else {
+                toast.error(data.error || 'Failed to delete quotation');
+            }
+        } catch (err) {
+            toast.error('Error deleting quotation');
         }
     };
 
@@ -431,6 +575,149 @@ export default function ContactDetailPage({ params }) {
                             />
                         </div>
 
+                        {/* Company Presentation */}
+                        <div className="space-y-2 pt-4 mt-4 border-t border-zinc-900">
+                            <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
+                                <FileText className="w-3 h-3" /> Company Presentation
+                            </Label>
+
+                            {presentationInfo?.hasPresentation ? (
+                                /* Show existing presentation */
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                                <FileText className="w-5 h-5 text-red-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-white font-light">{presentationInfo.fileName}</p>
+                                                <p className="text-[10px] text-zinc-600">
+                                                    Uploaded {new Date(presentationInfo.uploadedAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <a
+                                                href={presentationInfo.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                title="View"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </a>
+                                            <a
+                                                href={presentationInfo.url}
+                                                download={presentationInfo.fileName}
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                title="Download"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                            <button
+                                                onClick={handlePresentationDelete}
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-red-900/50 text-zinc-400 hover:text-red-400 transition-colors"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Upload area */
+                                <div
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    className={cn(
+                                        "border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer",
+                                        isDragging
+                                            ? "border-emerald-500 bg-emerald-500/10"
+                                            : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/30"
+                                    )}
+                                >
+                                    {isUploadingPresentation ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                                            <p className="text-sm text-zinc-400">Uploading...</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                                id="presentation-upload"
+                                            />
+                                            <label htmlFor="presentation-upload" className="cursor-pointer">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center">
+                                                        <Upload className="w-6 h-6 text-zinc-500" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm text-zinc-400">Drop PDF here or click to upload</p>
+                                                        <p className="text-[10px] text-zinc-600 mt-1">Max file size: 10MB</p>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Saved Quotation */}
+                        {quotationInfo?.hasQuotation && (
+                            <div className="space-y-2">
+                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
+                                    <FileText className="w-3 h-3" /> Saved Quotation
+                                </Label>
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                                <FileText className="w-5 h-5 text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-white font-light">{quotationInfo.fileName}</p>
+                                                <p className="text-[10px] text-zinc-600">
+                                                    Saved {new Date(quotationInfo.uploadedAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <a
+                                                href={quotationInfo.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                title="View"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </a>
+                                            <a
+                                                href={quotationInfo.url}
+                                                download={quotationInfo.fileName}
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                title="Download"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                            <button
+                                                onClick={handleQuotationDelete}
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-red-900/50 text-zinc-400 hover:text-red-400 transition-colors"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Meta Info */}
                         <div className="pt-4 border-t border-zinc-900 flex gap-6 text-[10px] text-zinc-600">
                             <div>
@@ -547,6 +834,10 @@ export default function ContactDetailPage({ params }) {
                 open={showQuotationModal}
                 onOpenChange={setShowQuotationModal}
                 contact={contact}
+                onQuotationSaved={() => {
+                    fetchQuotationInfo();
+                    fetchActivities();
+                }}
             />
         </div>
     );

@@ -3,13 +3,18 @@
  * Updates passwords for specific users (Chaitanya, Manan, Prashansa)
  * 
  * POST /api/admin/update-passwords
+ * 
+ * SECURITY: Requires developer role authentication
+ * Uses SEED_DIRECTOR_PASSWORD environment variable
  */
 
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { hashPassword } from '@/lib/utils/password';
+import { getCurrentUser } from '@/lib/utils/session';
 
-const CHOPRA_PASSWORD = 'Hound@1102';
+// SECURITY: Password loaded from environment variable
+const DIRECTOR_PASSWORD = process.env.SEED_DIRECTOR_PASSWORD || 'ChangeMe123!';
 
 const USERS_TO_UPDATE = [
     'chaitanya@benz-packaging.com',
@@ -19,8 +24,17 @@ const USERS_TO_UPDATE = [
 
 export async function POST(request) {
     try {
+        // SECURITY: Only developers can update passwords via this endpoint
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        if (currentUser.role !== 'developer') {
+            return NextResponse.json({ error: 'Forbidden - Developer only' }, { status: 403 });
+        }
+
         const supabase = createAdminClient();
-        const passwordHash = await hashPassword(CHOPRA_PASSWORD);
+        const passwordHash = await hashPassword(DIRECTOR_PASSWORD);
         const results = [];
 
         for (const email of USERS_TO_UPDATE) {

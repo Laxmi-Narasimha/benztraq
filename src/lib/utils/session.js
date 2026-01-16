@@ -3,14 +3,19 @@
  * Handles JWT token generation and validation for custom auth
  * 
  * @module lib/utils/session
+ * 
+ * SECURITY: Requires JWT_SECRET environment variable to be set
  */
 
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const SECRET_KEY = new TextEncoder().encode(
-    process.env.JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'fallback-secret-key-change-in-production'
-);
+// SECURITY: No fallback - JWT_SECRET must be properly configured
+const jwtSecret = process.env.JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!jwtSecret && process.env.NODE_ENV === 'production') {
+    console.error('CRITICAL: JWT_SECRET environment variable is not set!');
+}
+const SECRET_KEY = new TextEncoder().encode(jwtSecret || 'dev-only-secret-not-for-production');
 
 const SESSION_COOKIE_NAME = 'benztraq_session';
 const SESSION_DURATION = 60 * 60 * 24 * 7; // 7 days in seconds

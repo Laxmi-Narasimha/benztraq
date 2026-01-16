@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
     Building2, Search, Plus, RefreshCw, Trash2,
     User, Clock, Phone, Mail, FileText, MessageSquare, CalendarCheck,
-    Ban, CheckCircle, XCircle, AlertCircle
+    Ban, CheckCircle, XCircle, AlertCircle, Download, Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -251,13 +251,14 @@ export default function ContactsListPage() {
                 {/* Premium Data Grid */}
                 <div className="rounded-2xl border border-zinc-800/60 overflow-hidden bg-zinc-900/20 backdrop-blur-sm">
                     {/* Grid Header */}
-                    <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-zinc-800/60 bg-zinc-900/40 text-xs font-medium text-zinc-500 uppercase tracking-widest">
-                        <div className="col-span-4 sm:col-span-3">Company</div>
+                    <div className="grid grid-cols-14 gap-4 px-6 py-4 border-b border-zinc-800/60 bg-zinc-900/40 text-xs font-medium text-zinc-500 uppercase tracking-widest">
+                        <div className="col-span-3">Company</div>
                         <div className="col-span-2 hidden sm:block">Status</div>
                         <div className="col-span-2 hidden md:block">Created By</div>
-                        <div className="col-span-2 hidden lg:block">Updated By</div>
+                        <div className="col-span-1 hidden lg:block text-center">Presentation</div>
+                        <div className="col-span-1 hidden lg:block text-center">Quotation</div>
                         <div className="col-span-3 hidden xl:block">Latest Activity</div>
-                        <div className="col-span-2 md:col-span-2 lg:col-span-1 text-right">Last Updated</div>
+                        <div className="col-span-2 text-right">Last Updated</div>
                     </div>
 
                     {/* Grid Body */}
@@ -291,13 +292,13 @@ export default function ContactsListPage() {
                                         key={contact.id}
                                         href={`/ergopack/contacts/${contact.id}`}
                                         onClick={() => handleContactClick(contact.id)}
-                                        className="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-zinc-800/30 transition-all duration-200 group cursor-pointer relative"
+                                        className="grid grid-cols-14 gap-4 px-6 py-5 items-center hover:bg-zinc-800/30 transition-all duration-200 group cursor-pointer relative"
                                     >
                                         {/* Hover Highlight Line */}
                                         <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-white opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                         {/* Company */}
-                                        <div className="col-span-4 sm:col-span-3 overflow-hidden relative">
+                                        <div className="col-span-3 overflow-hidden relative">
                                             {/* Unseen Dot - Mobile optimized */}
                                             {hasUnseenUpdate && (
                                                 <div className="absolute -left-3 top-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse md:hidden" />
@@ -340,18 +341,62 @@ export default function ContactsListPage() {
                                             </span>
                                         </div>
 
-                                        {/* Updated By */}
-                                        <div className="col-span-2 hidden lg:flex items-center gap-2">
-                                            <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] text-zinc-400">
-                                                {contact.updated_by_user?.full_name?.charAt(0) || 'U'}
-                                            </div>
-                                            <span className="text-xs text-zinc-400 truncate max-w-[100px]">
-                                                {contact.updated_by_user?.full_name?.split(' ')[0] || 'Unknown'}
-                                            </span>
+                                        {/* Presentation Download */}
+                                        <div className="col-span-1 hidden lg:flex items-center justify-center">
+                                            {contact.presentation_file_path ? (
+                                                <button
+                                                    onClick={async (e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        try {
+                                                            const res = await fetch(`/api/ergopack/presentations?contactId=${contact.id}`);
+                                                            const data = await res.json();
+                                                            if (data.url) {
+                                                                window.open(data.url, '_blank');
+                                                            } else {
+                                                                toast.error('Could not get presentation URL');
+                                                            }
+                                                        } catch (err) {
+                                                            toast.error('Error loading presentation');
+                                                        }
+                                                    }}
+                                                    className="w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all"
+                                                    title={`Download: ${contact.presentation_file_name || 'Presentation'}`}
+                                                >
+                                                    <FileText className="w-4 h-4" />
+                                                </button>
+                                            ) : (
+                                                <span className="text-zinc-700 text-xs">-</span>
+                                            )}
+                                        </div>
 
-                                            {/* NEW Badge next to Updated By (Request: 'beside the updated by column value' or 'activity status') */}
-                                            {/* Reading request again: 'new beside the activity status' and 'when they click it, then the new will be gone beside the updated by column value' -> ambiguous. */}
-                                            {/* Interpreting as: Show 'New' badge noticeably. */}
+                                        {/* Quotation Download */}
+                                        <div className="col-span-1 hidden lg:flex items-center justify-center">
+                                            {contact.quotation_file_path ? (
+                                                <button
+                                                    onClick={async (e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        try {
+                                                            const res = await fetch(`/api/ergopack/quotations?contactId=${contact.id}`);
+                                                            const data = await res.json();
+                                                            if (data.url) {
+                                                                window.open(data.url, '_blank');
+                                                            } else {
+                                                                toast.error('Could not get quotation URL');
+                                                            }
+                                                        } catch (err) {
+                                                            toast.error('Error loading quotation');
+                                                        }
+                                                    }}
+                                                    className="w-8 h-8 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 flex items-center justify-center text-blue-400 hover:text-blue-300 transition-all"
+                                                    title={`Download: ${contact.quotation_file_name || 'Quotation'}`}
+                                                >
+                                                    <Download className="w-4 h-4" />
+                                                </button>
+                                            ) : (
+                                                <span className="text-zinc-700 text-xs">-</span>
+                                            )}
                                         </div>
 
                                         {/* Latest Activity + NEW Badge */}
@@ -375,7 +420,7 @@ export default function ContactsListPage() {
                                         </div>
 
                                         {/* Last Updated + Delete Action */}
-                                        <div className="col-span-2 md:col-span-2 lg:col-span-1 text-right flex items-center justify-end gap-3 group/actions">
+                                        <div className="col-span-2 text-right flex items-center justify-end gap-3 group/actions">
                                             <span className="text-xs text-zinc-500 font-mono group-hover:text-zinc-400 transition-colors">
                                                 {formatDate(contact.updated_at)}
                                             </span>

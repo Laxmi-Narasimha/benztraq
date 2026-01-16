@@ -36,7 +36,7 @@ export const SYSTEM_USERS = {
     // Head of Sales - Company-specific access
     HEAD_OF_SALES: [
         { name: 'Pulak Biswas', email: 'pulak@benz-packaging.com', companies: ['benz'] },
-        { name: 'Lokesh', email: 'lokesh@benz-packaging.com', companies: ['ergopack'] }
+        { name: 'Isha', email: 'isha@benz-packaging.com', companies: ['ergopack'] }
     ],
 
     // Area Sales Managers - Region-based, Benz only

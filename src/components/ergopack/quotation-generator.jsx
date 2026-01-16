@@ -34,7 +34,7 @@ import {
 import { pdf } from '@react-pdf/renderer';
 import QuotationPDF from './quotation-pdf';
 
-export default function QuotationGenerator({ open, onOpenChange, contact }) {
+export default function QuotationGenerator({ open, onOpenChange, contact, onQuotationSaved }) {
     const [step, setStep] = useState(1);
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -103,14 +103,41 @@ export default function QuotationGenerator({ open, onOpenChange, contact }) {
         setIsGenerating(true);
         try {
             const blob = await pdf(<QuotationPDF data={quotationData} />).toBlob();
+            const fileName = `Quotation-${quotationData.quotationNumber}-${quotationData.customerName.replace(/\s+/g, '-')}.pdf`;
+
+            // Download locally
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `Quotation-${quotationData.quotationNumber}-${quotationData.customerName.replace(/\s+/g, '-')}.pdf`;
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+
+            // Also save to database if contact exists
+            if (contact?.id) {
+                try {
+                    const formData = new FormData();
+                    formData.append('file', new File([blob], fileName, { type: 'application/pdf' }));
+                    formData.append('contactId', contact.id);
+                    formData.append('quotationNumber', quotationData.quotationNumber);
+
+                    await fetch('/api/ergopack/quotations', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    // Notify parent to refresh quotation info
+                    if (onQuotationSaved) {
+                        onQuotationSaved();
+                    }
+                } catch (saveError) {
+                    console.error('Failed to save quotation to database:', saveError);
+                    // Don't block the download, just log the error
+                }
+            }
+
             onOpenChange(false);
         } catch (error) {
             console.error('PDF generation error:', error);

@@ -67,3 +67,41 @@ export function userHasRole(user, roles) {
 export function isAdmin(user) {
     return userHasRole(user, ['vp', 'director', 'developer']);
 }
+
+/**
+ * Get session for API routes (alias for getUserFromRequest)
+ * Returns user object with role property for RBAC checks
+ * 
+ * @returns {Promise<{user: object} | null>} Session with user or null
+ */
+export async function getSession() {
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+
+        if (error || !user) {
+            return null;
+        }
+
+        // Fetch the user's profile with role
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        return {
+            user: {
+                id: user.id,
+                email: user.email,
+                role: profile?.role || 'asm',
+                full_name: profile?.full_name,
+                ...profile
+            }
+        };
+    } catch (error) {
+        console.error('getSession error:', error);
+        return null;
+    }
+}
+

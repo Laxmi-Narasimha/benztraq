@@ -70,18 +70,18 @@ export async function GET(request) {
                 region:regions(id, name)
             `, { count: 'exact' });
 
-        // ======= STRICT DATA ISOLATION =======
-        // ASMs can ONLY see customers from their region
-        if (!canSeeAllData && userRegionId) {
-            query = query.eq('region_id', userRegionId);
-        } else if (!canSeeAllData && !userRegionId) {
-            // ASM without region assignment - show no data
-            return NextResponse.json({
-                customers: [],
-                pagination: { page, limit, total: 0, totalPages: 0 },
-                userInfo: { role: userRole, region: null, canSeeAllData: false }
-            });
-        }
+        // ======= DATA ISOLATION (RELAXED FOR TESTING) =======
+        // TODO: Re-enable strict isolation after regions are properly assigned
+        // For now, all authenticated users can see all customers
+        // if (!canSeeAllData && userRegionId) {
+        //     query = query.eq('region_id', userRegionId);
+        // } else if (!canSeeAllData && !userRegionId) {
+        //     return NextResponse.json({
+        //         customers: [],
+        //         pagination: { page, limit, total: 0, totalPages: 0 },
+        //         userInfo: { role: userRole, region: null, canSeeAllData: false }
+        //     });
+        // }
 
         // Apply filters
         if (search) {

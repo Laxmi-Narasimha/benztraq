@@ -262,7 +262,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
         items: [
             { title: 'Analytics Dashboard', href: '/analytics', icon: 'BarChart3' },
             { title: 'Quote Comparison', href: '/comparison', icon: 'GitCompare' },
-            { title: 'Customers', href: '/customers', icon: 'Users' },
+            { title: 'Customers', href: '/customers', icon: 'Users', roles: ['developer', 'director'] },
             { title: 'Products', href: '/products', icon: 'Package' },
             { title: 'Regions', href: '/regions', icon: 'MapPin' },
         ],

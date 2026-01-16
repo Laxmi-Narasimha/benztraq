@@ -3,14 +3,22 @@
  * Seeds the default users into the database
  * 
  * POST /api/admin/seed-users
+ * 
+ * SECURITY: Requires developer role authentication
+ * 
+ * Required environment variables:
+ * - SEED_DEFAULT_PASSWORD: Default password for most users
+ * - SEED_DIRECTOR_PASSWORD: Password for directors
  */
 
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { hashPassword } from '@/lib/utils/password';
+import { getCurrentUser } from '@/lib/utils/session';
 
-const DEFAULT_PASSWORD = 'Benz@2024';
-const CHOPRA_PASSWORD = 'Hound@1102';
+// SECURITY: Passwords now loaded from environment variables
+const DEFAULT_PASSWORD = process.env.SEED_DEFAULT_PASSWORD || 'ChangeMe123!';
+const DIRECTOR_PASSWORD = process.env.SEED_DIRECTOR_PASSWORD || 'ChangeMe123!';
 
 const DEFAULT_USERS = [
     {
@@ -21,9 +29,8 @@ const DEFAULT_USERS = [
         phone: null,
         regionName: null,
         organization: 'benz_packaging',
-        companies: ['benz', 'ergopack']  // Full access
+        companies: ['benz', 'ergopack']
     },
-    // Directors - Full access to both companies (Custom password)
     {
         email: 'manan@benz-packaging.com',
         fullName: 'Manan',
@@ -33,7 +40,7 @@ const DEFAULT_USERS = [
         regionName: null,
         organization: 'benz_packaging',
         companies: ['benz', 'ergopack'],
-        customPassword: CHOPRA_PASSWORD
+        customPassword: DIRECTOR_PASSWORD
     },
     {
         email: 'chaitanya@benz-packaging.com',
@@ -44,7 +51,7 @@ const DEFAULT_USERS = [
         regionName: null,
         organization: 'benz_packaging',
         companies: ['benz', 'ergopack'],
-        customPassword: CHOPRA_PASSWORD
+        customPassword: DIRECTOR_PASSWORD
     },
     {
         email: 'prashansa@benz-packaging.com',
@@ -55,20 +62,18 @@ const DEFAULT_USERS = [
         regionName: null,
         organization: 'benz_packaging',
         companies: ['benz', 'ergopack'],
-        customPassword: CHOPRA_PASSWORD
+        customPassword: DIRECTOR_PASSWORD
     },
-    // Lokesh - Ergopack only
     {
-        email: 'lokesh@benz-packaging.com',
-        fullName: 'Lokesh',
+        email: 'isha@benz-packaging.com',
+        fullName: 'Isha',
         roleName: 'head_of_sales',
         designation: 'VP Operations',
         phone: null,
         regionName: null,
         organization: 'ergopack_india',
-        companies: ['ergopack']  // Ergopack only
+        companies: ['ergopack']
     },
-    // Pulak - Benz only, Head of Sales
     {
         email: 'pulak@benz-packaging.com',
         fullName: 'Pulak Biswas',
@@ -77,9 +82,8 @@ const DEFAULT_USERS = [
         phone: null,
         regionName: 'Gurgaon',
         organization: 'benz_packaging',
-        companies: ['benz']  // Benz only
+        companies: ['benz']
     },
-    // ASMs - 6 Location-based users (Benz only)
     {
         email: 'abhishek@benz-packaging.com',
         fullName: 'Madhya Pradesh',
@@ -144,7 +148,15 @@ const DEFAULT_USERS = [
 
 export async function POST(request) {
     try {
-        // No auth check needed for seeding - this is for initial setup only
+        // SECURITY: Only developers can seed users
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        if (currentUser.role !== 'developer') {
+            return NextResponse.json({ error: 'Forbidden - Developer only' }, { status: 403 });
+        }
+
         const supabase = createAdminClient();
         const results = [];
         const passwordHash = await hashPassword(DEFAULT_PASSWORD);
@@ -171,13 +183,11 @@ export async function POST(request) {
                 const roleId = roleMap[user.roleName];
                 const regionId = user.regionName ? regionMap[user.regionName] : null;
 
-                // Map role to legacy user_role enum
                 const legacyRole = user.roleName === 'developer' ? 'vp'
                     : user.roleName === 'director' ? 'director'
                         : user.roleName === 'head_of_sales' ? 'director'
                             : 'asm';
 
-                // Use custom password if defined, otherwise use default
                 const userPasswordHash = user.customPassword
                     ? await hashPassword(user.customPassword)
                     : passwordHash;
@@ -196,7 +206,7 @@ export async function POST(request) {
                         is_active: true,
                         role: legacyRole,
                         organization: user.organization || 'benz_packaging',
-                        companies: user.companies || ['benz']  // Add companies array
+                        companies: user.companies || ['benz']
                     }, {
                         onConflict: 'email',
                         ignoreDuplicates: false
