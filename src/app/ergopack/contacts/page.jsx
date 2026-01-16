@@ -251,14 +251,14 @@ export default function ContactsListPage() {
                 {/* Premium Data Grid */}
                 <div className="rounded-2xl border border-zinc-800/60 overflow-hidden bg-zinc-900/20 backdrop-blur-sm">
                     {/* Grid Header */}
-                    <div className="grid grid-cols-14 gap-4 px-6 py-4 border-b border-zinc-800/60 bg-zinc-900/40 text-xs font-medium text-zinc-500 uppercase tracking-widest">
+                    <div className="grid grid-cols-12 gap-3 px-6 py-4 border-b border-zinc-800/60 bg-zinc-900/40 text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
                         <div className="col-span-3">Company</div>
-                        <div className="col-span-2 hidden sm:block">Status</div>
+                        <div className="col-span-1 hidden sm:block">Status</div>
                         <div className="col-span-2 hidden md:block">Created By</div>
-                        <div className="col-span-1 hidden lg:block text-center">Presentation</div>
-                        <div className="col-span-1 hidden lg:block text-center">Quotation</div>
+                        <div className="col-span-1 hidden lg:block text-center">PDF</div>
+                        <div className="col-span-1 hidden lg:block text-center">Quote</div>
                         <div className="col-span-3 hidden xl:block">Latest Activity</div>
-                        <div className="col-span-2 text-right">Last Updated</div>
+                        <div className="col-span-1 text-right">Updated</div>
                     </div>
 
                     {/* Grid Body */}
@@ -292,7 +292,7 @@ export default function ContactsListPage() {
                                         key={contact.id}
                                         href={`/ergopack/contacts/${contact.id}`}
                                         onClick={() => handleContactClick(contact.id)}
-                                        className="grid grid-cols-14 gap-4 px-6 py-5 items-center hover:bg-zinc-800/30 transition-all duration-200 group cursor-pointer relative"
+                                        className="grid grid-cols-12 gap-3 px-6 py-5 items-center hover:bg-zinc-800/30 transition-all duration-200 group cursor-pointer relative"
                                     >
                                         {/* Hover Highlight Line */}
                                         <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -322,7 +322,7 @@ export default function ContactsListPage() {
                                         </div>
 
                                         {/* Status */}
-                                        <div className="col-span-2 hidden sm:flex items-center">
+                                        <div className="col-span-1 hidden sm:flex items-center">
                                             <Badge className={cn(
                                                 "px-2.5 py-0.5 text-[10px] font-medium tracking-wide uppercase rounded-full border bg-transparent",
                                                 statusConfig.text, statusConfig.border
@@ -420,7 +420,7 @@ export default function ContactsListPage() {
                                         </div>
 
                                         {/* Last Updated + Delete Action */}
-                                        <div className="col-span-2 text-right flex items-center justify-end gap-3 group/actions">
+                                        <div className="col-span-1 text-right flex items-center justify-end gap-3 group/actions">
                                             <span className="text-xs text-zinc-500 font-mono group-hover:text-zinc-400 transition-colors">
                                                 {formatDate(contact.updated_at)}
                                             </span>
