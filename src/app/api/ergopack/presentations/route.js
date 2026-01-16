@@ -10,8 +10,20 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/utils/session';
 
+// Increase body size limit for large PDF uploads (default is 4.5MB on Vercel)
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '15mb',
+        },
+    },
+};
+
+// Route segment config for App Router
+export const maxDuration = 60; // Allow up to 60 seconds for upload
+
 const BUCKET_NAME = 'ergopack-presentations';
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 
 /**
  * POST - Upload a presentation PDF
