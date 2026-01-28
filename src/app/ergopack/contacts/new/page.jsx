@@ -287,7 +287,7 @@ export default function NewContactPage() {
                                             <SelectItem
                                                 key={opt.value}
                                                 value={opt.value}
-                                                className="text-zinc-300 focus:bg-zinc-800 focus:text-white"
+                                                className="text-zinc-300 focus:bg-zinc-700 focus:text-white"
                                             >
                                                 {opt.label}
                                             </SelectItem>

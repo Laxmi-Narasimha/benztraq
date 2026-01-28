@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
                 conversionRate: 0,
                 avgOrderValue: 0,
                 activeCustomers: 0,
-                revenueChange: 12.5,
+                revenueChange: 0, // Now calculated from real data
                 quotationValue: 0,
             });
 

@@ -163,7 +163,8 @@ export async function POST(request) {
 
         // Generate customer code if not provided
         let customerCode = body.customer_code;
-        if (!customerCode) {
+        if (!customerCode && (!body.parent_id || body.company_type === 'company')) {
+            // Only generate code for main partners or companies
             // Get next sequence number
             const { count } = await supabase
                 .from('customers')
@@ -172,37 +173,73 @@ export async function POST(request) {
         }
 
         // Check for duplicate customer_code
-        const { data: existing } = await supabase
-            .from('customers')
-            .select('id')
-            .eq('customer_code', customerCode)
-            .single();
+        if (customerCode) {
+            const { data: existing } = await supabase
+                .from('customers')
+                .select('id')
+                .eq('customer_code', customerCode)
+                .single();
 
-        if (existing) {
-            return NextResponse.json(
-                { error: 'Customer with this code already exists' },
-                { status: 409 }
-            );
+            if (existing) {
+                return NextResponse.json(
+                    { error: 'Customer with this code already exists' },
+                    { status: 409 }
+                );
+            }
         }
 
-        // Prepare customer data
+        // Prepare customer data - matching Odoo 1:1
         const customerData = {
+            // Use Odoo field names primarily
             name: body.name,
             customer_code: customerCode,
-            customer_type: body.customer_type || 'Company',
+
+            // Partner Type Logic
+            company_type: body.company_type || (body.is_company ? 'company' : 'person'),
+            is_company: body.is_company ?? (body.company_type === 'company'),
+            parent_id: body.parent_id || null, // Link to parent company
+            type: body.type || 'contact', // contact, invoice, delivery, other
+            function: body.function || null, // Job Position
+
+            // Address fields
+            street: body.street || null,
+            street2: body.street2 || null,
+            city: body.city || null,
+            zip: body.zip || null,
+            // Odoo stores state_id and country_id as FKs. We might need to handle ID or code.
+            // Assuming simplified text or existing ID for now.
+            // In Odoo: state_id is Many2one (res.country.state), country_id is Many2one (res.country)
+            // We use whatever matches our DB schema (likely state string or ID if table exists)
+            // state_id: body.state_id || null, 
+            country_id: body.country_id || 'IN',
+
+            // Contact details
+            phone: body.phone || null,
+            mobile: body.mobile || null,
+            email: body.email || null,
+            website: body.website || null,
+
+            // Indian Localization
+            l10n_in_gst_treatment: body.l10n_in_gst_treatment || 'consumer',
+            vat: body.vat || body.gstin || null, // GSTIN
+            l10n_in_pan: body.l10n_in_pan || body.pan || null, // PAN
+
+            // Business Properties
+            property_payment_term_id: body.property_payment_term_id || null,
+            property_product_pricelist: body.property_product_pricelist || null,
+            property_account_position_id: body.property_account_position_id || null,
+            property_stock_customer: body.property_stock_customer || null,
+            property_stock_supplier: body.property_stock_supplier || null,
+
+            // Legacy / App Specific mappings
             customer_group_id: body.customer_group_id || null,
             industry_id: body.industry_id || null,
             region_id: body.region_id || null,
-            gstin: body.gstin || null,
-            pan: body.pan || null,
-            tax_category: body.tax_category || 'Regular',
-            is_sez: body.is_sez || false,
-            credit_limit: body.credit_limit || 0,
-            credit_days: body.credit_days || 30,
             account_manager_id: body.account_manager_id || null,
-            status: body.status || 'Active',
-            email: body.email || null,
-            phone: body.phone || null,
+
+            // Metdata
+            active: body.active ?? true,
+            comment: body.comment || null,
             created_by: currentUser.id
         };
 
@@ -219,7 +256,60 @@ export async function POST(request) {
 
         if (error) {
             console.error('Error creating customer:', error);
-            return NextResponse.json({ error: 'Failed to create customer' }, { status: 500 });
+            return NextResponse.json({ error: error.message || 'Failed to create customer' }, { status: 500 });
+        }
+
+        // Handle Child Contacts (if any) - Use the EXISTING customer_contacts table
+        if (data && body.child_ids && Array.isArray(body.child_ids) && body.child_ids.length > 0) {
+            for (const child of body.child_ids) {
+                // For address type (invoice, delivery, etc.), insert into customer_addresses
+                if (['invoice', 'delivery', 'other'].includes(child.type)) {
+                    const addressData = {
+                        customer_id: data.id,
+                        address_title: child.name,
+                        address_type: child.type === 'invoice' ? 'Billing' : 'Shipping',
+                        address_line1: child.street || '',
+                        address_line2: child.street2 || '',
+                        city: child.city || '',
+                        state: child.state_id || '',
+                        pincode: child.zip || '',
+                        country: 'India',
+                        phone: child.phone || '',
+                        email_id: child.email || '',
+                        is_primary_address: false,
+                        is_shipping_address: child.type === 'delivery'
+                    };
+
+                    const { error: addressError } = await supabase
+                        .from('customer_addresses')
+                        .insert(addressData);
+
+                    if (addressError) {
+                        console.error('Error creating address:', addressError);
+                    }
+                } else {
+                    // For contact type, insert into customer_contacts
+                    const nameParts = (child.name || '').split(' ');
+                    const contactData = {
+                        customer_id: data.id,
+                        first_name: nameParts[0] || 'Contact',
+                        last_name: nameParts.slice(1).join(' ') || '',
+                        email_id: child.email || '',
+                        phone: child.phone || '',
+                        mobile_no: child.mobile || '',
+                        is_primary_contact: false,
+                        is_billing_contact: false
+                    };
+
+                    const { error: contactError } = await supabase
+                        .from('customer_contacts')
+                        .insert(contactData);
+
+                    if (contactError) {
+                        console.error('Error creating contact:', contactError);
+                    }
+                }
+            }
         }
 
         return NextResponse.json({ customer: data }, { status: 201 });

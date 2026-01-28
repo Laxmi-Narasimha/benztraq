@@ -326,9 +326,9 @@ export default function QuotationGenerator({ open, onOpenChange, contact, onQuot
                                 Back
                             </Button>
                             <Button
-                                variant="outline"
+                                variant="secondary"
                                 onClick={handleMakeChanges}
-                                className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                                className="flex-1 bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700"
                             >
                                 <Edit2 className="w-4 h-4 mr-2" />
                                 Make Changes

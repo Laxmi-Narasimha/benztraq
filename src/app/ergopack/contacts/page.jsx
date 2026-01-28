@@ -239,7 +239,7 @@ export default function ContactsListPage() {
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="text-zinc-300 focus:bg-zinc-800 focus:text-white rounded-lg my-1 cursor-pointer"
+                                    className="text-zinc-300 focus:bg-zinc-700 focus:text-white rounded-lg my-1 cursor-pointer"
                                 >
                                     {opt.label}
                                 </SelectItem>

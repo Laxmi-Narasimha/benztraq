@@ -59,23 +59,7 @@ import {
     Link,
 } from 'lucide-react';
 
-// Mock data for display
-const mockQuotations = [
-    { id: '1', doc_number: 'QT-2024-001', doc_date: '2024-12-15', customer: 'Tata Auto Components', grand_total: 450000, status: 'sent', salesperson: 'Rahul Sharma' },
-    { id: '2', doc_number: 'QT-2024-002', doc_date: '2024-12-18', customer: 'Mahindra Parts Ltd', grand_total: 320000, status: 'draft', salesperson: 'Priya Patel' },
-    { id: '3', doc_number: 'QT-2024-003', doc_date: '2024-12-20', customer: 'Hero Manufacturing', grand_total: 580000, status: 'won', salesperson: 'Amit Kumar' },
-];
-
-const mockSalesOrders = [
-    { id: '1', doc_number: 'SO-2024-001', doc_date: '2024-12-16', customer: 'Tata Auto Components', grand_total: 425000, status: 'confirmed', salesperson: 'Rahul Sharma' },
-    { id: '2', doc_number: 'SO-2024-002', doc_date: '2024-12-19', customer: 'Bajaj Industries', grand_total: 280000, status: 'open', salesperson: 'Sneha Gupta' },
-    { id: '3', doc_number: 'SO-2024-003', doc_date: '2024-12-22', customer: 'TVS Exports', grand_total: 720000, status: 'confirmed', salesperson: 'Vikram Singh' },
-];
-
-const mockInvoices = [
-    { id: '1', doc_number: 'INV-2024-001', doc_date: '2024-12-17', customer: 'Tata Auto Components', grand_total: 425000, status: 'recorded', salesperson: 'Rahul Sharma' },
-    { id: '2', doc_number: 'INV-2024-002', doc_date: '2024-12-21', customer: 'Bajaj Industries', grand_total: 280000, status: 'recorded', salesperson: 'Sneha Gupta' },
-];
+// Note: Mock data removed - this page fetches real data from /api/documents
 
 /**
  * Status badge component with color coding.

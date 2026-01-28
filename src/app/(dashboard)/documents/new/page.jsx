@@ -18,7 +18,7 @@ import {
     Search,
     ChevronDown,
     X,
-    Filter
+    Sparkles
 } from 'lucide-react';
 import {
     computeLineAmounts,
@@ -29,6 +29,7 @@ import {
     COMPANY_STATE_CODE
 } from '@/lib/services/tax-computation';
 import OdooCustomerSelect from '@/components/odoo/OdooCustomerSelect';
+import OdooPartnerForm from './OdooPartnerForm';
 
 // Indian States
 const INDIAN_STATES = [
@@ -79,8 +80,7 @@ const PAYMENT_TERMS = [
 ];
 
 /**
- * Portal-based Searchable Dropdown
- * Renders the dropdown menu in a portal to avoid clipping issues in overflow containers.
+ * Modern Searchable Dropdown - Notion/HubSpot Style
  */
 function SearchableDropdown({
     options,
@@ -92,69 +92,60 @@ function SearchableDropdown({
     searchKeys = ["name"],
     className = "",
     disabled = false,
-    filterFn = null // Optional filter function
+    filterFn = null
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+    const [highlightedIndex, setHighlightedIndex] = useState(0);
     const triggerRef = useRef(null);
     const inputRef = useRef(null);
+    const listRef = useRef(null);
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setMounted(true);
+    useEffect(() => { setMounted(true); }, []);
+
+    const updatePosition = useCallback(() => {
+        if (!triggerRef.current) return;
+        const rect = triggerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = 280;
+        const spaceBelow = viewportHeight - rect.bottom;
+
+        setPosition({
+            top: spaceBelow >= dropdownHeight ? rect.bottom + window.scrollY + 4 : rect.top + window.scrollY - dropdownHeight - 4,
+            left: rect.left + window.scrollX,
+            width: Math.max(rect.width, 280)
+        });
     }, []);
 
-    // Update position when opening
     useEffect(() => {
-        if (isOpen && triggerRef.current) {
-            const rect = triggerRef.current.getBoundingClientRect();
-            setPosition({
-                top: rect.bottom + window.scrollY + 4,
-                left: rect.left + window.scrollX,
-                width: rect.width
-            });
+        if (isOpen) {
+            updatePosition();
+            window.addEventListener('scroll', updatePosition, true);
+            window.addEventListener('resize', updatePosition);
+            return () => {
+                window.removeEventListener('scroll', updatePosition, true);
+                window.removeEventListener('resize', updatePosition);
+            };
         }
-    }, [isOpen]);
+    }, [isOpen, updatePosition]);
 
-    // Handle outside click
     useEffect(() => {
         if (!isOpen) return;
         const handleClick = (e) => {
-            if (triggerRef.current && triggerRef.current.contains(e.target)) return;
-            // Check if click is inside the portal content (we can't easily ref it due to portal, but we can check class or Id)
+            if (triggerRef.current?.contains(e.target)) return;
             if (e.target.closest('.dropdown-portal-content')) return;
             setIsOpen(false);
             setSearch('');
+            setHighlightedIndex(0);
         };
-        window.addEventListener('mousedown', handleClick);
-        window.addEventListener('resize', () => setIsOpen(false));
-        return () => {
-            window.removeEventListener('mousedown', handleClick);
-            window.removeEventListener('resize', () => setIsOpen(false));
-        };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
     }, [isOpen]);
 
-    const handleSelect = (option) => {
-        onChange(option[valueKey]);
-        setIsOpen(false);
-        setSearch('');
-    };
-
-    const handleClear = (e) => {
-        e.stopPropagation();
-        onChange('');
-        setSearch('');
-    };
-
-    const selectedOption = options.find(opt => opt[valueKey] === value);
-
-    // Filter options
     let filteredOptions = options;
-    if (filterFn) {
-        filteredOptions = filteredOptions.filter(filterFn);
-    }
-
+    if (filterFn) filteredOptions = filteredOptions.filter(filterFn);
     filteredOptions = filteredOptions.filter(opt => {
         if (!search) return true;
         const searchLower = search.toLowerCase();
@@ -163,6 +154,56 @@ function SearchableDropdown({
             return val && String(val).toLowerCase().includes(searchLower);
         });
     });
+
+    const displayOptions = filteredOptions.slice(0, 100);
+
+    const handleSelect = useCallback((option) => {
+        onChange(option[valueKey]);
+        setIsOpen(false);
+        setSearch('');
+        setHighlightedIndex(0);
+    }, [onChange, valueKey]);
+
+    const handleClear = useCallback((e) => {
+        e.stopPropagation();
+        onChange('');
+        setSearch('');
+    }, [onChange]);
+
+    const handleKeyDown = useCallback((e) => {
+        if (!isOpen) return;
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setHighlightedIndex(prev => Math.min(prev + 1, displayOptions.length - 1));
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setHighlightedIndex(prev => Math.max(prev - 1, 0));
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (displayOptions[highlightedIndex]) handleSelect(displayOptions[highlightedIndex]);
+                break;
+            case 'Escape':
+                e.preventDefault();
+                setIsOpen(false);
+                setSearch('');
+                setHighlightedIndex(0);
+                break;
+        }
+    }, [isOpen, displayOptions, highlightedIndex, handleSelect]);
+
+    useEffect(() => {
+        if (listRef.current && isOpen) {
+            const highlighted = listRef.current.querySelector(`[data-index="${highlightedIndex}"]`);
+            if (highlighted) highlighted.scrollIntoView({ block: 'nearest' });
+        }
+    }, [highlightedIndex, isOpen]);
+
+    useEffect(() => { setHighlightedIndex(0); }, [search]);
+
+    const selectedOption = options.find(opt => opt[valueKey] === value);
 
     return (
         <div className={`relative ${className}`}>
@@ -173,94 +214,76 @@ function SearchableDropdown({
                 onClick={() => {
                     if (!disabled) {
                         setIsOpen(!isOpen);
-                        // Focus input after render
-                        setTimeout(() => {
-                            const input = document.getElementById(`dropdown-input-${valueKey}`);
-                            if (input) input.focus();
-                        }, 50);
+                        setTimeout(() => document.getElementById(`dropdown-input-${valueKey}`)?.focus(), 50);
                     }
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2 text-left 
-                    bg-white border rounded-lg shadow-sm transition-all
-                    ${disabled ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'hover:border-indigo-400 cursor-pointer border-gray-300'}
-                    ${isOpen ? 'ring-2 ring-indigo-500/20 border-indigo-500' : ''}`}
+                className={`w-full flex items-center justify-between px-4 py-2.5 text-left 
+                    bg-white rounded-xl transition-all duration-200
+                    ${disabled ? 'bg-stone-50 cursor-not-allowed text-stone-400' : 'hover:bg-stone-50 cursor-pointer'}
+                    ${isOpen ? 'ring-2 ring-teal-500/20 border-teal-500 shadow-lg' : 'border border-stone-200 hover:border-stone-300'}`}
             >
                 <div className="flex-1 truncate mr-2">
                     {selectedOption ? (
-                        <span className="text-gray-900 font-medium">{selectedOption[displayKey]}</span>
+                        <span className="text-stone-800 font-medium">{selectedOption[displayKey]}</span>
                     ) : (
-                        <span className="text-gray-400">{placeholder}</span>
+                        <span className="text-stone-400">{placeholder}</span>
                     )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                     {value && !disabled && (
-                        <span
-                            onClick={handleClear}
-                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                            <X className="w-3 h-3 text-gray-400 hover:text-gray-600" />
+                        <span onClick={handleClear} className="p-1 hover:bg-stone-100 rounded-lg transition-colors">
+                            <X className="w-3.5 h-3.5 text-stone-400 hover:text-stone-600" />
                         </span>
                     )}
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                 </div>
             </button>
 
-            {/* Portal Content */}
             {mounted && isOpen && createPortal(
                 <div
-                    className="dropdown-portal-content fixed z-50 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100"
-                    style={{
-                        top: position.top,
-                        left: position.left,
-                        width: position.width,
-                        maxHeight: '300px' // Ensure it fits in viewport usually
-                    }}
+                    className="dropdown-portal-content fixed z-50 bg-white rounded-xl border border-stone-200/60 shadow-2xl overflow-hidden
+                        animate-in fade-in slide-in-from-top-2 duration-150"
+                    style={{ top: position.top, left: position.left, width: position.width }}
                 >
-                    <div className="p-2 border-b border-gray-100 bg-gray-50/50">
+                    <div className="p-2 border-b border-stone-100">
                         <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                             <input
                                 id={`dropdown-input-${valueKey}`}
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 placeholder="Type to search..."
-                                className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-md 
-                                    focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
+                                className="w-full pl-9 pr-3 py-2 text-sm bg-stone-50 rounded-lg border-0 
+                                    focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500/20 transition-all"
                             />
                         </div>
                     </div>
 
-                    <div className="overflow-y-auto flex-1 p-1">
-                        {filteredOptions.length === 0 ? (
-                            <div className="px-3 py-6 text-sm text-gray-500 text-center flex flex-col items-center">
-                                <Search className="w-8 h-8 text-gray-300 mb-2" />
-                                <p>No matching results</p>
+                    <div ref={listRef} className="overflow-y-auto max-h-[240px] p-1">
+                        {displayOptions.length === 0 ? (
+                            <div className="px-4 py-6 text-sm text-stone-500 text-center">
+                                <Search className="w-6 h-6 text-stone-300 mx-auto mb-2" />
+                                No results found
                             </div>
                         ) : (
-                            filteredOptions.slice(0, 100).map((option, idx) => (
+                            displayOptions.map((option, idx) => (
                                 <button
                                     key={option[valueKey] || idx}
+                                    data-index={idx}
                                     type="button"
                                     onClick={() => handleSelect(option)}
-                                    className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors
-                                        flex items-center justify-between group
-                                        ${value === option[valueKey] ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'}`}
+                                    onMouseEnter={() => setHighlightedIndex(idx)}
+                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg transition-colors
+                                        flex items-center justify-between
+                                        ${idx === highlightedIndex ? 'bg-teal-50 text-teal-700' : 'text-stone-700 hover:bg-stone-50'}
+                                        ${value === option[valueKey] ? 'font-medium' : ''}`}
                                 >
-                                    <div className="flex flex-col">
-                                        <span>{option[displayKey]}</span>
-                                        {option.subtext && <span className="text-xs text-gray-400 font-normal">{option.subtext}</span>}
-                                    </div>
-                                    {value === option[valueKey] && (
-                                        <Check className="w-4 h-4 text-indigo-600" />
-                                    )}
+                                    <span className="truncate">{option[displayKey]}</span>
+                                    {value === option[valueKey] && <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />}
                                 </button>
                             ))
-                        )}
-                        {filteredOptions.length > 100 && (
-                            <div className="px-3 py-2 text-xs text-center text-gray-400 border-t border-gray-100 bg-gray-50">
-                                Showing 100 of {filteredOptions.length} results
-                            </div>
                         )}
                     </div>
                 </div>,
@@ -286,9 +309,9 @@ export default function NewQuotationPage() {
     const [products, setProducts] = useState([]);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [productFilterMode, setProductFilterMode] = useState('all'); // 'all', 'customer_linked'
+    const [showCustomerModal, setShowCustomerModal] = useState(false);
+    const [pendingCustomerName, setPendingCustomerName] = useState('');
 
-    // Document state
     const [document, setDocument] = useState({
         partner_id: '',
         partner_name: '',
@@ -305,57 +328,31 @@ export default function NewQuotationPage() {
         note: '',
     });
 
-    // Line items
     const [lines, setLines] = useState([]);
-
-    // Computed totals
     const [totals, setTotals] = useState({
-        amount_untaxed: 0,
-        amount_tax: 0,
-        amount_total: 0,
-        cgst_total: 0,
-        sgst_total: 0,
-        igst_total: 0,
+        amount_untaxed: 0, amount_tax: 0, amount_total: 0,
+        cgst_total: 0, sgst_total: 0, igst_total: 0,
     });
 
-    // Load data on mount
-    useEffect(() => {
-        loadCustomers();
-        loadProducts();
-    }, []);
-
-    // Recompute totals when lines change
-    useEffect(() => {
-        const newTotals = computeDocumentTotals(lines);
-        setTotals(newTotals);
-    }, [lines]);
+    useEffect(() => { loadCustomers(); loadProducts(); }, []);
+    useEffect(() => { setTotals(computeDocumentTotals(lines)); }, [lines]);
 
     const loadCustomers = async () => {
         try {
-            console.log('Fetching customers...');
-            const res = await fetch('/api/customers?limit=1000'); // Fetch more to be safe
+            const res = await fetch('/api/customers?limit=1000');
             const data = await res.json();
-
             if (data.customers && Array.isArray(data.customers)) {
-                // Normalize and prepare customer data for dropdown
-                const normalized = data.customers.map(c => ({
+                setCustomers(data.customers.map(c => ({
                     ...c,
                     name: c.name || c.customer_name || 'Unknown',
                     gstin: c.gstin || '',
                     state_code: c.state_code || '',
                     address: c.billing_address || c.address || '',
-                    // Create subtext for better search
-                    subtext: [c.customer_code, c.gstin, c.state_code].filter(Boolean).join(' • ')
-                }));
-                console.log(`Loaded ${normalized.length} customers`);
-                setCustomers(normalized);
-            } else {
-                console.warn('Unexpected customer data format:', data);
-                setCustomers([]);
+                })));
             }
         } catch (err) {
             console.error('Failed to load customers:', err);
-            setError('Failed to load customers list. Please try refreshing.');
+            setError('Failed to load customers');
         }
     };
 
@@ -364,48 +361,23 @@ export default function NewQuotationPage() {
             const res = await fetch('/api/products?limit=2000');
             const data = await res.json();
             const productList = data.products || data || [];
-            // Normalize product names
             setProducts(productList.map(p => ({
                 ...p,
                 name: p.item_name || p.name || 'Unknown',
                 hsn_code: p.hsn_code || '39232100',
                 selling_price: p.selling_price || 0,
                 default_gst_rate: p.default_gst_rate || 18,
-                subtext: [p.item_code, p.description?.substring(0, 30)].filter(Boolean).join(' • ')
             })));
         } catch (err) {
             console.error('Failed to load products:', err);
         }
     };
 
-    // Filter products based on selected customer
-    const getProductFilter = useCallback(() => {
-        if (productFilterMode === 'all' || !document.partner_id) return null;
-
-        const customer = customers.find(c => c.id === document.partner_id);
-        if (!customer) return null;
-
-        // Smart Filtering Logic:
-        // 1. If customer has a code like "CUST-001", maybe products don't match that.
-        // 2. Try to match the first word of customer name (e.g. "TATA" from "Tata Motors")
-
-        const namePrefix = customer.name.split(' ')[0].substring(0, 3).toUpperCase();
-
-        return (product) => {
-            if (!product.item_code) return true;
-            const code = product.item_code.toUpperCase();
-            // Match if product code starts with name prefix OR matches customer code patterns
-            return code.startsWith(namePrefix); // Simple prefix match
-        };
-    }, [productFilterMode, document.partner_id, customers]);
-
-    // Handle customer selection
     const handleCustomerChange = useCallback((customerId) => {
         const customer = customers.find(c => c.id === customerId);
         if (customer) {
             const stateCode = customer.state_code || '';
             const fiscalPosition = determineFiscalPosition(COMPANY_STATE_CODE, stateCode);
-
             setDocument(prev => ({
                 ...prev,
                 partner_id: customer.id,
@@ -416,12 +388,6 @@ export default function NewQuotationPage() {
                 place_of_supply: stateCode,
                 fiscal_position: fiscalPosition,
             }));
-
-            // Automatically switch to 'customer_linked' filter if useful?
-            // For now, keep as is or user can toggle.
-            setProductFilterMode('customer_linked');
-
-            // Recompute line items with new fiscal position
             if (lines.length > 0) {
                 setLines(prevLines => prevLines.map(line => ({
                     ...line,
@@ -431,27 +397,87 @@ export default function NewQuotationPage() {
         } else {
             setDocument(prev => ({
                 ...prev,
-                partner_id: '',
-                partner_name: '',
-                partner_gstin: '',
-                partner_state_code: '',
-                invoice_address: '',
-                place_of_supply: '',
+                partner_id: '', partner_name: '', partner_gstin: '',
+                partner_state_code: '', invoice_address: '', place_of_supply: '',
             }));
         }
     }, [customers, lines]);
 
-    // Handle place of supply change
+    const handleQuickCreateCustomer = useCallback(async (name) => {
+        try {
+            const response = await fetch('/api/customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, is_company: true, company_type: 'company' }),
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to create customer');
+
+            const newCustomer = result.customer;
+            const normalizedCustomer = {
+                ...newCustomer,
+                name: newCustomer.name || newCustomer.customer_name || name,
+                gstin: newCustomer.gstin || '',
+                state_code: newCustomer.state_code || '',
+                address: newCustomer.billing_address || newCustomer.address || '',
+            };
+            setCustomers(prev => [...prev, normalizedCustomer]);
+
+            const stateCode = normalizedCustomer.state_code || '';
+            const fiscalPosition = stateCode ? determineFiscalPosition(COMPANY_STATE_CODE, stateCode) : 'intrastate';
+            setDocument(prev => ({
+                ...prev,
+                partner_id: normalizedCustomer.id,
+                partner_name: normalizedCustomer.name,
+                partner_gstin: normalizedCustomer.gstin,
+                partner_state_code: stateCode,
+                invoice_address: normalizedCustomer.address,
+                place_of_supply: stateCode,
+                fiscal_position: fiscalPosition,
+            }));
+            setSuccess(`Customer "${name}" created!`);
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError(err.message || 'Failed to create customer');
+        }
+    }, []);
+
+    const handleCustomerCreated = useCallback((newCustomer) => {
+        const normalizedCustomer = {
+            ...newCustomer,
+            name: newCustomer.name || newCustomer.customer_name || 'New Customer',
+            gstin: newCustomer.gstin || '',
+            state_code: newCustomer.state_code || '',
+            address: newCustomer.billing_address || newCustomer.address || '',
+        };
+        setCustomers(prev => [...prev, normalizedCustomer]);
+
+        const stateCode = normalizedCustomer.state_code || '';
+        const fiscalPosition = stateCode ? determineFiscalPosition(COMPANY_STATE_CODE, stateCode) : 'intrastate';
+        setDocument(prev => ({
+            ...prev,
+            partner_id: normalizedCustomer.id,
+            partner_name: normalizedCustomer.name,
+            partner_gstin: normalizedCustomer.gstin,
+            partner_state_code: stateCode,
+            invoice_address: normalizedCustomer.address,
+            place_of_supply: stateCode,
+            fiscal_position: fiscalPosition,
+        }));
+        setShowCustomerModal(false);
+        setPendingCustomerName('');
+        setSuccess(`Customer "${normalizedCustomer.name}" created!`);
+        setTimeout(() => setSuccess(''), 3000);
+    }, []);
+
     const handlePlaceOfSupplyChange = useCallback((stateCode) => {
         const fiscalPosition = determineFiscalPosition(COMPANY_STATE_CODE, stateCode);
-
         setDocument(prev => ({
             ...prev,
             place_of_supply: stateCode,
             partner_state_code: stateCode,
             fiscal_position: fiscalPosition,
         }));
-
         if (lines.length > 0) {
             setLines(prevLines => prevLines.map(line => ({
                 ...line,
@@ -460,7 +486,6 @@ export default function NewQuotationPage() {
         }
     }, [lines]);
 
-    // Add new line
     const addLine = () => {
         setLines([...lines, {
             id: `temp_${Date.now()}`,
@@ -481,18 +506,12 @@ export default function NewQuotationPage() {
         }]);
     };
 
-    // Remove line
-    const removeLine = (index) => {
-        setLines(lines.filter((_, i) => i !== index));
-    };
+    const removeLine = (index) => { setLines(lines.filter((_, i) => i !== index)); };
 
-    // Update line
     const updateLine = (index, field, value) => {
         setLines(prevLines => {
             const newLines = [...prevLines];
             const line = { ...newLines[index], [field]: value };
-
-            // If product changed, update product-related fields
             if (field === 'product_id' && value) {
                 const product = products.find(p => p.id === value);
                 if (product) {
@@ -502,36 +521,22 @@ export default function NewQuotationPage() {
                     line.price_unit = product.selling_price;
                 }
             }
-
-            // Recompute amounts
             if (['product_uom_qty', 'price_unit', 'discount', 'gst_rate', 'product_id'].includes(field)) {
-                const computed = computeLineAmounts(line, document.fiscal_position);
-                Object.assign(line, computed);
+                Object.assign(line, computeLineAmounts(line, document.fiscal_position));
             }
-
             newLines[index] = line;
             return newLines;
         });
     };
 
-    // Handle product selection for a line
-    const handleProductSelect = (index, productId) => {
-        updateLine(index, 'product_id', productId);
-    };
-
-    // Save document
     const handleSave = async (newState = 'draft') => {
         setError('');
         setSuccess('');
         setSaving(true);
 
         try {
-            if (!document.partner_id) {
-                throw new Error('Please select a customer first');
-            }
-            if (lines.length === 0) {
-                throw new Error('Please add at least one product line');
-            }
+            if (!document.partner_id) throw new Error('Please select a customer');
+            if (lines.length === 0) throw new Error('Please add at least one product');
 
             const payload = {
                 ...document,
@@ -559,16 +564,10 @@ export default function NewQuotationPage() {
             });
 
             const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to save document');
 
-            if (!res.ok) {
-                throw new Error(data.error || 'Failed to save document');
-            }
-
-            setSuccess(`Document saved successfully! Redirecting...`);
-            setTimeout(() => {
-                router.push(`/documents/${data.id || data.document?.id}`);
-            }, 1500);
-
+            setSuccess('Document saved! Redirecting...');
+            setTimeout(() => { router.push(`/documents/${data.id || data.document?.id}`); }, 1500);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -577,428 +576,404 @@ export default function NewQuotationPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-20">
-            {/* Header */}
-            <div className="sticky top-0 z-30 bg-white border-b shadow-sm backdrop-blur-sm bg-white/90">
-                <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.push('/documents')}
-                            className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <div>
-                            <h1 className="text-xl font-bold text-gray-900 tracking-tight">New Quotation</h1>
-                            <p className="text-sm text-gray-500">Create professional quotation with logic-based selection</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => handleSave('draft')}
-                            disabled={saving}
-                            className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 
-                                disabled:opacity-50 flex items-center gap-2 text-sm font-medium transition-colors shadow-sm bg-white"
-                        >
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 text-gray-500" />}
-                            Save Draft
-                        </button>
-                        <button
-                            onClick={() => handleSave('sale')}
-                            disabled={saving}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 
-                                disabled:opacity-50 flex items-center gap-2 text-sm font-medium shadow-md shadow-indigo-100 transition-all active:scale-95"
-                        >
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                            Confirm Order
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Messages */}
-            {error && (
-                <div className="max-w-7xl mx-auto px-4 mt-6">
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700 shadow-sm animate-in slide-in-from-top-2">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <span className="font-medium">{error}</span>
-                    </div>
-                </div>
-            )}
-            {success && (
-                <div className="max-w-7xl mx-auto px-4 mt-6">
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 text-green-700 shadow-sm animate-in slide-in-from-top-2">
-                        <Check className="w-5 h-5 flex-shrink-0" />
-                        <span className="font-medium">{success}</span>
-                    </div>
-                </div>
-            )}
-
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-                {/* Customer & Order Details */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Customer Card */}
-                    <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-6 space-y-6 hover:shadow-md transition-shadow duration-300">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <Building2 className="w-5 h-5 text-indigo-500" />
-                                Customer Details
-                            </h2>
-                            <span className="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full font-medium">Step 1</span>
-                        </div>
-
-                        <div className="space-y-5">
+        <>
+            <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-stone-100/50">
+                {/* Modern Header */}
+                <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-stone-200/50">
+                    <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => router.push('/documents')}
+                                className="p-2 -ml-2 hover:bg-stone-100 rounded-xl transition-colors text-stone-500 hover:text-stone-700"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                            </button>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Customer <span className="text-red-500">*</span>
-                                </label>
-                                <OdooCustomerSelect
-                                    customers={customers}
-                                    value={document.partner_id}
-                                    onChange={handleCustomerChange}
-                                    placeholder="Type to find a customer..."
-                                    loading={customers.length === 0}
-                                />
+                                <h1 className="text-xl font-semibold text-stone-800">New Quotation</h1>
+                                <p className="text-sm text-stone-500">Create a professional quote</p>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-5">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">GSTIN</label>
-                                    <input
-                                        type="text"
-                                        value={document.partner_gstin}
-                                        onChange={(e) => setDocument(prev => ({ ...prev, partner_gstin: e.target.value.toUpperCase() }))}
-                                        placeholder="22AAAAA0000A1Z5"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm transition-all
-                                            focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Place of Supply</label>
-                                    <SearchableDropdown
-                                        options={INDIAN_STATES}
-                                        value={document.place_of_supply}
-                                        onChange={handlePlaceOfSupplyChange}
-                                        placeholder="Select state..."
-                                        displayKey="name"
-                                        valueKey="code"
-                                        searchKeys={["name", "code"]}
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Billing Address</label>
-                                <textarea
-                                    value={document.invoice_address}
-                                    onChange={(e) => setDocument(prev => ({ ...prev, invoice_address: e.target.value }))}
-                                    rows={3}
-                                    placeholder="Customer billing address..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none transition-all
-                                        focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                />
-                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => handleSave('draft')}
+                                disabled={saving}
+                                className="px-4 py-2.5 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 
+                                    disabled:opacity-50 flex items-center gap-2 text-sm font-medium transition-all shadow-sm"
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 text-stone-500" />}
+                                Save Draft
+                            </button>
+                            <button
+                                onClick={() => handleSave('sale')}
+                                disabled={saving}
+                                className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl 
+                                    hover:from-teal-600 hover:to-cyan-700 disabled:opacity-50 flex items-center gap-2 
+                                    text-sm font-medium shadow-lg shadow-teal-500/25 transition-all active:scale-[0.98]"
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                Confirm Order
+                            </button>
                         </div>
                     </div>
+                </header>
 
-                    {/* Order Details Card */}
-                    <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-6 space-y-6 hover:shadow-md transition-shadow duration-300">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-indigo-500" />
-                                Order Details
-                            </h2>
-                            <span className="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full font-medium">Step 2</span>
+                {/* Messages */}
+                <div className="max-w-6xl mx-auto px-6">
+                    {error && (
+                        <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700 animate-in slide-in-from-top-2">
+                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                            <span className="font-medium">{error}</span>
+                            <button onClick={() => setError('')} className="ml-auto p-1 hover:bg-red-100 rounded-lg">
+                                <X className="w-4 h-4" />
+                            </button>
                         </div>
+                    )}
+                    {success && (
+                        <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3 text-emerald-700 animate-in slide-in-from-top-2">
+                            <Check className="w-5 h-5 flex-shrink-0" />
+                            <span className="font-medium">{success}</span>
+                        </div>
+                    )}
+                </div>
 
-                        <div className="space-y-5">
-                            <div className="grid grid-cols-2 gap-5">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Order Date</label>
-                                    <input
-                                        type="date"
-                                        value={document.date_order}
-                                        onChange={(e) => setDocument(prev => ({ ...prev, date_order: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm transition-all
-                                            focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    />
+                {/* Main Content */}
+                <main className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+                    {/* Two Column Layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Customer Section */}
+                        <section className="bg-white rounded-2xl border border-stone-200/60 p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
+                                    <Building2 className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Validity Date</label>
-                                    <input
-                                        type="date"
-                                        value={document.validity_date}
-                                        onChange={(e) => setDocument(prev => ({ ...prev, validity_date: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm transition-all
-                                            focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                    />
+                                    <h2 className="font-semibold text-stone-800">Customer</h2>
+                                    <p className="text-xs text-stone-500">Select or create a customer</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-5">
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Payment Terms</label>
-                                    <div className="relative">
-                                        <select
-                                            value={document.payment_term_note}
-                                            onChange={(e) => setDocument(prev => ({ ...prev, payment_term_note: e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none bg-white transition-all
-                                                focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                        >
-                                            {PAYMENT_TERMS.map(t => (
-                                                <option key={t.value} value={t.value}>{t.label}</option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                    <label className="block text-sm font-medium text-stone-600 mb-2">
+                                        Customer <span className="text-red-500">*</span>
+                                    </label>
+                                    <OdooCustomerSelect
+                                        customers={customers}
+                                        value={document.partner_id}
+                                        onChange={handleCustomerChange}
+                                        loading={customers.length === 0}
+                                        onCreateNew={(name, openForm) => {
+                                            if (openForm) {
+                                                setPendingCustomerName(name);
+                                                setShowCustomerModal(true);
+                                            } else {
+                                                handleQuickCreateCustomer(name);
+                                            }
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-600 mb-2">GSTIN</label>
+                                        <input
+                                            type="text"
+                                            value={document.partner_gstin}
+                                            onChange={(e) => setDocument(prev => ({ ...prev, partner_gstin: e.target.value.toUpperCase() }))}
+                                            placeholder="22AAAAA0000A1Z5"
+                                            className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
+                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-600 mb-2">Place of Supply</label>
+                                        <SearchableDropdown
+                                            options={INDIAN_STATES}
+                                            value={document.place_of_supply}
+                                            onChange={handlePlaceOfSupplyChange}
+                                            placeholder="Select state..."
+                                            displayKey="name"
+                                            valueKey="code"
+                                            searchKeys={["name", "code"]}
+                                        />
                                     </div>
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Customer PO No.</label>
-                                    <input
-                                        type="text"
-                                        value={document.client_order_ref}
-                                        onChange={(e) => setDocument(prev => ({ ...prev, client_order_ref: e.target.value }))}
-                                        placeholder="PO Number..."
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm transition-all
-                                            focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                    <label className="block text-sm font-medium text-stone-600 mb-2">Billing Address</label>
+                                    <textarea
+                                        value={document.invoice_address}
+                                        onChange={(e) => setDocument(prev => ({ ...prev, invoice_address: e.target.value }))}
+                                        rows={2}
+                                        placeholder="Customer billing address..."
+                                        className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm resize-none transition-all
+                                            focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
                                     />
                                 </div>
                             </div>
+                        </section>
 
-                            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl flex items-center justify-between text-sm">
-                                <span className="text-blue-700 font-medium">Tax Position:</span>
-                                <span className={`px-2 py-1 rounded bg-white font-semibold border ${document.fiscal_position === 'interstate' ? 'text-amber-600 border-amber-200' : 'text-emerald-600 border-emerald-200'}`}>
-                                    {document.fiscal_position === 'interstate' ? 'Inter-State (IGST)' : 'Intra-State (CGST + SGST)'}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Line Items */}
-                <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden flex flex-col">
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
-                        <div className="flex items-center gap-4">
-                            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                                <Package className="w-5 h-5 text-indigo-500" />
-                                Order Lines
-                            </h2>
-
-                            {/* Product Filter Toggle */}
-                            {document.partner_id && (
-                                <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border shadow-sm">
-                                    <span className="text-xs text-gray-500 font-medium">Filter:</span>
-                                    <button
-                                        onClick={() => setProductFilterMode(m => m === 'all' ? 'customer_linked' : 'all')}
-                                        className={`text-xs px-2 py-0.5 rounded-full transition-colors flex items-center gap-1
-                                            ${productFilterMode === 'customer_linked' ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
-                                    >
-                                        <Filter className="w-3 h-3" />
-                                        Linked Only
-                                    </button>
+                        {/* Order Details Section */}
+                        <section className="bg-white rounded-2xl border border-stone-200/60 p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                    <FileText className="w-5 h-5 text-white" />
                                 </div>
-                            )}
-                        </div>
+                                <div>
+                                    <h2 className="font-semibold text-stone-800">Order Details</h2>
+                                    <p className="text-xs text-stone-500">Dates and payment terms</p>
+                                </div>
+                            </div>
 
-                        <button
-                            onClick={addLine}
-                            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg 
-                                hover:bg-gray-800 flex items-center gap-2 shadow-lg shadow-gray-200 hover:shadow-xl transition-all active:scale-95"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Line
-                        </button>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-600 mb-2">Order Date</label>
+                                        <input
+                                            type="date"
+                                            value={document.date_order}
+                                            onChange={(e) => setDocument(prev => ({ ...prev, date_order: e.target.value }))}
+                                            className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
+                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-600 mb-2">Valid Until</label>
+                                        <input
+                                            type="date"
+                                            value={document.validity_date}
+                                            onChange={(e) => setDocument(prev => ({ ...prev, validity_date: e.target.value }))}
+                                            className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
+                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-600 mb-2">Payment Terms</label>
+                                        <div className="relative">
+                                            <select
+                                                value={document.payment_term_note}
+                                                onChange={(e) => setDocument(prev => ({ ...prev, payment_term_note: e.target.value }))}
+                                                className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm appearance-none transition-all
+                                                    focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                            >
+                                                {PAYMENT_TERMS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                            </select>
+                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-600 mb-2">Customer PO #</label>
+                                        <input
+                                            type="text"
+                                            value={document.client_order_ref}
+                                            onChange={(e) => setDocument(prev => ({ ...prev, client_order_ref: e.target.value }))}
+                                            placeholder="Optional"
+                                            className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
+                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Tax Position Badge */}
+                                <div className={`p-4 rounded-xl flex items-center justify-between text-sm
+                                    ${document.fiscal_position === 'interstate'
+                                        ? 'bg-amber-50 border border-amber-200'
+                                        : 'bg-emerald-50 border border-emerald-200'}`}
+                                >
+                                    <span className={document.fiscal_position === 'interstate' ? 'text-amber-700' : 'text-emerald-700'}>
+                                        Tax Position
+                                    </span>
+                                    <span className={`px-3 py-1 rounded-lg font-medium ${document.fiscal_position === 'interstate'
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : 'bg-emerald-100 text-emerald-800'}`}>
+                                        {document.fiscal_position === 'interstate' ? 'Inter-State (IGST)' : 'Intra-State (CGST+SGST)'}
+                                    </span>
+                                </div>
+                            </div>
+                        </section>
                     </div>
 
-                    <div className="overflow-x-auto min-h-[300px]">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-gray-50 border-b border-gray-200">
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-600 w-10">#</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-600 min-w-[280px]">Product details</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-600 w-24">HSN</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-600 w-24">Qty</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-600 w-24">Unit Price</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-600 w-20">Disc %</th>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-600 w-20">GST</th>
-                                    <th className="px-4 py-3 text-right font-semibold text-gray-600 w-32">Subtotal</th>
-                                    <th className="px-4 py-3 text-right font-semibold text-gray-600 w-32">Total</th>
-                                    <th className="px-4 py-3 w-12"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {lines.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={10} className="px-4 py-16 text-center text-gray-500 bg-gray-50/20">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Package className="w-8 h-8 text-gray-300" />
-                                                <p>No products added yet.</p>
-                                                <button onClick={addLine} className="text-indigo-600 hover:underline">Add your first product</button>
-                                            </div>
-                                        </td>
+                    {/* Products Section */}
+                    <section className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20">
+                                    <Package className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="font-semibold text-stone-800">Products</h2>
+                                    <p className="text-xs text-stone-500">{lines.length} item{lines.length !== 1 ? 's' : ''} added</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={addLine}
+                                className="px-4 py-2.5 bg-stone-800 text-white text-sm font-medium rounded-xl 
+                                    hover:bg-stone-700 flex items-center gap-2 shadow-lg transition-all active:scale-[0.98]"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Product
+                            </button>
+                        </div>
+
+                        {/* Product Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-stone-50/50 border-b border-stone-100">
+                                        <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-12">#</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider min-w-[250px]">Product</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-24">Qty</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-28">Price</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-20">GST</th>
+                                        <th className="px-4 py-3 text-right font-semibold text-stone-500 uppercase text-xs tracking-wider w-32">Total</th>
+                                        <th className="px-4 py-3 w-12"></th>
                                     </tr>
-                                ) : (
-                                    lines.map((line, idx) => (
-                                        <tr key={line.id} className="hover:bg-gray-50/80 transition-colors group">
-                                            <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
-                                            <td className="px-4 py-3">
-                                                <SearchableDropdown
-                                                    options={products}
-                                                    value={line.product_id}
-                                                    onChange={(v) => handleProductSelect(idx, v)}
-                                                    placeholder="Search product..."
-                                                    displayKey="name"
-                                                    valueKey="id"
-                                                    searchKeys={["name", "hsn_code", "item_code"]}
-                                                    filterFn={getProductFilter()}
-                                                    className="w-full"
-                                                />
+                                </thead>
+                                <tbody className="divide-y divide-stone-100">
+                                    {lines.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className="px-4 py-16 text-center text-stone-500">
+                                                <Package className="w-12 h-12 text-stone-200 mx-auto mb-3" />
+                                                <p className="font-medium">No products added</p>
+                                                <button onClick={addLine} className="mt-2 text-teal-600 hover:underline text-sm">Add your first product</button>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <input
-                                                    type="text"
-                                                    value={line.hsn_code}
-                                                    onChange={(e) => updateLine(idx, 'hsn_code', e.target.value)}
-                                                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-center"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1 border border-gray-300 rounded overflow-hidden">
+                                        </tr>
+                                    ) : (
+                                        lines.map((line, idx) => (
+                                            <tr key={line.id} className="hover:bg-stone-50/50 transition-colors group">
+                                                <td className="px-4 py-4 text-stone-400 font-medium">{idx + 1}</td>
+                                                <td className="px-4 py-4">
+                                                    <SearchableDropdown
+                                                        options={products}
+                                                        value={line.product_id}
+                                                        onChange={(v) => updateLine(idx, 'product_id', v)}
+                                                        placeholder="Search product..."
+                                                        displayKey="name"
+                                                        valueKey="id"
+                                                        searchKeys={["name", "hsn_code", "item_code"]}
+                                                        className="w-full"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-4">
                                                     <input
                                                         type="number"
                                                         min="1"
                                                         value={line.product_uom_qty}
                                                         onChange={(e) => updateLine(idx, 'product_uom_qty', parseFloat(e.target.value) || 1)}
-                                                        className="w-full px-2 py-1.5 text-sm text-center focus:outline-none"
+                                                        className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm text-center
+                                                            focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white transition-all"
                                                     />
-                                                    <span className="bg-gray-100 text-xs px-1 py-2 text-gray-500 border-l">
-                                                        {line.product_uom?.substring(0, 3)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={line.price_unit}
-                                                    onChange={(e) => updateLine(idx, 'price_unit', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-right font-medium"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="100"
-                                                    value={line.discount}
-                                                    onChange={(e) => updateLine(idx, 'discount', parseFloat(e.target.value) || 0)}
-                                                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-center"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <select
-                                                    value={line.gst_rate}
-                                                    onChange={(e) => updateLine(idx, 'gst_rate', parseFloat(e.target.value))}
-                                                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
-                                                >
-                                                    {GST_RATES.map(r => (
-                                                        <option key={r.value} value={r.value}>{r.value}%</option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                            <td className="px-4 py-3 text-right text-gray-600 font-medium">
-                                                {formatCurrency(line.price_subtotal)}
-                                            </td>
-                                            <td className="px-4 py-3 text-right font-bold text-gray-900">
-                                                {formatCurrency(line.price_total)}
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <button
-                                                    onClick={() => removeLine(idx)}
-                                                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={line.price_unit}
+                                                        onChange={(e) => updateLine(idx, 'price_unit', parseFloat(e.target.value) || 0)}
+                                                        className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm text-right font-medium
+                                                            focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white transition-all"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <select
+                                                        value={line.gst_rate}
+                                                        onChange={(e) => updateLine(idx, 'gst_rate', parseFloat(e.target.value))}
+                                                        className="w-full px-2 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm
+                                                            focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white transition-all"
+                                                    >
+                                                        {GST_RATES.map(r => <option key={r.value} value={r.value}>{r.value}%</option>)}
+                                                    </select>
+                                                </td>
+                                                <td className="px-4 py-4 text-right font-semibold text-stone-800">
+                                                    {formatCurrency(line.price_total)}
+                                                </td>
+                                                <td className="px-4 py-4 text-center">
+                                                    <button
+                                                        onClick={() => removeLine(idx)}
+                                                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg 
+                                                            transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
 
-                {/* Summary Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Terms */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
-                        <h2 className="text-base font-semibold text-gray-900 mb-4">Terms & Conditions</h2>
-                        <textarea
-                            value={document.note}
-                            onChange={(e) => setDocument(prev => ({ ...prev, note: e.target.value }))}
-                            rows={5}
-                            placeholder="Enter terms and conditions, payment details, or delivery instructions..."
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm resize-none transition-all
-                                focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-gray-50/50"
-                        />
-                    </div>
+                    {/* Summary Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Notes */}
+                        <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-200/60 p-6 shadow-sm">
+                            <h3 className="font-semibold text-stone-800 mb-4">Notes & Terms</h3>
+                            <textarea
+                                value={document.note}
+                                onChange={(e) => setDocument(prev => ({ ...prev, note: e.target.value }))}
+                                rows={4}
+                                placeholder="Add any notes or terms..."
+                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm resize-none transition-all
+                                    focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white hover:border-stone-300"
+                            />
+                        </div>
 
-                    {/* Totals */}
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 flex flex-col justify-between h-full bg-gradient-to-br from-white to-gray-50">
-                        <div>
-                            <h2 className="text-base font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                                <Calculator className="w-5 h-5 text-indigo-500" />
-                                Order Summary
-                            </h2>
+                        {/* Totals Card */}
+                        <div className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl p-6 text-white shadow-xl">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Calculator className="w-5 h-5 text-stone-400" />
+                                <h3 className="font-semibold">Order Summary</h3>
+                            </div>
 
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-600">Subtotal (Untaxed)</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(totals.amount_untaxed)}</span>
+                            <div className="space-y-3 text-sm">
+                                <div className="flex justify-between text-stone-400">
+                                    <span>Subtotal</span>
+                                    <span className="text-white font-medium">{formatCurrency(totals.amount_untaxed)}</span>
                                 </div>
-                                <div className="border-t border-dashed border-gray-200 my-2"></div>
+                                <div className="border-t border-stone-700 my-3"></div>
 
                                 {document.fiscal_position === 'interstate' ? (
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-gray-600 flex items-center gap-1">
-                                            IGST <span className="text-xs bg-gray-100 px-1 rounded text-gray-500">Tax</span>
-                                        </span>
-                                        <span className="font-medium text-gray-900">{formatCurrency(totals.igst_total)}</span>
+                                    <div className="flex justify-between text-stone-400">
+                                        <span>IGST</span>
+                                        <span className="text-white font-medium">{formatCurrency(totals.igst_total)}</span>
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-600 flex items-center gap-1">
-                                                CGST <span className="text-xs bg-gray-100 px-1 rounded text-gray-500">Tax</span>
-                                            </span>
-                                            <span className="font-medium text-gray-900">{formatCurrency(totals.cgst_total)}</span>
+                                        <div className="flex justify-between text-stone-400">
+                                            <span>CGST</span>
+                                            <span className="text-white font-medium">{formatCurrency(totals.cgst_total)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-600 flex items-center gap-1">
-                                                SGST <span className="text-xs bg-gray-100 px-1 rounded text-gray-500">Tax</span>
-                                            </span>
-                                            <span className="font-medium text-gray-900">{formatCurrency(totals.sgst_total)}</span>
+                                        <div className="flex justify-between text-stone-400">
+                                            <span>SGST</span>
+                                            <span className="text-white font-medium">{formatCurrency(totals.sgst_total)}</span>
                                         </div>
                                     </>
                                 )}
                             </div>
-                        </div>
 
-                        <div className="mt-8 pt-6 border-t border-gray-200">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="text-lg font-bold text-gray-900">Total Amount</span>
-                                <span className="text-3xl font-bold text-indigo-600 tracking-tight">
-                                    {formatCurrency(totals.amount_total)}
-                                </span>
+                            <div className="mt-6 pt-4 border-t border-stone-700">
+                                <div className="flex justify-between items-end">
+                                    <span className="text-stone-400">Total</span>
+                                    <span className="text-3xl font-bold">{formatCurrency(totals.amount_total)}</span>
+                                </div>
+                                <p className="text-xs text-stone-500 mt-2 text-right">{amountToWords(totals.amount_total)}</p>
                             </div>
-                            <p className="text-xs text-gray-500 text-right font-medium italic">
-                                {amountToWords(totals.amount_total)}
-                            </p>
                         </div>
                     </div>
-                </div>
+                </main>
             </div>
-        </div>
+
+            {/* Customer Modal */}
+            <OdooPartnerForm
+                isOpen={showCustomerModal}
+                onClose={() => { setShowCustomerModal(false); setPendingCustomerName(''); }}
+                onSave={handleCustomerCreated}
+                initialName={pendingCustomerName}
+            />
+        </>
     );
 }

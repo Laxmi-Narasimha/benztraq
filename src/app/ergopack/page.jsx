@@ -16,9 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
     Building2, Clock, Phone, FileText, CheckCircle, XCircle,
-    Plus, ArrowRight, RefreshCw, Ban, TrendingUp
+    Plus, ArrowRight, RefreshCw, Ban, TrendingUp, Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const STATUS_CARDS = [
     { key: 'total', label: 'Total', icon: Building2, color: 'text-white', bg: 'bg-zinc-800/50' },
@@ -139,6 +140,15 @@ export default function ErgopackDashboard() {
                         </Link>
                     </CardHeader>
                     <CardContent className="p-0">
+                        {/* Header for Grid */}
+                        <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-zinc-900 bg-zinc-900/40 text-[10px] font-medium text-zinc-500 uppercase tracking-widest text-center items-center">
+                            <div className="col-span-4 text-left">Company</div>
+                            <div className="col-span-3">Status</div>
+                            <div className="col-span-2">PDF</div>
+                            <div className="col-span-2">Quote</div>
+                            <div className="col-span-1"></div>
+                        </div>
+
                         {isLoading ? (
                             <div className="p-6 text-center text-zinc-600 text-sm">
                                 <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2" />
@@ -149,26 +159,83 @@ export default function ErgopackDashboard() {
                         ) : (
                             <div className="divide-y divide-zinc-900">
                                 {recentContacts.map((contact) => (
-                                    <Link key={contact.id} href={`/ergopack/contacts/${contact.id}`} className="block group">
-                                        <div className="flex items-center justify-between px-4 py-3 hover:bg-zinc-900/40 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                                                    <Building2 className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-zinc-200 group-hover:text-white">
-                                                        {contact.company_name}
-                                                    </p>
-                                                    <p className="text-[10px] text-zinc-600">
-                                                        {contact.contact_person || 'No contact'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <Badge className={cn("border text-[9px] uppercase", getStatusBadge(contact.status))}>
+                                    <div key={contact.id} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-zinc-900/40 transition-colors group text-center">
+                                        {/* Company */}
+                                        <div className="col-span-4 text-left">
+                                            <Link href={`/ergopack/contacts/${contact.id}`} className="block">
+                                                <p className="text-sm font-medium text-zinc-200 group-hover:text-white truncate">
+                                                    {contact.company_name}
+                                                </p>
+                                                <p className="text-[10px] text-zinc-600 truncate">
+                                                    {contact.contact_person || 'No contact'}
+                                                </p>
+                                            </Link>
+                                        </div>
+
+                                        {/* Status */}
+                                        <div className="col-span-3 flex justify-center">
+                                            <Badge className={cn("border text-[9px] uppercase whitespace-nowrap", getStatusBadge(contact.status))}>
                                                 {contact.status?.replace('_', ' ')}
                                             </Badge>
                                         </div>
-                                    </Link>
+
+                                        {/* PDF Download */}
+                                        <div className="col-span-2 flex justify-center">
+                                            {contact.presentation_file_path ? (
+                                                <button
+                                                    onClick={async (e) => {
+                                                        e.preventDefault();
+                                                        try {
+                                                            const res = await fetch(`/api/ergopack/presentations?contactId=${contact.id}`);
+                                                            const data = await res.json();
+                                                            if (data.url) window.open(data.url, '_blank');
+                                                            else toast.error('Error getting URL');
+                                                        } catch (err) {
+                                                            toast.error('Error loading PDF');
+                                                        }
+                                                    }}
+                                                    className="w-7 h-7 rounded bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center text-red-500 hover:text-red-400 transition-all"
+                                                >
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                </button>
+                                            ) : (
+                                                <span className="text-zinc-700">-</span>
+                                            )}
+                                        </div>
+
+                                        {/* Quote Download */}
+                                        <div className="col-span-2 flex justify-center">
+                                            {contact.quotation_file_path ? (
+                                                <button
+                                                    onClick={async (e) => {
+                                                        e.preventDefault();
+                                                        try {
+                                                            const res = await fetch(`/api/ergopack/quotations?contactId=${contact.id}`);
+                                                            const data = await res.json();
+                                                            if (data.url) window.open(data.url, '_blank');
+                                                            else toast.error('Error getting URL');
+                                                        } catch (err) {
+                                                            toast.error('Error loading Quote');
+                                                        }
+                                                    }}
+                                                    className="w-7 h-7 rounded bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center text-blue-500 hover:text-blue-400 transition-all"
+                                                >
+                                                    <Download className="w-3.5 h-3.5" />
+                                                </button>
+                                            ) : (
+                                                <span className="text-zinc-700">-</span>
+                                            )}
+                                        </div>
+
+                                        {/* Arrow */}
+                                        <div className="col-span-1 flex justify-end">
+                                            <Link href={`/ergopack/contacts/${contact.id}`}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-600 hover:text-white">
+                                                    <ArrowRight className="w-3 h-3" />
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         )}

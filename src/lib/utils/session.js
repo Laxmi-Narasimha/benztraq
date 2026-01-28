@@ -98,6 +98,7 @@ export async function getCurrentUser() {
         fullName: session.full_name,
         role: session.role,
         roleId: session.role_id,
+        regionId: session.region_id, // Expose region_id
         permissions: session.permissions || {},
         organization: session.organization || 'benz_packaging', // Expose organization
     };

@@ -49,14 +49,14 @@ export async function GET(request) {
         const salespersonId = searchParams.get('salesperson_id');
         const regionId = searchParams.get('region_id');
         const customerId = searchParams.get('customer_id');
+        const search = searchParams.get('search');
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
 
-        // Build query
-        // Build query
+        // Build query with count for pagination
         let query = supabase
             .from('documents')
-            .select('*')
+            .select('*', { count: 'exact' })
             .eq('organization', currentUser.organization) // Enforce Organization Isolation
             .order('doc_date', { ascending: false })
             .range(offset, offset + limit - 1);
@@ -64,6 +64,12 @@ export async function GET(request) {
         // RBAC: ASM can only see their own documents
         if (isASM(currentUser.role)) {
             query = query.eq('salesperson_user_id', currentUser.id);
+        }
+
+        // Apply search filter (search across multiple fields)
+        if (search && search.trim()) {
+            const searchTerm = search.trim();
+            query = query.or(`doc_number.ilike.%${searchTerm}%,customer_name_raw.ilike.%${searchTerm}%,product_name.ilike.%${searchTerm}%`);
         }
 
         // Apply filters
@@ -138,6 +144,14 @@ export async function GET(request) {
 
         return NextResponse.json({
             documents,
+            pagination: {
+                total: count || 0,
+                totalPages: Math.ceil((count || 0) / limit),
+                page: Math.floor(offset / limit) + 1,
+                limit,
+                offset,
+            },
+            // Legacy format for backward compatibility
             count,
             limit,
             offset,
@@ -269,6 +283,37 @@ export async function POST(request) {
         const finalAmountUntaxed = amount_untaxed || subtotal || finalAmountTotal;
         const finalAmountTax = amount_tax || (cgst_total || 0) + (sgst_total || 0) + (igst_total || 0);
 
+        // Resolve internal salesperson ID and Region ID
+        // If user has no region (e.g. Admin/Director), we MUST get it from the customer
+        // because documents.region_id is NOT NULL
+        let finalRegionId = currentUser.regionId;
+
+        // FIXED: Always use Auth User ID because the FK references auth.users(id)
+        // Trying to use profiles.id is dangerous if profiles table has a separate PK
+        const salespersonId = currentUser.id;
+
+        // If no region from user session, fetch from customer
+        if (!finalRegionId && finalCustomerId) {
+            const { data: customerData } = await supabase
+                .from('customers')
+                .select('region_id')
+                .eq('id', finalCustomerId)
+                .single();
+
+            if (customerData?.region_id) {
+                finalRegionId = customerData.region_id;
+            } else {
+                // FALLBACK: Get ANY valid region ID (Default to Gurgaon/Head Office)
+                // This prevents 500 error on "Next" button
+                const { data: defaultRegion } = await supabase
+                    .from('regions')
+                    .select('id')
+                    .limit(1)
+                    .single();
+                finalRegionId = defaultRegion?.id;
+            }
+        }
+
         // Build document insert payload
         const documentPayload = {
             // Odoo-style fields
@@ -283,7 +328,7 @@ export async function POST(request) {
             commitment_date: commitment_date || null,
             state: docState,
             fiscal_position: finalFiscalPosition,
-            place_of_supply: place_of_supply || null,
+            place_of_supply: finalFiscalPosition === 'intrastate' ? '27' : place_of_supply || null, // Default to MH if intra
             currency_id: currency_id || 'INR',
             payment_term_id: payment_term_id || null,
             payment_term_note: payment_term_note || payment_terms || null,
@@ -325,9 +370,10 @@ export async function POST(request) {
             notes: notes || note || null,
 
             // Tracking
-            salesperson_id: currentUser.id,
-            salesperson_user_id: currentUser.id,
+            salesperson_id: salespersonId, // Use resolved ID
+            salesperson_user_id: currentUser.id, // Explicit Auth ID
             sales_team: currentUser.region || null,
+            region_id: finalRegionId, // FIXED: Correctly resolved region ID
             created_by: currentUser.id,
             organization: currentUser.organization || 'benz_packaging',
             status: docState === 'sale' ? 'open' : 'draft',

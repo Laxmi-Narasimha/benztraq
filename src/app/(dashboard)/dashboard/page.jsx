@@ -351,6 +351,7 @@ export default function DashboardPage() {
     const { isManager: authIsManager } = useAuth();
     const isManager = stats?.isManager ?? authIsManager;
     const summary = stats?.summaryMetrics || {};
+    const kpis = stats?.kpis || {}; // New KPIs with real calculations
     const accessibleUsers = stats?.accessibleUsers || [];
 
     // Leaderboard calculation from trend data
@@ -439,8 +440,8 @@ export default function DashboardPage() {
                     title="Revenue"
                     value={formatCurrency(summary.totalRevenue || 0)}
                     subtext="From confirmed orders"
-                    trend={summary.previousPeriod?.revenueChange}
-                    trendDirection={summary.previousPeriod?.revenueChange >= 0 ? 'up' : 'down'}
+                    trend={kpis.revenueChange || 0}
+                    trendDirection={(kpis.revenueChange || 0) >= 0 ? 'up' : 'down'}
                     icon={DollarSign}
                     loading={loading}
                 />
@@ -455,8 +456,8 @@ export default function DashboardPage() {
                     title="Orders"
                     value={summary.totalOrders?.toLocaleString() || '0'}
                     subtext="Confirmed orders"
-                    trend={summary.previousPeriod?.ordersChange}
-                    trendDirection={summary.previousPeriod?.ordersChange >= 0 ? 'up' : 'down'}
+                    trend={kpis.ordersChange || 0}
+                    trendDirection={(kpis.ordersChange || 0) >= 0 ? 'up' : 'down'}
                     icon={ShoppingCart}
                     loading={loading}
                 />
@@ -468,9 +469,11 @@ export default function DashboardPage() {
                     loading={loading}
                 />
                 <MetricCard
-                    title="Avg Order"
-                    value={formatCurrency(summary.avgOrderValue || 0, { compact: true })}
-                    subtext="Per order"
+                    title="Target"
+                    value={kpis.targetAchievement ? `${kpis.targetAchievement}%` : '--'}
+                    subtext={kpis.yearlyTarget ? `of ${formatCurrency(kpis.yearlyTarget, { compact: true })}` : 'Annual achievement'}
+                    trend={kpis.targetAchievement >= 100 ? 10 : kpis.targetAchievement >= 80 ? 5 : null}
+                    trendDirection={kpis.targetAchievement >= 80 ? 'up' : 'down'}
                     icon={BarChart3}
                     loading={loading}
                 />

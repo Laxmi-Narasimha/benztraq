@@ -152,6 +152,7 @@ export async function POST(request) {
             full_name: profile.full_name,
             role: profile.roles?.name,
             role_id: profile.role_id,
+            region_id: profile.region_id, // Add region_id to token
             role_level: profile.roles?.level,
             permissions: permissionsMap,
             organization: profile.organization || 'benz_packaging', // Default to benz if missing
