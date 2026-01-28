@@ -23,13 +23,24 @@ import { cn } from '@/lib/utils';
 // ============================================================================
 // METRIC CARD COMPONENT
 // ============================================================================
+// Icon color mapping for different metrics
+const iconColors = {
+    DollarSign: 'from-teal-500 to-cyan-600',
+    FileText: 'from-blue-500 to-indigo-600',
+    ShoppingCart: 'from-emerald-500 to-green-600',
+    Target: 'from-amber-500 to-orange-500',
+    BarChart3: 'from-violet-500 to-purple-600',
+    Users: 'from-rose-500 to-pink-600',
+};
+
 function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, loading }) {
     if (loading) {
         return (
-            <Card className="border-slate-100 shadow-sm">
-                <CardContent className="p-6">
-                    <Skeleton className="h-4 w-20 mb-4" />
-                    <Skeleton className="h-8 w-32 mb-2" />
+            <Card className="overflow-hidden">
+                <CardContent className="p-5">
+                    <Skeleton className="h-10 w-10 rounded-xl mb-4" />
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-7 w-32 mb-1" />
                     <Skeleton className="h-3 w-24" />
                 </CardContent>
             </Card>
@@ -37,27 +48,39 @@ function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, 
     }
 
     const TrendIcon = trendDirection === 'up' ? TrendingUp : TrendingDown;
-    const trendColor = trendDirection === 'up' ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50';
+    const iconName = Icon?.name || 'BarChart3';
+    const gradient = iconColors[iconName] || 'from-teal-500 to-cyan-600';
 
     return (
-        <Card className="border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-3">
-                    <div className="p-2.5 bg-slate-50 rounded-xl text-slate-600">
-                        <Icon className="h-5 w-5" />
+        <Card className="overflow-hidden group hover:shadow-premium-lg transition-all duration-300">
+            <CardContent className="p-5">
+                <div className="flex justify-between items-start mb-4">
+                    {/* Gradient Icon Container */}
+                    <div className={cn(
+                        "w-11 h-11 rounded-xl flex items-center justify-center",
+                        "bg-gradient-to-br", gradient,
+                        "shadow-lg transition-transform duration-200 group-hover:scale-105"
+                    )}>
+                        <Icon className="h-5 w-5 text-white" />
                     </div>
+                    {/* Trend Badge */}
                     {trend !== null && trend !== undefined && (
-                        <div className={cn("flex items-center text-xs font-medium px-2 py-1 rounded-full", trendColor)}>
+                        <div className={cn(
+                            "flex items-center text-xs font-semibold px-2.5 py-1 rounded-full",
+                            trendDirection === 'up'
+                                ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                : 'text-rose-700 bg-rose-50 dark:bg-rose-900/30 dark:text-rose-400'
+                        )}>
                             <TrendIcon className="h-3 w-3 mr-1" />
                             {Math.abs(trend)}%
                         </div>
                     )}
                 </div>
                 <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-500">{title}</p>
-                    <p className="text-2xl font-bold text-slate-900 tracking-tight">{value}</p>
+                    <p className="text-sm font-medium text-stone-500 dark:text-stone-400">{title}</p>
+                    <p className="text-2xl font-bold text-stone-800 dark:text-white tracking-tight">{value}</p>
                 </div>
-                {subtext && <p className="text-xs text-slate-400 mt-2">{subtext}</p>}
+                {subtext && <p className="text-xs text-stone-400 dark:text-stone-500 mt-2">{subtext}</p>}
             </CardContent>
         </Card>
     );
@@ -397,16 +420,16 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="space-y-6 p-6 max-w-[1800px] mx-auto bg-slate-50/50 min-h-screen">
+        <div className="space-y-6 p-6 max-w-[1800px] mx-auto bg-gradient-subtle min-h-screen">
             {/* ============================================
                 HEADER WITH FILTERS
             ============================================ */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                    <h1 className="text-2xl font-bold tracking-tight text-stone-800 dark:text-white">
                         Sales Dashboard
                     </h1>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-stone-500 dark:text-stone-400">
                         {isManager
                             ? `Team performance overview • ${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d, yyyy')}`
                             : `Your performance • ${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d, yyyy')}`
@@ -508,12 +531,17 @@ export default function DashboardPage() {
             ============================================ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Sales Funnel */}
-                <Card className="border-slate-100 shadow-sm bg-white">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
-                            Sales Funnel
-                        </CardTitle>
+                <Card accent="teal">
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="icon-container icon-container-md icon-container-teal-subtle">
+                                <BarChart3 className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-base">Sales Funnel</CardTitle>
+                                <CardDescription>Quote to order progression</CardDescription>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <SalesFunnel data={stats?.funnelData} loading={loading} />
@@ -521,12 +549,17 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* Top Products */}
-                <Card className="border-slate-100 shadow-sm bg-white">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-500">
-                            Top Products
-                        </CardTitle>
-                        <CardDescription className="text-xs">By revenue contribution</CardDescription>
+                <Card accent="amber">
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="icon-container icon-container-md icon-container-amber-subtle">
+                                <ShoppingCart className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-base">Top Products</CardTitle>
+                                <CardDescription>By revenue contribution</CardDescription>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <ProductList data={stats?.topProducts} loading={loading} />
@@ -534,12 +567,17 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* Pipeline Status */}
-                <Card className="border-slate-100 shadow-sm bg-white">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-500">
-                            Pipeline Status
-                        </CardTitle>
-                        <CardDescription className="text-xs">Document distribution</CardDescription>
+                <Card accent="violet">
+                    <CardHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="icon-container icon-container-md icon-container-violet-subtle">
+                                <FileText className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-base">Pipeline Status</CardTitle>
+                                <CardDescription>Document distribution</CardDescription>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <PipelineStatus data={stats?.pieData} loading={loading} />
