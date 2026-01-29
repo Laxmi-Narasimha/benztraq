@@ -21,24 +21,15 @@ import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
-// METRIC CARD COMPONENT
+// METRIC CARD COMPONENT - Clean Design
 // ============================================================================
-// Icon color mapping for different metrics
-const iconColors = {
-    DollarSign: 'from-teal-500 to-cyan-600',
-    FileText: 'from-blue-500 to-indigo-600',
-    ShoppingCart: 'from-emerald-500 to-green-600',
-    Target: 'from-amber-500 to-orange-500',
-    BarChart3: 'from-violet-500 to-purple-600',
-    Users: 'from-rose-500 to-pink-600',
-};
 
 function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, loading }) {
     if (loading) {
         return (
             <Card className="overflow-hidden">
                 <CardContent className="p-5">
-                    <Skeleton className="h-10 w-10 rounded-xl mb-4" />
+                    <Skeleton className="h-10 w-10 rounded-lg mb-4" />
                     <Skeleton className="h-4 w-20 mb-2" />
                     <Skeleton className="h-7 w-32 mb-1" />
                     <Skeleton className="h-3 w-24" />
@@ -48,25 +39,19 @@ function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, 
     }
 
     const TrendIcon = trendDirection === 'up' ? TrendingUp : TrendingDown;
-    const iconName = Icon?.name || 'BarChart3';
-    const gradient = iconColors[iconName] || 'from-teal-500 to-cyan-600';
 
     return (
-        <Card className="overflow-hidden group hover:shadow-premium-lg transition-all duration-300">
+        <Card className="overflow-hidden hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-5">
                 <div className="flex justify-between items-start mb-4">
-                    {/* Gradient Icon Container */}
-                    <div className={cn(
-                        "w-11 h-11 rounded-xl flex items-center justify-center",
-                        "bg-gradient-to-br", gradient,
-                        "shadow-lg transition-transform duration-200 group-hover:scale-105"
-                    )}>
-                        <Icon className="h-5 w-5 text-white" />
+                    {/* Clean Icon */}
+                    <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                        <Icon className="h-5 w-5 text-stone-500 dark:text-stone-400" />
                     </div>
                     {/* Trend Badge */}
                     {trend !== null && trend !== undefined && (
                         <div className={cn(
-                            "flex items-center text-xs font-semibold px-2.5 py-1 rounded-full",
+                            "flex items-center text-xs font-medium px-2 py-1 rounded-md",
                             trendDirection === 'up'
                                 ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400'
                                 : 'text-rose-700 bg-rose-50 dark:bg-rose-900/30 dark:text-rose-400'
@@ -531,12 +516,10 @@ export default function DashboardPage() {
             ============================================ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Sales Funnel */}
-                <Card accent="teal">
+                <Card>
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <div className="icon-container icon-container-md icon-container-teal-subtle">
-                                <BarChart3 className="h-4 w-4" />
-                            </div>
+                            <BarChart3 className="h-5 w-5 text-stone-400" />
                             <div>
                                 <CardTitle className="text-base">Sales Funnel</CardTitle>
                                 <CardDescription>Quote to order progression</CardDescription>
@@ -549,12 +532,10 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* Top Products */}
-                <Card accent="amber">
+                <Card>
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <div className="icon-container icon-container-md icon-container-amber-subtle">
-                                <ShoppingCart className="h-4 w-4" />
-                            </div>
+                            <ShoppingCart className="h-5 w-5 text-stone-400" />
                             <div>
                                 <CardTitle className="text-base">Top Products</CardTitle>
                                 <CardDescription>By revenue contribution</CardDescription>
@@ -567,12 +548,10 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* Pipeline Status */}
-                <Card accent="violet">
+                <Card>
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <div className="icon-container icon-container-md icon-container-violet-subtle">
-                                <FileText className="h-4 w-4" />
-                            </div>
+                            <FileText className="h-5 w-5 text-stone-400" />
                             <div>
                                 <CardTitle className="text-base">Pipeline Status</CardTitle>
                                 <CardDescription>Document distribution</CardDescription>

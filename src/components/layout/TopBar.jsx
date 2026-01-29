@@ -80,7 +80,7 @@ function Breadcrumbs() {
     return (
         <nav className="hidden md:flex items-center gap-1 text-sm">
             {breadcrumbs.map((crumb, index) => (
-                <div key={crumb.href} className="flex items-center gap-1">
+                <div key={`${crumb.href}-${index}`} className="flex items-center gap-1">
                     {index > 0 && (
                         <ChevronRight className="w-3.5 h-3.5 text-stone-300 dark:text-stone-600" />
                     )}

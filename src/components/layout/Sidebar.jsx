@@ -43,56 +43,55 @@ import { formatInitials } from '@/lib/utils/formatting';
 import { useState } from 'react';
 
 /**
- * Icon mapping with associated colors for gradient backgrounds
+ * Icon mapping - Clean monochrome design
+ * All icons use the same subtle styling, only active state gets accent color
  */
 const IconConfig = {
-    LayoutDashboard: { icon: LayoutDashboard, gradient: 'from-teal-500 to-cyan-500', bg: 'bg-teal-500/10' },
-    FileText: { icon: FileText, gradient: 'from-blue-500 to-indigo-500', bg: 'bg-blue-500/10' },
-    Upload: { icon: Upload, gradient: 'from-violet-500 to-purple-500', bg: 'bg-violet-500/10' },
-    GitCompare: { icon: GitCompare, gradient: 'from-pink-500 to-rose-500', bg: 'bg-pink-500/10' },
-    Users: { icon: Users, gradient: 'from-amber-500 to-orange-500', bg: 'bg-amber-500/10' },
-    Package: { icon: Package, gradient: 'from-emerald-500 to-green-500', bg: 'bg-emerald-500/10' },
-    MapPin: { icon: MapPin, gradient: 'from-red-500 to-rose-500', bg: 'bg-red-500/10' },
-    Target: { icon: Target, gradient: 'from-cyan-500 to-blue-500', bg: 'bg-cyan-500/10' },
-    BarChart3: { icon: BarChart3, gradient: 'from-indigo-500 to-violet-500', bg: 'bg-indigo-500/10' },
-    Settings: { icon: Settings, gradient: 'from-stone-500 to-stone-600', bg: 'bg-stone-500/10' },
-    Shield: { icon: Shield, gradient: 'from-rose-500 to-red-500', bg: 'bg-rose-500/10' },
+    LayoutDashboard: { icon: LayoutDashboard },
+    FileText: { icon: FileText },
+    Upload: { icon: Upload },
+    GitCompare: { icon: GitCompare },
+    Users: { icon: Users },
+    Package: { icon: Package },
+    MapPin: { icon: MapPin },
+    Target: { icon: Target },
+    BarChart3: { icon: BarChart3 },
+    Settings: { icon: Settings },
+    Shield: { icon: Shield },
 };
 
 /**
- * Single Navigation Item Component
+ * Single Navigation Item Component - Clean Design
  */
 function NavItem({ item, collapsed, isActive }) {
-    const config = IconConfig[item.icon] || { icon: LayoutDashboard, gradient: 'from-stone-500 to-stone-600', bg: 'bg-stone-500/10' };
+    const config = IconConfig[item.icon] || { icon: LayoutDashboard };
     const Icon = config.icon;
 
     return (
         <Link
             href={item.href}
             className={cn(
-                'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 isActive
-                    ? 'bg-gradient-to-r from-teal-500/10 to-cyan-500/5 text-teal-700 dark:text-teal-300'
-                    : 'text-stone-600 hover:bg-stone-100/80 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-stone-200',
+                    ? 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100'
+                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-stone-200',
                 collapsed && 'justify-center px-0'
             )}
             title={collapsed ? item.title : undefined}
         >
-            {/* Active Indicator */}
+            {/* Active Indicator - Clean left bar */}
             {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-teal-500 to-cyan-500 rounded-r-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-teal-500 rounded-r-full" />
             )}
 
-            {/* Icon Container */}
-            <span className={cn(
-                'relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200',
+            {/* Icon - Clean, no container */}
+            <Icon className={cn(
+                'flex-shrink-0 transition-colors duration-200',
                 isActive
-                    ? `bg-gradient-to-br ${config.gradient} text-white shadow-lg shadow-teal-500/20`
-                    : `${config.bg} text-stone-500 group-hover:text-stone-700 dark:text-stone-400`,
-                collapsed ? 'w-10 h-10' : 'w-8 h-8'
-            )}>
-                <Icon className={cn('transition-transform duration-200 group-hover:scale-110', collapsed ? 'w-5 h-5' : 'w-4 h-4')} />
-            </span>
+                    ? 'text-teal-600 dark:text-teal-400'
+                    : 'text-stone-400 group-hover:text-stone-600 dark:text-stone-500 dark:group-hover:text-stone-300',
+                collapsed ? 'w-5 h-5' : 'w-[18px] h-[18px]'
+            )} />
 
             {/* Label */}
             {!collapsed && (
@@ -101,7 +100,7 @@ function NavItem({ item, collapsed, isActive }) {
 
             {/* Badge/Count (if applicable) */}
             {item.badge && !collapsed && (
-                <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">
+                <span className="ml-auto text-xs font-medium px-1.5 py-0.5 rounded-md bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-300">
                     {item.badge}
                 </span>
             )}
