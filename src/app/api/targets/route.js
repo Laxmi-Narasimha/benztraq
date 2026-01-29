@@ -1,7 +1,10 @@
 /**
- * Targets API Route - Ultra Robust Version
+ * Targets API Route - Fixed Version
  * 
- * Handles all edge cases including missing tables.
+ * Features:
+ * - Only returns the 6 valid ASM regions
+ * - Tracks who set each target
+ * - Logs all target changes
  * 
  * @module api/targets
  */
@@ -12,10 +15,17 @@ import { getCurrentUser } from '@/lib/utils/session';
 
 export const dynamic = 'force-dynamic';
 
-// ASM names that can have targets set
-const ASM_NAMES = ['Madhya Pradesh', 'Rajasthan', 'Karnataka', 'Maharashtra', 'Noida', 'West Zone'];
+// The ONLY valid ASM regions that can have targets
+const VALID_ASM_REGIONS = [
+    'Karnataka',
+    'Madhya Pradesh',
+    'Maharashtra',
+    'Noida',
+    'Rajasthan',
+    'West Zone'
+];
 
-// Manager roles
+// Manager roles that can set targets
 const MANAGER_ROLES = ['developer', 'director', 'head_of_sales', 'head of sales', 'vp'];
 
 function isManager(role) {
@@ -55,58 +65,78 @@ export async function GET(request) {
         let targets = [];
         let availableSalespeople = [];
 
-        // Step 1: Fetch targets from annual_targets table
+        // Step 1: Fetch ONLY valid ASM profiles (no duplicates)
+        // Filter by: is in VALID_ASM_REGIONS, has email, is active, role is 'asm'
         try {
-            const { data: targetData, error: targetError } = await supabase
-                .from('annual_targets')
-                .select('*')
-                .eq('year', year);
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('user_id, full_name, email, role')
+                .in('full_name', VALID_ASM_REGIONS)
+                .eq('is_active', true)
+                .not('email', 'is', null)
+                .neq('email', '')
+                .order('full_name');
 
-            if (targetError) {
-                console.error('[Targets API GET] Target fetch error:', targetError.message);
-            } else if (targetData && targetData.length > 0) {
-                const userIds = [...new Set(targetData.map(t => t.salesperson_user_id).filter(Boolean))];
+            // Deduplicate by full_name (keep first one with email)
+            const uniqueProfiles = {};
+            (profiles || []).forEach(p => {
+                if (!uniqueProfiles[p.full_name] && p.email) {
+                    uniqueProfiles[p.full_name] = p;
+                }
+            });
 
-                if (userIds.length > 0) {
-                    // Fetch profiles
-                    const { data: profiles } = await supabase
-                        .from('profiles')
-                        .select('user_id, full_name, email')
-                        .in('user_id', userIds);
+            availableSalespeople = Object.values(uniqueProfiles).map(p => ({
+                id: p.user_id,
+                name: p.full_name,
+                email: p.email
+            }));
 
+            console.log('[Targets API GET] Available ASM regions:', availableSalespeople.map(s => s.name));
+        } catch (e) {
+            console.error('[Targets API GET] Profiles error:', e.message);
+        }
+
+        // Step 2: Fetch targets ONLY for valid ASM regions
+        const validUserIds = availableSalespeople.map(s => s.id);
+
+        if (validUserIds.length > 0) {
+            try {
+                const { data: targetData, error: targetError } = await supabase
+                    .from('annual_targets')
+                    .select('*')
+                    .eq('year', year)
+                    .in('salesperson_user_id', validUserIds);
+
+                if (targetError) {
+                    console.error('[Targets API GET] Target fetch error:', targetError.message);
+                } else if (targetData && targetData.length > 0) {
+                    // Get profile names
                     const profileMap = {};
-                    (profiles || []).forEach(p => { profileMap[p.user_id] = p; });
+                    availableSalespeople.forEach(p => { profileMap[p.id] = p; });
 
-                    // Step 2: Fetch sales orders for this year to calculate achieved amounts
+                    // Fetch sales orders for achievement calculation
                     const startDate = `${year}-01-01`;
                     const endDate = `${year}-12-31`;
 
-                    const { data: salesOrders, error: salesError } = await supabase
+                    const { data: salesOrders } = await supabase
                         .from('documents')
                         .select('salesperson_user_id, grand_total, doc_date')
                         .eq('doc_type', 'sales_order')
-                        .in('salesperson_user_id', userIds)
+                        .in('salesperson_user_id', validUserIds)
                         .gte('doc_date', startDate)
                         .lte('doc_date', endDate);
 
-                    if (salesError) {
-                        console.error('[Targets API GET] Sales order fetch error:', salesError.message);
-                    }
-
-                    // Calculate achieved by salesperson (annual total)
+                    // Calculate achieved by salesperson
                     const achievedMap = {};
-                    const monthlyAchievedMap = {}; // { salesperson_id: { 1: amount, 2: amount, ... } }
+                    const monthlyAchievedMap = {};
 
                     (salesOrders || []).forEach(so => {
                         const spId = so.salesperson_user_id;
                         const amount = parseFloat(so.grand_total) || 0;
-
-                        // Add to annual total
                         achievedMap[spId] = (achievedMap[spId] || 0) + amount;
 
-                        // Add to monthly breakdown
                         if (so.doc_date) {
-                            const month = new Date(so.doc_date).getMonth() + 1; // 1-12
+                            const month = new Date(so.doc_date).getMonth() + 1;
                             if (!monthlyAchievedMap[spId]) {
                                 monthlyAchievedMap[spId] = {};
                             }
@@ -114,47 +144,28 @@ export async function GET(request) {
                         }
                     });
 
-                    console.log('[Targets API GET] Achieved map:', achievedMap);
-
-                    // Build targets with achieved amounts
+                    // Build targets with tracking info
                     targets = targetData.map(t => ({
                         id: t.id,
                         salespersonId: t.salesperson_user_id,
-                        salespersonName: profileMap[t.salesperson_user_id]?.full_name || 'Unknown',
+                        salespersonName: profileMap[t.salesperson_user_id]?.name || 'Unknown',
                         year: t.year,
                         annualTarget: parseFloat(t.annual_target) || 0,
                         totalAchieved: achievedMap[t.salesperson_user_id] || 0,
                         monthlyAchieved: monthlyAchievedMap[t.salesperson_user_id] || {},
+                        setBy: t.set_by_name || null,
+                        setByUserId: t.set_by_user_id || null,
+                        createdAt: t.created_at || null,
+                        updatedAt: t.updated_at || null,
                     }));
 
-                    // Filter for ASMs if not manager
+                    // Non-managers can only see their own targets
                     if (!userIsManager) {
                         targets = targets.filter(t => t.salespersonId === currentUser.id);
                     }
                 }
-            }
-        } catch (e) {
-            console.error('[Targets API GET] Exception:', e.message);
-        }
-
-        // Step 3: Fetch ASMs for filter dropdown
-        if (userIsManager) {
-            try {
-                const { data: profiles } = await supabase
-                    .from('profiles')
-                    .select('user_id, full_name, email')
-                    .eq('is_active', true)
-                    .order('full_name');
-
-                const asmProfiles = (profiles || []).filter(p => ASM_NAMES.includes(p.full_name));
-
-                availableSalespeople = asmProfiles.map(p => ({
-                    id: p.user_id,
-                    name: p.full_name,
-                    email: p.email || ''
-                }));
             } catch (e) {
-                console.error('[Targets API GET] Profiles error:', e.message);
+                console.error('[Targets API GET] Targets error:', e.message);
             }
         }
 
@@ -175,12 +186,12 @@ export async function GET(request) {
             targets: [],
             availableSalespeople: [],
             canSetTargets: false
-        }, { status: 200 }); // Return 200 to not break UI
+        }, { status: 200 });
     }
 }
 
 // ============================================================================
-// POST HANDLER
+// POST HANDLER - Set/Update Target with Logging
 // ============================================================================
 
 export async function POST(request) {
@@ -189,17 +200,21 @@ export async function POST(request) {
     try {
         // Step 1: Auth
         const currentUser = await getCurrentUser();
-        console.log('[Targets API POST] User:', currentUser?.id, 'Role:', currentUser?.role);
+        console.log('[Targets API POST] Current user:', JSON.stringify(currentUser, null, 2));
 
         if (!currentUser) {
+            console.log('[Targets API POST] No user found - returning 401');
             return NextResponse.json({
                 success: false,
                 error: 'Unauthorized - Please log in again'
             }, { status: 401 });
         }
 
+        console.log('[Targets API POST] User ID:', currentUser.id, 'Role:', currentUser.role, 'Name:', currentUser.fullName);
+
         // Step 2: Permission check
         if (!canSetTargets(currentUser.role)) {
+            console.log('[Targets API POST] Permission denied for role:', currentUser.role);
             return NextResponse.json({
                 success: false,
                 error: `Permission denied. Role: ${currentUser.role}`
@@ -210,7 +225,6 @@ export async function POST(request) {
         let body;
         try {
             body = await request.json();
-            console.log('[Targets API POST] Body:', JSON.stringify(body));
         } catch (e) {
             return NextResponse.json({
                 success: false,
@@ -218,208 +232,199 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const { salespersonId, year, annualTarget } = body;
+        const { salespersonId, year, annualTarget, oldTarget } = body;
 
-        // Step 4: Validate
-        if (!salespersonId) {
+        // Validate required fields
+        if (!salespersonId || !year || annualTarget === undefined) {
             return NextResponse.json({
                 success: false,
-                error: 'Salesperson ID is required'
-            }, { status: 400 });
-        }
-        if (!year) {
-            return NextResponse.json({
-                success: false,
-                error: 'Year is required'
-            }, { status: 400 });
-        }
-        if (!annualTarget && annualTarget !== 0) {
-            return NextResponse.json({
-                success: false,
-                error: 'Annual target is required'
+                error: 'Missing required fields: salespersonId, year, annualTarget'
             }, { status: 400 });
         }
 
-        const yearNum = parseInt(year);
-        const targetNum = parseFloat(annualTarget);
+        const supabase = createAdminClient();
 
-        // Step 5: DB connection
-        let supabase;
-        try {
-            supabase = createAdminClient();
-            console.log('[Targets API POST] Supabase client created');
-        } catch (e) {
-            console.error('[Targets API POST] DB init error:', e);
+        // Step 4: Verify the salesperson is a valid ASM region
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, email')
+            .eq('user_id', salespersonId)
+            .single();
+
+        if (profileError || !profile) {
             return NextResponse.json({
                 success: false,
-                error: 'Database connection failed: ' + e.message
-            }, { status: 500 });
+                error: 'Invalid salesperson ID'
+            }, { status: 400 });
         }
 
-        // Step 6: Verify salesperson exists
-        let salespersonName = 'Unknown';
-        try {
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('user_id, full_name')
-                .eq('user_id', salespersonId)
+        if (!VALID_ASM_REGIONS.includes(profile.full_name)) {
+            return NextResponse.json({
+                success: false,
+                error: `Targets can only be set for ASM regions: ${VALID_ASM_REGIONS.join(', ')}`
+            }, { status: 400 });
+        }
+
+        // Step 5: Check for existing target
+        const { data: existing } = await supabase
+            .from('annual_targets')
+            .select('*')
+            .eq('salesperson_user_id', salespersonId)
+            .eq('year', year)
+            .single();
+
+        let result;
+        let action = 'created';
+
+        if (existing) {
+            // Update existing target
+            action = 'updated';
+            const { data, error } = await supabase
+                .from('annual_targets')
+                .update({
+                    annual_target: annualTarget,
+                    set_by_user_id: currentUser.id,
+                    set_by_name: currentUser.fullName || currentUser.email,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id)
+                .select()
                 .single();
 
-            console.log('[Targets API POST] Profile lookup:', profile?.full_name, 'Error:', profileError?.message);
-
-            if (profileError || !profile) {
+            if (error) {
+                console.error('[Targets API POST] Update error:', error);
                 return NextResponse.json({
                     success: false,
-                    error: 'Salesperson not found',
-                    details: profileError?.message || 'No profile for ID'
-                }, { status: 404 });
-            }
-
-            salespersonName = profile.full_name;
-
-            // Verify is ASM
-            if (!ASM_NAMES.includes(profile.full_name)) {
-                return NextResponse.json({
-                    success: false,
-                    error: `Cannot set target for ${profile.full_name}. Only ASMs allowed.`,
-                    allowedASMs: ASM_NAMES
-                }, { status: 400 });
-            }
-        } catch (e) {
-            console.error('[Targets API POST] Profile lookup error:', e);
-            return NextResponse.json({
-                success: false,
-                error: 'Profile lookup failed: ' + e.message
-            }, { status: 500 });
-        }
-
-        // Step 7: Check if target exists
-        let existingId = null;
-        try {
-            const { data: existing, error: existingError } = await supabase
-                .from('annual_targets')
-                .select('id')
-                .eq('salesperson_user_id', salespersonId)
-                .eq('year', yearNum)
-                .maybeSingle();
-
-            console.log('[Targets API POST] Existing check:', existing?.id, 'Error:', existingError?.message);
-
-            if (existingError && existingError.code !== 'PGRST116') {
-                // Table might not exist - try to create it
-                if (existingError.code === '42P01') {
-                    console.log('[Targets API POST] Table does not exist, will try to create');
-                } else {
-                    throw existingError;
-                }
-            }
-
-            existingId = existing?.id;
-        } catch (e) {
-            console.error('[Targets API POST] Existing check error:', e);
-            // Continue - might be new table situation
-        }
-
-        // Step 8: Upsert
-        try {
-            let result;
-
-            if (existingId) {
-                console.log('[Targets API POST] Updating existing:', existingId);
-                result = await supabase
-                    .from('annual_targets')
-                    .update({
-                        annual_target: targetNum,
-                        created_by: currentUser.id,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', existingId)
-                    .select()
-                    .single();
-            } else {
-                console.log('[Targets API POST] Inserting new target');
-                result = await supabase
-                    .from('annual_targets')
-                    .insert({
-                        salesperson_user_id: salespersonId,
-                        year: yearNum,
-                        annual_target: targetNum,
-                        created_by: currentUser.id
-                    })
-                    .select()
-                    .single();
-            }
-
-            console.log('[Targets API POST] Upsert result:', result.data?.id, 'Error:', result.error?.message);
-
-            if (result.error) {
-                return NextResponse.json({
-                    success: false,
-                    error: 'Database save failed: ' + result.error.message, // Show actual error in toast
-                    details: result.error.message,
-                    code: result.error.code,
-                    hint: result.error.hint
+                    error: error.message
                 }, { status: 500 });
             }
+            result = data;
+        } else {
+            // Create new target
+            const { data, error } = await supabase
+                .from('annual_targets')
+                .insert({
+                    salesperson_user_id: salespersonId,
+                    year: year,
+                    annual_target: annualTarget,
+                    set_by_user_id: currentUser.id,
+                    set_by_name: currentUser.fullName || currentUser.email,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
 
-            // Step 9: Create notification for target change
-            try {
-                const notificationType = existingId ? 'target_updated' : 'target_set';
-                const oldTarget = body.oldTarget || null;
-
-                await supabase.from('notifications').insert({
-                    type: notificationType,
-                    title: existingId
-                        ? `Target updated for ${salespersonName}`
-                        : `New target set for ${salespersonName}`,
-                    message: existingId
-                        ? `Annual target changed from ₹${oldTarget?.toLocaleString() || 'N/A'} to ₹${targetNum.toLocaleString()} for ${yearNum}`
-                        : `Annual target of ₹${targetNum.toLocaleString()} set for ${yearNum}`,
-                    user_id: salespersonId, // The ASM this is about - they will see this
-                    created_by: currentUser.id,
-                    metadata: {
-                        salesperson_id: salespersonId,
-                        salesperson_name: salespersonName,
-                        year: yearNum,
-                        new_target: targetNum,
-                        old_target: oldTarget,
-                        set_by: currentUser.name || currentUser.email
-                    }
-                });
-                console.log('[Targets API POST] Notification created');
-            } catch (notifError) {
-                // Don't fail the request if notification fails
-                console.error('[Targets API POST] Notification error:', notifError.message);
+            if (error) {
+                console.error('[Targets API POST] Insert error:', error);
+                return NextResponse.json({
+                    success: false,
+                    error: error.message
+                }, { status: 500 });
             }
+            result = data;
+        }
 
-            return NextResponse.json({
-                success: true,
-                message: existingId ? 'Target updated' : 'Target created',
-                target: {
-                    id: result.data.id,
-                    salespersonName,
-                    year: yearNum,
-                    annualTarget: targetNum
-                }
-            });
+        // Step 6: Log the change
+        try {
+            await supabase
+                .from('target_logs')
+                .insert({
+                    target_id: result.id,
+                    action: action,
+                    salesperson_user_id: salespersonId,
+                    salesperson_name: profile.full_name,
+                    year: year,
+                    old_value: oldTarget || null,
+                    new_value: annualTarget,
+                    changed_by_user_id: currentUser.id,
+                    changed_by_name: currentUser.fullName || currentUser.email,
+                    notes: action === 'updated'
+                        ? `Target changed from ₹${(oldTarget || 0).toLocaleString()} to ₹${annualTarget.toLocaleString()}`
+                        : `New target of ₹${annualTarget.toLocaleString()} created`
+                });
+        } catch (logError) {
+            console.error('[Targets API POST] Log insert error:', logError);
+            // Don't fail the request if logging fails
+        }
 
-        } catch (e) {
-            console.error('[Targets API POST] Upsert error:', e);
+        console.log('[Targets API POST] Success:', result.id);
+
+        return NextResponse.json({
+            success: true,
+            target: result,
+            message: action === 'updated' ? 'Target updated successfully' : 'Target created successfully'
+        });
+
+    } catch (error) {
+        console.error('[Targets API POST] Fatal error:', error.message);
+        console.error('[Targets API POST] Stack:', error.stack);
+        return NextResponse.json({
+            success: false,
+            error: error.message
+        }, { status: 500 });
+    }
+}
+
+// ============================================================================
+// GET LOGS - New endpoint for fetching target activity logs
+// ============================================================================
+
+export async function PATCH(request) {
+    try {
+        const currentUser = await getCurrentUser();
+
+        if (!currentUser) {
             return NextResponse.json({
                 success: false,
-                error: 'Upsert failed',
-                details: e.message,
-                stack: e.stack?.split('\n').slice(0, 3).join(' | ')
+                error: 'Unauthorized'
+            }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const action = searchParams.get('action');
+
+        if (action !== 'get_logs') {
+            return NextResponse.json({
+                success: false,
+                error: 'Invalid action'
+            }, { status: 400 });
+        }
+
+        const supabase = createAdminClient();
+        const userIsManager = isManager(currentUser.role);
+
+        let query = supabase
+            .from('target_logs')
+            .select('*')
+            .order('changed_at', { ascending: false })
+            .limit(100);
+
+        // Non-managers can only see their own logs
+        if (!userIsManager) {
+            query = query.eq('salesperson_user_id', currentUser.id);
+        }
+
+        const { data: logs, error } = await query;
+
+        if (error) {
+            console.error('[Targets API PATCH] Logs error:', error);
+            return NextResponse.json({
+                success: false,
+                error: error.message
             }, { status: 500 });
         }
 
+        return NextResponse.json({
+            success: true,
+            logs: logs || []
+        });
+
     } catch (error) {
-        console.error('[Targets API POST] Fatal error:', error);
+        console.error('[Targets API PATCH] Fatal error:', error);
         return NextResponse.json({
             success: false,
-            error: 'Server error',
-            details: error.message,
-            stack: error.stack?.split('\n').slice(0, 3).join(' | ')
+            error: error.message
         }, { status: 500 });
     }
 }

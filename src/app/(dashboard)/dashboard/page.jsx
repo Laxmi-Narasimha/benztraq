@@ -21,7 +21,7 @@ import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
-// METRIC CARD COMPONENT - Clean Design
+// METRIC CARD COMPONENT - Pure B/W Design
 // ============================================================================
 
 function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, loading }) {
@@ -29,7 +29,7 @@ function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, 
         return (
             <Card className="overflow-hidden">
                 <CardContent className="p-5">
-                    <Skeleton className="h-10 w-10 rounded-lg mb-4" />
+                    <Skeleton className="h-9 w-9 rounded-md mb-4" />
                     <Skeleton className="h-4 w-20 mb-2" />
                     <Skeleton className="h-7 w-32 mb-1" />
                     <Skeleton className="h-3 w-24" />
@@ -41,20 +41,20 @@ function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, 
     const TrendIcon = trendDirection === 'up' ? TrendingUp : TrendingDown;
 
     return (
-        <Card className="overflow-hidden hover:shadow-md transition-shadow duration-200">
+        <Card className="overflow-hidden hover:shadow-sm transition-shadow duration-150">
             <CardContent className="p-5">
                 <div className="flex justify-between items-start mb-4">
-                    {/* Clean Icon */}
-                    <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-stone-500 dark:text-stone-400" />
+                    {/* Icon */}
+                    <div className="w-9 h-9 rounded-md bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                        <Icon className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
                     </div>
-                    {/* Trend Badge */}
+                    {/* Trend Badge - Green for up, Red for down */}
                     {trend !== null && trend !== undefined && (
                         <div className={cn(
-                            "flex items-center text-xs font-medium px-2 py-1 rounded-md",
+                            "flex items-center text-xs font-medium px-2 py-0.5 rounded",
                             trendDirection === 'up'
                                 ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                : 'text-rose-700 bg-rose-50 dark:bg-rose-900/30 dark:text-rose-400'
+                                : 'text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400'
                         )}>
                             <TrendIcon className="h-3 w-3 mr-1" />
                             {Math.abs(trend)}%
@@ -62,10 +62,10 @@ function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, 
                     )}
                 </div>
                 <div className="space-y-1">
-                    <p className="text-sm font-medium text-stone-500 dark:text-stone-400">{title}</p>
-                    <p className="text-2xl font-bold text-stone-800 dark:text-white tracking-tight">{value}</p>
+                    <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{title}</p>
+                    <p className="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">{value}</p>
                 </div>
-                {subtext && <p className="text-xs text-stone-400 dark:text-stone-500 mt-2">{subtext}</p>}
+                {subtext && <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2">{subtext}</p>}
             </CardContent>
         </Card>
     );
@@ -519,7 +519,7 @@ export default function DashboardPage() {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <BarChart3 className="h-5 w-5 text-stone-400" />
+                            <BarChart3 className="h-5 w-5 text-neutral-400" />
                             <div>
                                 <CardTitle className="text-base">Sales Funnel</CardTitle>
                                 <CardDescription>Quote to order progression</CardDescription>
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <ShoppingCart className="h-5 w-5 text-stone-400" />
+                            <ShoppingCart className="h-5 w-5 text-neutral-400" />
                             <div>
                                 <CardTitle className="text-base">Top Products</CardTitle>
                                 <CardDescription>By revenue contribution</CardDescription>
@@ -551,7 +551,7 @@ export default function DashboardPage() {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-stone-400" />
+                            <FileText className="h-5 w-5 text-neutral-400" />
                             <div>
                                 <CardTitle className="text-base">Pipeline Status</CardTitle>
                                 <CardDescription>Document distribution</CardDescription>

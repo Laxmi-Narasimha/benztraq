@@ -61,7 +61,7 @@ const IconConfig = {
 };
 
 /**
- * Single Navigation Item Component - Clean Design
+ * Single Navigation Item Component - Pure B/W Design
  */
 function NavItem({ item, collapsed, isActive }) {
     const config = IconConfig[item.icon] || { icon: LayoutDashboard };
@@ -71,26 +71,21 @@ function NavItem({ item, collapsed, isActive }) {
         <Link
             href={item.href}
             className={cn(
-                'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                'group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150',
                 isActive
-                    ? 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100'
-                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-stone-200',
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                    : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
                 collapsed && 'justify-center px-0'
             )}
             title={collapsed ? item.title : undefined}
         >
-            {/* Active Indicator - Clean left bar */}
-            {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-teal-500 rounded-r-full" />
-            )}
-
-            {/* Icon - Clean, no container */}
+            {/* Icon */}
             <Icon className={cn(
-                'flex-shrink-0 transition-colors duration-200',
+                'flex-shrink-0 transition-colors duration-150',
                 isActive
-                    ? 'text-teal-600 dark:text-teal-400'
-                    : 'text-stone-400 group-hover:text-stone-600 dark:text-stone-500 dark:group-hover:text-stone-300',
-                collapsed ? 'w-5 h-5' : 'w-[18px] h-[18px]'
+                    ? 'text-white dark:text-neutral-900'
+                    : 'text-neutral-500 group-hover:text-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-200',
+                collapsed ? 'w-5 h-5' : 'w-4 h-4'
             )} />
 
             {/* Label */}
@@ -98,9 +93,9 @@ function NavItem({ item, collapsed, isActive }) {
                 <span className="truncate">{item.title}</span>
             )}
 
-            {/* Badge/Count (if applicable) */}
+            {/* Badge */}
             {item.badge && !collapsed && (
-                <span className="ml-auto text-xs font-medium px-1.5 py-0.5 rounded-md bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-300">
+                <span className="ml-auto text-xs font-medium px-1.5 py-0.5 rounded bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
                     {item.badge}
                 </span>
             )}
@@ -156,7 +151,7 @@ function NavSection({ section, collapsed, pathname }) {
 }
 
 /**
- * Premium Sidebar Component
+ * Sidebar Component - Pure B/W Design
  */
 export function Sidebar({ collapsed = false, onToggle }) {
     const pathname = usePathname();
@@ -172,33 +167,27 @@ export function Sidebar({ collapsed = false, onToggle }) {
     return (
         <aside
             className={cn(
-                'flex flex-col h-screen transition-all duration-300 ease-out',
-                'bg-gradient-to-b from-white via-white to-stone-50/50',
-                'dark:from-stone-900 dark:via-stone-900 dark:to-stone-950/50',
-                'border-r border-stone-200/80 dark:border-stone-800',
-                collapsed ? 'w-[72px]' : 'w-[260px]'
+                'flex flex-col h-screen transition-all duration-200 ease-out',
+                'bg-white dark:bg-neutral-950',
+                'border-r border-neutral-200 dark:border-neutral-800',
+                collapsed ? 'w-[72px]' : 'w-[240px]'
             )}
         >
-            {/* ========== Header ========== */}
+            {/* Header */}
             <div className={cn(
-                'flex items-center h-16 px-4 border-b border-stone-200/80 dark:border-stone-800',
+                'flex items-center h-14 px-4 border-b border-neutral-200 dark:border-neutral-800',
                 collapsed ? 'justify-center' : 'justify-between'
             )}>
                 {!collapsed && (
-                    <div className="flex items-center gap-3">
-                        {/* Logo */}
-                        <div className="relative">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
-                                <Sparkles className="w-5 h-5 text-white" />
-                            </div>
-                            {/* Pulse animation */}
-                            <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-md bg-neutral-900 dark:bg-white flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-white dark:text-neutral-900" />
                         </div>
                         <div>
-                            <h1 className="text-base font-bold text-stone-800 dark:text-white tracking-tight">
+                            <h1 className="text-sm font-bold text-neutral-900 dark:text-white tracking-tight">
                                 BENZTRAQ
                             </h1>
-                            <p className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Sales Hub</p>
+                            <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">Sales Hub</p>
                         </div>
                     </div>
                 )}
@@ -207,24 +196,24 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 <button
                     onClick={onToggle}
                     className={cn(
-                        'p-2 rounded-lg transition-all duration-200',
-                        'text-stone-400 hover:text-stone-600 hover:bg-stone-100',
-                        'dark:text-stone-500 dark:hover:text-stone-300 dark:hover:bg-stone-800',
+                        'p-2 rounded-md transition-all duration-150',
+                        'text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100',
+                        'dark:text-neutral-500 dark:hover:text-neutral-300 dark:hover:bg-neutral-800',
                         collapsed && 'mx-auto'
                     )}
                     aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
-                    {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+                    {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </button>
             </div>
 
-            {/* ========== Quick Search (Collapsed: Just icon) ========== */}
-            <div className="px-3 py-3">
+            {/* Search */}
+            <div className="px-3 py-2">
                 <button
                     className={cn(
-                        'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
-                        'bg-stone-100/80 hover:bg-stone-200/80 text-stone-500',
-                        'dark:bg-stone-800/50 dark:hover:bg-stone-800 dark:text-stone-400',
+                        'w-full flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-150',
+                        'bg-neutral-100 hover:bg-neutral-200 text-neutral-500',
+                        'dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-400',
                         collapsed ? 'justify-center' : ''
                     )}
                 >
@@ -232,7 +221,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
                     {!collapsed && (
                         <>
                             <span className="text-sm">Search...</span>
-                            <kbd className="ml-auto text-xs bg-white dark:bg-stone-700 px-1.5 py-0.5 rounded border border-stone-200 dark:border-stone-600 text-stone-400">
+                            <kbd className="ml-auto text-xs bg-white dark:bg-neutral-700 px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-600 text-neutral-400">
                                 ⌘K
                             </kbd>
                         </>
@@ -254,15 +243,14 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 </div>
             </ScrollArea>
 
-            {/* ========== Quick Create Button ========== */}
+            {/* New Quote Button */}
             <div className="px-3 py-2">
                 <Link
                     href="/documents/new"
                     className={cn(
-                        'flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-medium text-sm transition-all duration-200',
-                        'bg-gradient-to-r from-teal-500 to-cyan-600 text-white',
-                        'hover:from-teal-600 hover:to-cyan-700 hover:shadow-lg hover:shadow-teal-500/30',
-                        'active:scale-[0.98]',
+                        'flex items-center justify-center gap-2 w-full py-2 rounded-md font-medium text-sm transition-all duration-150',
+                        'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900',
+                        'hover:bg-neutral-800 dark:hover:bg-neutral-100',
                         collapsed ? 'px-0' : 'px-4'
                     )}
                 >
@@ -271,16 +259,16 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 </Link>
             </div>
 
-            {/* ========== Ergopack Switch (Directors Only) ========== */}
+            {/* Ergopack Switch (Directors Only) */}
             {profile && ['director', 'developer'].includes(profile.role) && !collapsed && (
                 <div className="px-3 pb-2">
                     <Link
                         href="/ergopack"
                         className={cn(
-                            'flex items-center justify-center gap-2 w-full py-2 rounded-xl font-medium text-sm transition-all duration-200',
-                            'border border-dashed border-emerald-300 text-emerald-600',
-                            'hover:bg-emerald-50 hover:border-emerald-400',
-                            'dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20'
+                            'flex items-center justify-center gap-2 w-full py-2 rounded-md font-medium text-sm transition-all duration-150',
+                            'border border-neutral-300 text-neutral-600',
+                            'hover:bg-neutral-100 hover:border-neutral-400',
+                            'dark:border-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800'
                         )}
                     >
                         <Package className="w-4 h-4" />
@@ -289,35 +277,33 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 </div>
             )}
 
-            {/* ========== User Profile Card ========== */}
-            <div className="border-t border-stone-200/80 dark:border-stone-800 p-3">
+            {/* User Profile */}
+            <div className="border-t border-neutral-200 dark:border-neutral-800 p-3">
                 {profile && (
                     <div className={cn(
-                        'flex items-center gap-3 p-2 rounded-xl transition-all duration-200',
-                        'hover:bg-stone-100/80 dark:hover:bg-stone-800/50',
+                        'flex items-center gap-2.5 p-2 rounded-md transition-all duration-150',
+                        'hover:bg-neutral-100 dark:hover:bg-neutral-800',
                         collapsed && 'justify-center p-0'
                     )}>
-                        {/* Avatar with Status */}
+                        {/* Avatar */}
                         <div className="relative">
                             <Avatar className={cn(
-                                'ring-2 ring-stone-200 dark:ring-stone-700',
-                                collapsed ? 'h-10 w-10' : 'h-9 w-9'
+                                'ring-2 ring-neutral-200 dark:ring-neutral-700',
+                                collapsed ? 'h-10 w-10' : 'h-8 w-8'
                             )}>
-                                <AvatarFallback className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white text-sm font-semibold">
+                                <AvatarFallback className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-semibold">
                                     {formatInitials(profile.full_name)}
                                 </AvatarFallback>
                             </Avatar>
-                            {/* Online Status */}
-                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-stone-900" />
                         </div>
 
                         {!collapsed && (
                             <>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-stone-800 dark:text-white truncate">
+                                    <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
                                         {profile.full_name}
                                     </p>
-                                    <p className="text-xs text-stone-400 dark:text-stone-500 capitalize">
+                                    <p className="text-xs text-neutral-400 dark:text-neutral-500 capitalize">
                                         {profile.role}
                                     </p>
                                 </div>
@@ -327,9 +313,9 @@ export function Sidebar({ collapsed = false, onToggle }) {
                                     onClick={handleSignOut}
                                     disabled={isSigningOut}
                                     className={cn(
-                                        'p-2 rounded-lg transition-all duration-200',
-                                        'text-stone-400 hover:text-red-500 hover:bg-red-50',
-                                        'dark:text-stone-500 dark:hover:text-red-400 dark:hover:bg-red-900/20',
+                                        'p-1.5 rounded transition-all duration-150',
+                                        'text-neutral-400 hover:text-red-600 hover:bg-red-50',
+                                        'dark:text-neutral-500 dark:hover:text-red-400 dark:hover:bg-red-900/20',
                                         isSigningOut && 'opacity-50 cursor-not-allowed'
                                     )}
                                     aria-label="Sign out"

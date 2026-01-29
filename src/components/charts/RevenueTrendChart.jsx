@@ -14,17 +14,15 @@ function formatCurrencyCompact(value) {
 }
 
 /**
- * RevenueTrendChart - Shows monthly actual vs target revenue with immersive visualization
+ * RevenueTrendChart - Pure B/W with green/red for performance
  */
 export function RevenueTrendChart({ targets, year }) {
     const currentMonth = new Date().getMonth() + 1;
 
     // Calculate monthly data
     const chartData = useMemo(() => {
-        // Aggregate all targets into monthly totals
         const monthlyTarget = targets.reduce((sum, t) => sum + (t.annualTarget || 0), 0) / 12;
 
-        // Aggregate monthly achievements across all salespeople
         const monthlyActual = {};
         targets.forEach(t => {
             Object.entries(t.achieved || {}).forEach(([month, value]) => {
@@ -33,7 +31,6 @@ export function RevenueTrendChart({ targets, year }) {
             });
         });
 
-        // Build monthly data array with cumulative values
         let cumulativeTarget = 0;
         let cumulativeActual = 0;
 
@@ -75,7 +72,6 @@ export function RevenueTrendChart({ targets, year }) {
         const max = Math.max(
             ...chartData.map(d => Math.max(d.actual, d.target))
         );
-        // Round up to nice number
         const magnitude = Math.pow(10, Math.floor(Math.log10(max || 1)));
         return Math.ceil(max / magnitude) * magnitude || 1000000;
     }, [chartData]);
@@ -106,21 +102,21 @@ export function RevenueTrendChart({ targets, year }) {
     };
 
     return (
-        <Card className="bg-slate-900 border-slate-800 text-white overflow-hidden">
+        <Card className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 overflow-hidden">
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-lg font-semibold text-white">Revenue Trend</CardTitle>
-                        <p className="text-sm text-slate-400">Monthly revenue vs target for {year}</p>
+                        <CardTitle className="text-lg font-semibold text-neutral-900 dark:text-white">Revenue Trend</CardTitle>
+                        <p className="text-sm text-neutral-500">Monthly revenue vs target for {year}</p>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                        <span className="flex items-center gap-1">
-                            <span className="w-3 h-0.5 bg-cyan-400 rounded"></span>
-                            <span className="text-slate-400">Actual Revenue</span>
+                    <div className="flex items-center gap-4 text-xs">
+                        <span className="flex items-center gap-1.5">
+                            <span className="w-3 h-0.5 bg-neutral-900 dark:bg-white rounded"></span>
+                            <span className="text-neutral-500">Actual Revenue</span>
                         </span>
-                        <span className="flex items-center gap-1">
-                            <span className="w-3 h-0.5 bg-blue-500 rounded border-dashed"></span>
-                            <span className="text-slate-400">Target Revenue</span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="w-3 h-0.5 bg-neutral-400 rounded" style={{ borderBottom: '2px dashed' }}></span>
+                            <span className="text-neutral-500">Target Revenue</span>
                         </span>
                     </div>
                 </div>
@@ -137,7 +133,7 @@ export function RevenueTrendChart({ targets, year }) {
                                     y1={getY(label)}
                                     x2={width - padding.right}
                                     y2={getY(label)}
-                                    stroke="#334155"
+                                    stroke="#e5e5e5"
                                     strokeWidth="1"
                                     strokeDasharray={i === 0 ? "0" : "4,4"}
                                 />
@@ -146,7 +142,7 @@ export function RevenueTrendChart({ targets, year }) {
                                     y={getY(label)}
                                     textAnchor="end"
                                     alignmentBaseline="middle"
-                                    className="fill-slate-500 text-xs"
+                                    className="fill-neutral-400 text-xs"
                                     fontSize="11"
                                 >
                                     {formatCurrencyCompact(label)}
@@ -154,36 +150,22 @@ export function RevenueTrendChart({ targets, year }) {
                             </g>
                         ))}
 
-                        {/* Target line (dashed) */}
+                        {/* Target line (dashed gray) */}
                         <path
                             d={generatePath('target')}
                             fill="none"
-                            stroke="#3b82f6"
+                            stroke="#a3a3a3"
                             strokeWidth="2"
                             strokeDasharray="6,4"
-                            className="drop-shadow-sm"
                         />
 
-                        {/* Actual line (solid with glow) */}
+                        {/* Actual line (solid black) */}
                         <path
                             d={generatePath('actual')}
                             fill="none"
-                            stroke="#22d3ee"
-                            strokeWidth="3"
-                            className="drop-shadow-lg"
-                            filter="url(#glow)"
+                            stroke="#171717"
+                            strokeWidth="2.5"
                         />
-
-                        {/* Gradient glow filter */}
-                        <defs>
-                            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                                <feMerge>
-                                    <feMergeNode in="coloredBlur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                        </defs>
 
                         {/* Data points - Actual */}
                         {chartData.map((d, i) => (
@@ -191,13 +173,11 @@ export function RevenueTrendChart({ targets, year }) {
                                 <circle
                                     cx={getX(i)}
                                     cy={getY(d.actual)}
-                                    r="5"
-                                    fill={d.isPast ? "#22d3ee" : "#475569"}
-                                    stroke="#0f172a"
+                                    r="4"
+                                    fill={d.isPast ? "#171717" : "#d4d4d4"}
+                                    stroke="#fff"
                                     strokeWidth="2"
-                                    className="cursor-pointer hover:r-7 transition-all"
                                 />
-                                {/* Tooltip on hover would require state, simplified here */}
                             </g>
                         ))}
 
@@ -207,9 +187,9 @@ export function RevenueTrendChart({ targets, year }) {
                                 key={`target-${i}`}
                                 cx={getX(i)}
                                 cy={getY(d.target)}
-                                r="4"
-                                fill="#3b82f6"
-                                stroke="#0f172a"
+                                r="3"
+                                fill="#a3a3a3"
+                                stroke="#fff"
                                 strokeWidth="2"
                             />
                         ))}
@@ -221,7 +201,7 @@ export function RevenueTrendChart({ targets, year }) {
                                 x={getX(i)}
                                 y={height - 10}
                                 textAnchor="middle"
-                                className="fill-slate-400 text-xs"
+                                className="fill-neutral-500 text-xs"
                                 fontSize="11"
                             >
                                 {month}
@@ -231,20 +211,20 @@ export function RevenueTrendChart({ targets, year }) {
                 </div>
 
                 {/* YTD Stats */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-800">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
                     <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wider">YTD Revenue</p>
-                        <p className="text-xl font-bold text-cyan-400">{formatCurrencyCompact(ytdStats.ytdActual)}</p>
+                        <p className="text-xs text-neutral-500 uppercase tracking-wider">YTD Revenue</p>
+                        <p className="text-xl font-bold text-neutral-900 dark:text-white">{formatCurrencyCompact(ytdStats.ytdActual)}</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-xs text-slate-500 uppercase tracking-wider">YTD Target</p>
-                        <p className="text-xl font-bold text-blue-400">{formatCurrencyCompact(ytdStats.ytdTarget)}</p>
+                        <p className="text-xs text-neutral-500 uppercase tracking-wider">YTD Target</p>
+                        <p className="text-xl font-bold text-neutral-500">{formatCurrencyCompact(ytdStats.ytdTarget)}</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs text-slate-500 uppercase tracking-wider">Performance</p>
+                        <p className="text-xs text-neutral-500 uppercase tracking-wider">Performance</p>
                         <p className={cn(
                             "text-xl font-bold",
-                            ytdStats.performance >= 0 ? "text-emerald-400" : "text-red-400"
+                            ytdStats.performance >= 0 ? "text-emerald-600" : "text-red-600"
                         )}>
                             {ytdStats.performance >= 0 ? '+' : ''}{ytdStats.performance.toFixed(1)}%
                         </p>

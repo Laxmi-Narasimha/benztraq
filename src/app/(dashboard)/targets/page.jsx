@@ -229,10 +229,10 @@ function SetTargetDialog({ open, onOpenChange, onSave, salespeople, existingTarg
                             <div className="space-y-2">
                                 <Label>Salesperson (Region)</Label>
                                 <Select value={selectedSalesperson} onValueChange={setSelectedSalesperson}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Select region/salesperson" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent position="popper" className="z-[100]">
                                         {salespeople.map((sp) => (
                                             <SelectItem key={sp.id} value={sp.id}>
                                                 {sp.name}
@@ -245,10 +245,10 @@ function SetTargetDialog({ open, onOpenChange, onSave, salespeople, existingTarg
                             <div className="space-y-2">
                                 <Label>Year</Label>
                                 <Select value={year} onValueChange={setYear}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent position="popper" className="z-[100]">
                                         {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
                                             <SelectItem key={y} value={y.toString()}>
                                                 {y}
@@ -258,22 +258,30 @@ function SetTargetDialog({ open, onOpenChange, onSave, salespeople, existingTarg
                                 </Select>
                             </div>
 
-                            {/* Existing Target Warning */}
+                            {/* Existing Target Warning with Set By Info */}
                             {existingTarget && (
-                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <div className="p-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md">
                                     <div className="flex items-start gap-2">
-                                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                                        <AlertCircle className="h-4 w-4 text-neutral-500 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-medium text-amber-800">
+                                            <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                                                 Existing Target Found
                                             </p>
-                                            <p className="text-sm text-amber-700">
+                                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
                                                 <strong>{selectedName}</strong> already has a target of{' '}
                                                 <strong>{formatCurrency(existingTarget.annualTarget)}</strong>{' '}
                                                 for {year}.
                                             </p>
-                                            <p className="text-xs text-amber-600 mt-1">
-                                                Changing this will update the existing target and notify the ASM.
+                                            {existingTarget.setBy && (
+                                                <p className="text-xs text-neutral-500 mt-1">
+                                                    Set by <strong>{existingTarget.setBy}</strong>
+                                                    {existingTarget.updatedAt && (
+                                                        <> on {new Date(existingTarget.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</>
+                                                    )}
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 font-medium">
+                                                Would you like to change this target?
                                             </p>
                                         </div>
                                     </div>
@@ -310,12 +318,12 @@ function SetTargetDialog({ open, onOpenChange, onSave, salespeople, existingTarg
                     /* Confirmation View */
                     <>
                         <div className="py-4">
-                            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                            <div className="p-4 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md mb-4">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <AlertCircle className="h-5 w-5 text-amber-600" />
-                                    <p className="font-semibold text-amber-800">Confirm Target Change</p>
+                                    <AlertCircle className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+                                    <p className="font-semibold text-neutral-800 dark:text-neutral-200">Confirm Target Change</p>
                                 </div>
-                                <div className="space-y-2 text-sm">
+                                <div className="space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
                                     <p><strong>Salesperson:</strong> {selectedName}</p>
                                     <p><strong>Year:</strong> {year}</p>
                                     <div className="flex items-center gap-2">
@@ -461,8 +469,8 @@ export default function TargetsPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-primary/10 rounded-lg">
-                                <Target className="h-6 w-6 text-primary" />
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+                                <Target className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Total Team Target</p>
@@ -475,8 +483,8 @@ export default function TargetsPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-emerald-100 rounded-lg">
-                                <TrendingUp className="h-6 w-6 text-emerald-600" />
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+                                <TrendingUp className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Total Achieved (YTD)</p>
@@ -489,8 +497,8 @@ export default function TargetsPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-blue-100 rounded-lg">
-                                <Users className="h-6 w-6 text-blue-600" />
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+                                <Users className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Team Members with Targets</p>
