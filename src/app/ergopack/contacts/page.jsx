@@ -102,6 +102,7 @@ export default function ContactsListPage() {
 
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalContacts, setTotalContacts] = useState(0);
 
     const fetchContacts = useCallback(async () => {
         setIsLoading(true);
@@ -138,8 +139,8 @@ export default function ContactsListPage() {
     }, [statusFilter, searchQuery, itemsPerPage, sortBy]);
 
     // Pagination Logic
-    const totalPages = Math.ceil(totalContacts / itemsPerPage);
-    const paginatedContacts = contacts; // Contacts are already paginated by the API
+    const totalPages = Math.ceil(totalContacts / itemsPerPage) || 1;
+    const paginatedContacts = contacts;
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -186,37 +187,7 @@ export default function ContactsListPage() {
         return lastUpdated > (lastSeen + 2000);
     };
 
-    const filteredContacts = contacts
-        .filter(contact => {
-            if (!searchQuery) return true;
-            const query = searchQuery.toLowerCase();
-            return (
-                contact.company_name?.toLowerCase().includes(query) ||
-                contact.contact_person?.toLowerCase().includes(query) ||
-                contact.email?.toLowerCase().includes(query) ||
-                contact.city?.toLowerCase().includes(query)
-            );
-        })
-        .sort((a, b) => {
-            switch (sortBy) {
-                case 'updated_desc':
-                    return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
-                case 'updated_asc':
-                    return new Date(a.updated_at || 0) - new Date(b.updated_at || 0);
-                case 'created_desc':
-                    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-                case 'created_asc':
-                    return new Date(a.created_at || 0) - new Date(b.created_at || 0);
-                case 'activity_desc':
-                    const aActivity = a.latest_activity?.created_at || a.updated_at || 0;
-                    const bActivity = b.latest_activity?.created_at || b.updated_at || 0;
-                    return new Date(bActivity) - new Date(aActivity);
-                case 'company_asc':
-                    return (a.company_name || '').localeCompare(b.company_name || '');
-                default:
-                    return 0;
-            }
-        });
+
 
     const getStatusConfig = (status) => {
         return STATUS_CONFIG[status] || STATUS_CONFIG.open;
@@ -243,7 +214,7 @@ export default function ContactsListPage() {
                         <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
                             Contacts
                             <span className="ml-3 text-sm font-medium text-[#AD7D56] bg-[#AD7D56]/10 px-2 py-1 rounded-full align-middle">
-                                {filteredContacts.length} Total
+                                {totalContacts} Total
                             </span>
                         </h1>
                         <p className="text-gray-500 mt-1 text-sm">Manage your outreach pipeline and relationships.</p>
@@ -403,7 +374,7 @@ export default function ContactsListPage() {
                 {/* Pagination Controls */}
                 <div className="flex items-center justify-between px-2">
                     <p className="text-sm text-gray-500">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredContacts.length)} of {filteredContacts.length} entries
+                        Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalContacts)} to {Math.min(currentPage * itemsPerPage, totalContacts)} of {totalContacts} entries
                     </p>
                     <div className="flex items-center gap-2">
                         <Button
