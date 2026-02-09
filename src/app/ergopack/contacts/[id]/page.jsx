@@ -1,5 +1,5 @@
 /**
- * Contact Detail Page - Premium Dark Theme
+ * Contact Detail Page - Clean Light Theme
  * 
  * Unified fields matching New Lead form.
  * Prominent "Log Activity" button.
@@ -360,19 +360,19 @@ export default function ContactDetailPage({ params }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a]">
+        <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-zinc-800">
+            <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xl border-b border-gray-200">
                 <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href="/ergopack/contacts">
-                            <button className="text-zinc-400 hover:text-white transition-colors">
+                            <button className="text-gray-500 hover:text-gray-900 transition-colors">
                                 <ArrowLeft className="w-6 h-6" />
                             </button>
                         </Link>
                         <div>
-                            <h1 className="text-xl font-semibold text-white">{contact.company_name}</h1>
-                            <Badge className="bg-zinc-700 text-zinc-200 text-xs capitalize mt-1">
+                            <h1 className="text-xl font-semibold text-gray-900">{contact.company_name}</h1>
+                            <Badge className="bg-gray-100 text-gray-700 border border-gray-300 text-xs capitalize mt-1">
                                 {contact.status?.replace('_', ' ')}
                             </Badge>
                         </div>
@@ -383,7 +383,7 @@ export default function ContactDetailPage({ params }) {
                             variant="outline"
                             size="sm"
                             onClick={() => setShowQuotationModal(true)}
-                            className="border-[#097dc4]/50 text-[#097dc4] hover:bg-[#097dc4]/20 hover:text-[#097dc4] h-8"
+                            className="border-blue-500 text-blue-600 hover:bg-blue-50 h-8"
                         >
                             <FileText className="w-3.5 h-3.5 mr-1" />
                             Create Quote
@@ -393,7 +393,7 @@ export default function ContactDetailPage({ params }) {
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleDelete}
-                                className="text-zinc-500 hover:text-red-400 hover:bg-zinc-900 h-8 w-8"
+                                className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </Button>
@@ -402,7 +402,7 @@ export default function ContactDetailPage({ params }) {
                             size="sm"
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-white text-black hover:bg-zinc-200 h-8"
+                            className="bg-gray-900 text-white hover:bg-gray-800 h-8"
                         >
                             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1" />}
                             Save
@@ -419,24 +419,24 @@ export default function ContactDetailPage({ params }) {
                         {/* Row 1: Company + Contact */}
                         <div className="grid grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                     <Building2 className="w-4 h-4" /> Company
                                 </Label>
                                 <Input
                                     value={contact.company_name || ''}
                                     onChange={(e) => handleChange('company_name', e.target.value)}
-                                    className="bg-zinc-900/70 border-zinc-700 text-white text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 text-base h-12"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                     <User className="w-4 h-4" /> Contact Person
                                 </Label>
                                 <Input
                                     value={contact.contact_person || ''}
                                     onChange={(e) => handleChange('contact_person', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base h-12"
                                 />
                             </div>
                         </div>
@@ -444,25 +444,25 @@ export default function ContactDetailPage({ params }) {
                         {/* Row 2: Email + Phone */}
                         <div className="grid grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                     <Mail className="w-4 h-4" /> Email
                                 </Label>
                                 <Input
                                     value={contact.email || ''}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base h-12"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                     <Phone className="w-4 h-4" /> Phone
                                 </Label>
                                 <Input
                                     value={contact.phone || ''}
                                     onChange={(e) => handleChange('phone', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base h-12"
                                 />
                             </div>
                         </div>
@@ -470,23 +470,23 @@ export default function ContactDetailPage({ params }) {
                         {/* Row 3: City + State */}
                         <div className="grid grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                     <MapPin className="w-4 h-4" /> City
                                 </Label>
                                 <Input
                                     value={contact.city || ''}
                                     onChange={(e) => handleChange('city', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base h-12"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">State</Label>
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide">State</Label>
                                 <Input
                                     value={contact.state || ''}
                                     onChange={(e) => handleChange('state', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base h-12"
                                 />
                             </div>
                         </div>
@@ -494,25 +494,25 @@ export default function ContactDetailPage({ params }) {
                         {/* Row 4: Industry + Status */}
                         <div className="grid grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                     <Briefcase className="w-4 h-4" /> Industry
                                 </Label>
                                 <Input
                                     value={contact.industry || ''}
                                     onChange={(e) => handleChange('industry', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base h-12"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">Status</Label>
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide">Status</Label>
                                 <Select value={contact.status || 'open'} onValueChange={(v) => handleChange('status', v)}>
-                                    <SelectTrigger className="bg-zinc-900/70 border-zinc-700 text-white text-base h-12">
+                                    <SelectTrigger className="bg-white border-gray-300 text-gray-900 text-base h-12">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-700">
+                                    <SelectContent className="bg-white border-gray-200">
                                         {STATUS_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value} className="text-white text-base focus:bg-zinc-700">
+                                            <SelectItem key={opt.value} value={opt.value} className="text-gray-900 text-base focus:bg-gray-100">
                                                 {opt.label}
                                             </SelectItem>
                                         ))}
@@ -524,10 +524,10 @@ export default function ContactDetailPage({ params }) {
                         {/* Row 5: Suggested Model + Product Interest */}
                         <div className="grid grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                     <Package className="w-4 h-4" /> Suggested Models
                                 </Label>
-                                <div className="flex flex-wrap gap-2 p-3 bg-zinc-900/70 border border-zinc-700 rounded-md min-h-[48px]">
+                                <div className="flex flex-wrap gap-2 p-3 bg-white border border-gray-300 rounded-md min-h-[48px]">
                                     {SUGGESTED_MODELS.filter(opt => opt.value).map((opt) => {
                                         const models = (contact.suggested_model || '').split(',').filter(Boolean);
                                         const isSelected = models.includes(opt.value);
@@ -543,7 +543,7 @@ export default function ContactDetailPage({ params }) {
                                                 }}
                                                 className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-all ${isSelected
                                                     ? 'bg-emerald-600 border-emerald-500 text-white'
-                                                    : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-zinc-500'
+                                                    : 'bg-gray-100 border-gray-300 text-gray-700 hover:border-gray-400'
                                                     }`}
                                             >
                                                 {opt.label}
@@ -553,31 +553,31 @@ export default function ContactDetailPage({ params }) {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">Product Interest</Label>
+                                <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide">Product Interest</Label>
                                 <Input
                                     value={contact.product_interest || ''}
                                     onChange={(e) => handleChange('product_interest', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
+                                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base h-12"
                                 />
                             </div>
                         </div>
 
                         {/* Notes */}
                         <div className="space-y-2">
-                            <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">Notes</Label>
+                            <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide">Notes</Label>
                             <Textarea
                                 value={contact.notes || ''}
                                 onChange={(e) => handleChange('notes', e.target.value)}
                                 placeholder="Add notes..."
                                 rows={4}
-                                className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base resize-none"
+                                className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 text-base resize-none"
                             />
                         </div>
 
                         {/* Company Presentation */}
-                        <div className="space-y-3 pt-5 mt-5 border-t border-zinc-800">
-                            <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                        <div className="space-y-3 pt-5 mt-5 border-t border-gray-200">
+                            <Label className="text-gray-600 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
                                 <FileText className="w-4 h-4" /> Company Presentation
                             </Label>
 
@@ -719,33 +719,33 @@ export default function ContactDetailPage({ params }) {
                         )}
 
                         {/* Meta Info */}
-                        <div className="pt-5 border-t border-zinc-800 flex gap-8 text-sm text-zinc-500">
+                        <div className="pt-5 border-t border-gray-200 flex gap-8 text-sm text-gray-500">
                             <div>
                                 <span className="uppercase tracking-wide font-medium">Created</span>
-                                <span className="ml-2 text-zinc-400">{new Date(contact.created_at).toLocaleDateString()}</span>
+                                <span className="ml-2 text-gray-700">{new Date(contact.created_at).toLocaleDateString()}</span>
                             </div>
                             <div>
                                 <span className="uppercase tracking-wide font-medium">By</span>
-                                <span className="ml-2 text-zinc-400">{contact.created_by_user?.full_name || '-'}</span>
+                                <span className="ml-2 text-gray-700">{contact.created_by_user?.full_name || '-'}</span>
                             </div>
                             <div>
                                 <span className="uppercase tracking-wide font-medium">Updated</span>
-                                <span className="ml-2 text-zinc-400">{contact.updated_by_user?.full_name || '-'}</span>
+                                <span className="ml-2 text-gray-700">{contact.updated_by_user?.full_name || '-'}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Right - Activity */}
-                    <div className="lg:col-span-1 bg-zinc-900/50 rounded-xl border border-zinc-700 p-5">
+                    <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                         <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-sm uppercase tracking-wide text-zinc-300 font-semibold">Activity</h2>
+                            <h2 className="text-sm uppercase tracking-wide text-gray-700 font-semibold">Activity</h2>
                             <Button
                                 size="sm"
                                 onClick={() => setShowActivityForm(!showActivityForm)}
                                 className={cn(
                                     "h-9 text-sm",
                                     showActivityForm
-                                        ? "bg-zinc-700 text-zinc-300"
+                                        ? "bg-gray-200 text-gray-700"
                                         : "bg-emerald-600 hover:bg-emerald-500 text-white"
                                 )}
                             >
