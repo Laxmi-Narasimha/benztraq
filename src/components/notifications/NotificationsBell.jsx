@@ -47,13 +47,13 @@ const getNotificationColor = (type) => {
     switch (type) {
         case 'target_set':
         case 'target_updated':
-            return 'text-purple-600 bg-purple-50';
+            return 'text-neutral-900 bg-neutral-100';
         case 'quotation_created':
-            return 'text-amber-600 bg-amber-50';
+            return 'text-neutral-700 bg-neutral-50';
         case 'sales_order_created':
-            return 'text-emerald-600 bg-emerald-50';
+            return 'text-black bg-neutral-200';
         default:
-            return 'text-blue-600 bg-blue-50';
+            return 'text-neutral-600 bg-neutral-50';
     }
 };
 
@@ -127,18 +127,18 @@ export function NotificationsBell() {
     return (
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="relative hover:bg-neutral-100 rounded-full w-10 h-10">
+                    <Bell className="h-5 w-5 text-neutral-600" />
                     {unreadCount > 0 && (
                         <Badge
-                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500"
+                            className="absolute top-1 right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-black text-white border-2 border-white shadow-sm"
                         >
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </Badge>
                     )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-80 bg-white border border-neutral-200 shadow-xl z-50 rounded-xl mt-2 p-0">
                 <DropdownMenuLabel className="flex items-center justify-between">
                     <span>Notifications</span>
                     {unreadCount > 0 && (
@@ -191,7 +191,7 @@ export function NotificationsBell() {
                                             </p>
                                         </div>
                                         {!notification.is_read && (
-                                            <div className="h-2 w-2 rounded-full bg-blue-500 mt-2" />
+                                            <div className="h-2 w-2 rounded-full bg-black mt-2" />
                                         )}
                                     </div>
                                 </div>

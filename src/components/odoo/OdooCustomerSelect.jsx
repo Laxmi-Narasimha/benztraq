@@ -7,11 +7,22 @@ import { Search, X, ChevronDown, Plus, Building2, User, Check, Loader2, MapPin, 
 /**
  * Premium Odoo-Style Customer Select Dropdown
  * Features:
- * - Warm, inviting color palette
+ * - Minimalist monochrome palette
  * - Fluid animations and glassmorphism effects
  * - Enhanced customer cards with details
  * - Smooth keyboard navigation
  */
+
+// Utility to get initials
+const getInitials = (name) => {
+    if (!name) return '??';
+    return name
+        .split(' ')
+        .map(n => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+};
 
 // Premium Customer Card
 const CustomerCard = memo(function CustomerCard({ customer, isSelected, isHighlighted, onClick, index }) {
@@ -20,46 +31,36 @@ const CustomerCard = memo(function CustomerCard({ customer, isSelected, isHighli
             type="button"
             data-index={index}
             onClick={(e) => { e.stopPropagation(); onClick(customer); }}
-            className={`w-full px-4 py-3 text-left flex items-start gap-3 transition-all duration-200
+            className={`w-full px-4 py-2.5 text-left flex items-center gap-3 transition-all duration-200 group
                 ${isHighlighted
-                    ? 'bg-gradient-to-r from-teal-50 to-cyan-50 border-l-2 border-l-teal-500'
-                    : 'hover:bg-stone-50 border-l-2 border-l-transparent'}
-                ${isSelected ? 'bg-teal-50/50' : ''}`}
+                    ? 'bg-neutral-100'
+                    : 'hover:bg-neutral-50'}
+                ${isSelected ? 'bg-neutral-100' : ''}`}
         >
-            {/* Avatar */}
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm
+            {/* Avatar with Initials */}
+            <div className={`w-9 h-9 rounded flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-sm transition-colors
                 ${isHighlighted || isSelected
-                    ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white'
-                    : 'bg-gradient-to-br from-stone-100 to-stone-200 text-stone-500'}`}>
-                <Building2 className="w-5 h-5" />
+                    ? 'bg-black text-white'
+                    : 'bg-neutral-200 text-neutral-600 group-hover:bg-neutral-300'}`}>
+                {getInitials(customer.name)}
             </div>
 
             {/* Details */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <span className={`font-semibold truncate ${isHighlighted || isSelected ? 'text-teal-900' : 'text-stone-800'}`}>
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex items-center justify-between">
+                    <span className={`text-sm font-semibold truncate ${isHighlighted || isSelected ? 'text-black' : 'text-neutral-800'}`}>
                         {customer.name}
                     </span>
-                    {isSelected && (
-                        <span className="flex-shrink-0 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
-                        </span>
-                    )}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-black" />}
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-stone-500">
-                    {customer.city && (
-                        <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {customer.city}
-                        </span>
-                    )}
-                    {customer.phone && (
-                        <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {customer.phone}
-                        </span>
-                    )}
-                </div>
+
+                {(customer.city || customer.email) && (
+                    <div className="flex items-center gap-2 text-xs text-neutral-500 truncate">
+                        {customer.city && <span>{customer.city}</span>}
+                        {customer.city && customer.email && <span className="text-neutral-300">•</span>}
+                        {customer.email && <span className="truncate opacity-80">{customer.email}</span>}
+                    </div>
+                )}
             </div>
         </button>
     );
@@ -102,55 +103,55 @@ function CustomerSearchModal({
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col animate-in zoom-in-95 fade-in duration-200 border border-stone-200/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col animate-in zoom-in-95 fade-in duration-200 border border-neutral-200">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-stone-50 to-stone-100/50 rounded-t-2xl">
+                <div className="flex items-center justify-between px-6 py-4 border-b bg-neutral-50 rounded-t-2xl">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
+                        <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center shadow-lg shadow-black/10">
                             <Building2 className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="font-semibold text-stone-800">Search Customers</h2>
-                            <p className="text-xs text-stone-500">{totalCount} customers available</p>
+                            <h2 className="font-semibold text-neutral-900">Search Customers</h2>
+                            <p className="text-xs text-neutral-500">{totalCount} customers available</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-xl transition-colors">
-                        <X className="w-5 h-5 text-stone-500" />
+                    <button onClick={onClose} className="p-2 hover:bg-neutral-200 rounded-xl transition-colors">
+                        <X className="w-5 h-5 text-neutral-500" />
                     </button>
                 </div>
 
                 {/* Search Bar */}
                 <div className="px-6 py-4 border-b bg-white flex items-center gap-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                         <input
                             ref={inputRef}
                             type="text"
                             value={search}
                             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             placeholder="Search by name, city, or email..."
-                            className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm 
-                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm 
+                                focus:ring-2 focus:ring-black/5 focus:border-black focus:bg-white transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-stone-500">
+                    <div className="flex items-center gap-2 text-sm text-neutral-500">
                         <span className="font-medium">{startIdx + 1}-{endIdx}</span>
-                        <span className="text-stone-400">of</span>
+                        <span className="text-neutral-400">of</span>
                         <span className="font-medium">{totalCount}</span>
                     </div>
                     <div className="flex items-center gap-1">
                         <button
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
-                            className="p-2 hover:bg-stone-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="p-2 hover:bg-neutral-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
                             ‹
                         </button>
                         <button
                             onClick={() => setPage(p => p + 1)}
                             disabled={endIdx >= totalCount}
-                            className="p-2 hover:bg-stone-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="p-2 hover:bg-neutral-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
                             ›
                         </button>
@@ -160,48 +161,54 @@ function CustomerSearchModal({
                 {/* Table */}
                 <div className="flex-1 overflow-auto">
                     <table className="w-full text-sm">
-                        <thead className="bg-stone-50 sticky top-0">
+                        <thead className="bg-neutral-50 sticky top-0">
                             <tr>
-                                <th className="px-6 py-3 text-left font-semibold text-stone-600 uppercase text-xs tracking-wider">Customer</th>
-                                <th className="px-6 py-3 text-left font-semibold text-stone-600 uppercase text-xs tracking-wider">Contact</th>
-                                <th className="px-6 py-3 text-left font-semibold text-stone-600 uppercase text-xs tracking-wider">Location</th>
+                                <th className="px-6 py-3 text-left font-semibold text-neutral-600 uppercase text-xs tracking-wider">Customer</th>
+                                <th className="px-6 py-3 text-left font-semibold text-neutral-600 uppercase text-xs tracking-wider">Contact</th>
+                                <th className="px-6 py-3 text-left font-semibold text-neutral-600 uppercase text-xs tracking-wider">Location</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-stone-100">
+                        <tbody className="divide-y divide-neutral-100">
                             {pageCustomers.map(customer => (
                                 <tr
                                     key={customer.id}
                                     onClick={() => { onSelect(customer); onClose(); }}
                                     className={`cursor-pointer transition-colors group
-                                        ${selectedId === customer.id ? 'bg-teal-50' : 'hover:bg-stone-50'}`}
+                                        ${selectedId === customer.id ? 'bg-neutral-100' : 'hover:bg-neutral-50'}`}
                                 >
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center
+                                            {/* Avatar */}
+                                            <div className={`w-9 h-9 rounded flex items-center justify-center text-xs font-bold
                                                 ${selectedId === customer.id
-                                                    ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white'
-                                                    : 'bg-stone-100 text-stone-500 group-hover:bg-stone-200'}`}>
-                                                <Building2 className="w-4 h-4" />
+                                                    ? 'bg-black text-white'
+                                                    : 'bg-neutral-200 text-neutral-600 group-hover:bg-neutral-300'}`}>
+                                                {getInitials(customer.name)}
                                             </div>
-                                            <span className="font-medium text-stone-800">{customer.name}</span>
+                                            <span className="font-semibold text-neutral-800">{customer.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-stone-600">
+                                    <td className="px-6 py-4 text-neutral-600">
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <Phone className="w-3.5 h-3.5 text-stone-400" />
-                                                {customer.phone || customer.mobile || '-'}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-stone-500">
-                                                <Mail className="w-3 h-3 text-stone-400" />
-                                                {customer.email || '-'}
-                                            </div>
+                                            {customer.phone && (
+                                                <div className="flex items-center gap-2 text-xs">
+                                                    <Phone className="w-3.5 h-3.5 text-neutral-400" />
+                                                    {customer.phone}
+                                                </div>
+                                            )}
+                                            {customer.email && (
+                                                <div className="flex items-center gap-2 text-xs text-neutral-500">
+                                                    <Mail className="w-3.5 h-3.5 text-neutral-400" />
+                                                    {customer.email}
+                                                </div>
+                                            )}
+                                            {!customer.phone && !customer.email && <span className="text-neutral-300">-</span>}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-stone-600">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                                            {customer.city || '-'}
+                                    <td className="px-6 py-4 text-neutral-600">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <MapPin className="w-3.5 h-3.5 text-neutral-400" />
+                                            {customer.city || <span className="text-neutral-300">-</span>}
                                         </div>
                                     </td>
                                 </tr>
@@ -211,19 +218,19 @@ function CustomerSearchModal({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t bg-stone-50/50 rounded-b-2xl flex items-center gap-3">
+                <div className="px-6 py-4 border-t bg-neutral-50 rounded-b-2xl flex items-center gap-3">
                     <button
                         onClick={onCreateNew}
-                        className="px-4 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white text-sm font-medium rounded-xl 
-                            hover:from-teal-600 hover:to-cyan-700 transition-all shadow-lg shadow-teal-500/20 flex items-center gap-2"
+                        className="px-4 py-2.5 bg-black text-white text-sm font-medium rounded-xl 
+                            hover:bg-neutral-800 transition-all shadow-lg shadow-black/10 flex items-center gap-2"
                     >
                         <Plus className="w-4 h-4" />
                         New Customer
                     </button>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2.5 bg-white text-stone-700 text-sm font-medium rounded-xl border border-stone-200
-                            hover:bg-stone-50 transition-colors"
+                        className="px-4 py-2.5 bg-white text-neutral-700 text-sm font-medium rounded-xl border border-neutral-200
+                            hover:bg-neutral-50 transition-colors"
                     >
                         Close
                     </button>
@@ -380,20 +387,20 @@ export default function OdooCustomerSelect({
                     className={`flex items-center rounded-xl bg-white transition-all duration-200 cursor-text
                         border-2 hover:shadow-md
                         ${isOpen
-                            ? 'border-teal-500 ring-4 ring-teal-500/10 shadow-lg'
-                            : 'border-stone-200 hover:border-stone-300'}`}
+                            ? 'border-black ring-4 ring-black/5 shadow-lg'
+                            : 'border-neutral-200 hover:border-neutral-300'}`}
                     onClick={() => inputRef.current?.focus()}
                 >
                     {/* Icon */}
-                    <div className={`pl-4 transition-colors ${isOpen ? 'text-teal-500' : 'text-stone-400'}`}>
+                    <div className={`pl-4 transition-colors ${isOpen ? 'text-black' : 'text-neutral-400'}`}>
                         <Building2 className="w-5 h-5" />
                     </div>
 
                     {selectedCustomer && !isOpen ? (
                         <div className="flex-1 px-3 py-3 flex items-center gap-2">
-                            <span className="font-medium text-stone-800 truncate">{selectedCustomer.name}</span>
+                            <span className="font-medium text-neutral-800 truncate">{selectedCustomer.name}</span>
                             {selectedCustomer.city && (
-                                <span className="text-sm text-stone-500 flex items-center gap-1">
+                                <span className="text-sm text-neutral-500 flex items-center gap-1">
                                     <MapPin className="w-3 h-3" />
                                     {selectedCustomer.city}
                                 </span>
@@ -408,31 +415,31 @@ export default function OdooCustomerSelect({
                             onFocus={handleInputFocus}
                             onKeyDown={handleKeyDown}
                             placeholder={placeholder}
-                            className="flex-1 px-3 py-3 text-sm bg-transparent border-none outline-none placeholder:text-stone-400"
+                            className="flex-1 px-3 py-3 text-sm bg-transparent border-none outline-none placeholder:text-neutral-400"
                         />
                     )}
 
                     <div className="flex items-center gap-1 pr-3">
-                        {loading && <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />}
+                        {loading && <Loader2 className="w-4 h-4 text-neutral-400 animate-spin" />}
                         {value && (
-                            <button type="button" onClick={handleClear} className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors">
-                                <X className="w-4 h-4 text-stone-400" />
+                            <button type="button" onClick={handleClear} className="p-1.5 hover:bg-neutral-100 rounded-lg transition-colors">
+                                <X className="w-4 h-4 text-neutral-400" />
                             </button>
                         )}
-                        <ChevronDown className={`w-5 h-5 text-stone-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                     </div>
                 </div>
 
                 {/* Dropdown Portal */}
                 {mounted && isOpen && createPortal(
                     <div
-                        className="odoo-dropdown-portal fixed z-50 bg-white rounded-2xl border border-stone-200/60 shadow-2xl overflow-hidden
+                        className="odoo-dropdown-portal fixed z-50 bg-white rounded-2xl border border-neutral-200 shadow-2xl overflow-hidden
                             animate-in fade-in slide-in-from-top-2 duration-200"
                         style={{ top: position.top, left: position.left, width: position.width }}
                     >
                         {/* Create Options */}
                         {search.trim() && (
-                            <div className="p-2 border-b border-stone-100 bg-gradient-to-r from-stone-50 to-stone-100/50">
+                            <div className="p-2 border-b border-neutral-100 bg-neutral-50">
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -440,7 +447,7 @@ export default function OdooCustomerSelect({
                                         setSearch('');
                                         setIsOpen(false);
                                     }}
-                                    className="w-full px-4 py-2.5 text-sm text-left text-teal-600 hover:bg-teal-50 font-medium 
+                                    className="w-full px-4 py-2.5 text-sm text-left text-neutral-900 hover:bg-white font-medium 
                                         transition-colors flex items-center gap-2 rounded-lg"
                                 >
                                     <Plus className="w-4 h-4" />
@@ -453,7 +460,7 @@ export default function OdooCustomerSelect({
                                         setSearch('');
                                         setIsOpen(false);
                                     }}
-                                    className="w-full px-4 py-2.5 text-sm text-left text-amber-600 hover:bg-amber-50 font-medium 
+                                    className="w-full px-4 py-2.5 text-sm text-left text-neutral-600 hover:bg-white font-medium 
                                         transition-colors flex items-center gap-2 rounded-lg"
                                 >
                                     <Plus className="w-4 h-4" />
@@ -463,16 +470,16 @@ export default function OdooCustomerSelect({
                         )}
 
                         {filteredCustomers.length === 0 && !search ? (
-                            <div className="px-4 py-8 text-sm text-stone-500 text-center">
-                                <Search className="w-8 h-8 mx-auto text-stone-300 mb-2" />
+                            <div className="px-4 py-8 text-sm text-neutral-500 text-center">
+                                <Search className="w-8 h-8 mx-auto text-neutral-300 mb-2" />
                                 <p>Start typing to search...</p>
                             </div>
                         ) : filteredCustomers.length === 0 && search ? (
-                            <div className="px-4 py-6 text-sm text-stone-500 text-center">
+                            <div className="px-4 py-6 text-sm text-neutral-500 text-center">
                                 <p>No customers match your search</p>
                             </div>
                         ) : (
-                            <div ref={listRef} className="max-h-[300px] overflow-y-auto divide-y divide-stone-100">
+                            <div ref={listRef} className="max-h-[300px] overflow-y-auto divide-y divide-neutral-100">
                                 {filteredCustomers.map((customer, idx) => (
                                     <CustomerCard
                                         key={customer.id}
@@ -486,11 +493,11 @@ export default function OdooCustomerSelect({
                             </div>
                         )}
 
-                        <div className="p-2 border-t border-stone-100 bg-stone-50/50">
+                        <div className="p-2 border-t border-neutral-100 bg-neutral-50">
                             <button
                                 type="button"
                                 onClick={() => { setShowModal(true); setIsOpen(false); }}
-                                className="w-full px-4 py-2.5 text-sm text-left text-stone-600 hover:bg-white 
+                                className="w-full px-4 py-2.5 text-sm text-left text-neutral-600 hover:bg-white 
                                     font-medium transition-colors rounded-lg flex items-center gap-2"
                             >
                                 <Search className="w-4 h-4" />

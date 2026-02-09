@@ -67,14 +67,14 @@ import {
 // ============================================================================
 
 const COLORS = [
-    "#3B82F6", // blue
-    "#10B981", // emerald
-    "#F59E0B", // amber
-    "#EF4444", // red
-    "#8B5CF6", // violet
-    "#EC4899", // pink
-    "#06B6D4", // cyan
-    "#84CC16"  // lime
+    "#171717", // black
+    "#404040", // neutral-700
+    "#737373", // neutral-500
+    "#a3a3a3", // neutral-400
+    "#d4d4d4", // neutral-300
+    "#e5e5e5", // neutral-200
+    "#f5f5f5", // neutral-100
+    "#fafafa"  // neutral-50
 ];
 
 const DATE_RANGE_OPTIONS = [
@@ -195,7 +195,7 @@ export default function AnalyticsPage() {
                                     value.toLocaleString()}
                         </p>
                         {change !== undefined && (
-                            <div className={`flex items-center gap-1 text-xs ${change >= 0 ? "text-emerald-600" : "text-red-600"
+                            <div className={`flex items-center gap-1 text-xs ${change >= 0 ? "text-neutral-900" : "text-neutral-500"
                                 }`}>
                                 {change >= 0 ?
                                     <ArrowUpRight className="h-3 w-3" /> :
@@ -347,7 +347,7 @@ export default function AnalyticsPage() {
                                             stroke="#94a3b8"
                                             name="Target"
                                         />
-                                        <Bar dataKey="revenue" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Revenue" />
+                                        <Bar dataKey="revenue" fill="#171717" radius={[4, 4, 0, 0]} name="Revenue" />
                                     </ComposedChart>
                                 </ResponsiveContainer>
                             </div>
@@ -438,10 +438,10 @@ export default function AnalyticsPage() {
                                             <Funnel
                                                 dataKey="value"
                                                 data={funnelData.length > 0 ? funnelData : [
-                                                    { name: "Quotations", value: kpis.quotationCount || 10, fill: "#3B82F6" },
-                                                    { name: "Sent", value: Math.floor((kpis.quotationCount || 10) * 0.8), fill: "#10B981" },
-                                                    { name: "Negotiation", value: Math.floor((kpis.quotationCount || 10) * 0.5), fill: "#F59E0B" },
-                                                    { name: "Won", value: kpis.orderCount || 3, fill: "#22C55E" },
+                                                    { name: "Quotations", value: kpis.quotationCount || 10, fill: "#e5e5e5" },
+                                                    { name: "Sent", value: Math.floor((kpis.quotationCount || 10) * 0.8), fill: "#a3a3a3" },
+                                                    { name: "Negotiation", value: Math.floor((kpis.quotationCount || 10) * 0.5), fill: "#737373" },
+                                                    { name: "Won", value: kpis.orderCount || 3, fill: "#171717" },
                                                 ]}
                                                 isAnimationActive
                                             >
@@ -506,8 +506,8 @@ export default function AnalyticsPage() {
                                         <YAxis tick={{ fontSize: 12 }} />
                                         <Tooltip contentStyle={{ borderRadius: 8 }} />
                                         <Legend />
-                                        <Line type="monotone" dataKey="quotations" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4 }} name="Quotations" />
-                                        <Line type="monotone" dataKey="orders" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} name="Orders" />
+                                        <Line type="monotone" dataKey="quotations" stroke="#737373" strokeWidth={2} dot={{ r: 3, fill: '#737373' }} name="Quotations" />
+                                        <Line type="monotone" dataKey="orders" stroke="#171717" strokeWidth={2} dot={{ r: 4, fill: '#171717' }} name="Orders" />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
@@ -544,7 +544,7 @@ export default function AnalyticsPage() {
                                         <YAxis type="category" dataKey="region" width={100} tick={{ fontSize: 12 }} />
                                         <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ borderRadius: 8 }} />
                                         <Legend />
-                                        <Bar dataKey="revenue" fill="#3B82F6" radius={[0, 4, 4, 0]} name="Revenue" />
+                                        <Bar dataKey="revenue" fill="#171717" radius={[0, 4, 4, 0]} name="Revenue" />
                                         <Bar dataKey="target" fill="#e0e0e0" radius={[0, 4, 4, 0]} name="Target" />
                                     </BarChart>
                                 </ResponsiveContainer>

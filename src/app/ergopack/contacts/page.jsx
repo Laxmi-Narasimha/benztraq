@@ -1,10 +1,11 @@
 /**
- * Ergopack Contacts List Page - Clean Light Theme
+ * Ergopack Contacts List Page - Premium Earthy Theme
  * 
- * Professional light theme with sort/filter capabilities.
- * Features a clean data grid layout with columns: 
- * Company, Status, Created By, Updated By, Activity, Last Updated.
- * Includes sort by: Last Updated, Last Added, Status, Activity.
+ * Color Palette:
+ * - Charcoal Black: #111111
+ * - French Beige: #AD7D56  
+ * - Rodeo Dust: #CDB49E
+ * - Ivory White: #F5F1EC
  * 
  * @module app/ergopack/contacts/page
  */
@@ -38,15 +39,15 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_CONFIG = {
-    open: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', label: 'Open' },
-    new: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', label: 'New' },
-    contacted: { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-300', label: 'Contacted' },
-    proposal_sent: { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', label: 'Proposal Sent' },
-    deal_done: { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300', label: 'Deal Done' },
-    won: { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300', label: 'Won' },
-    lost: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300', label: 'Lost' },
-    not_serviceable: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300', label: 'Not Serviceable' },
-    dormant: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-300', label: 'Dormant' },
+    open: { bg: 'bg-[#AD7D56]/20', text: 'text-[#AD7D56]', border: 'border-[#AD7D56]/40', label: 'Open' },
+    new: { bg: 'bg-[#AD7D56]/20', text: 'text-[#AD7D56]', border: 'border-[#AD7D56]/40', label: 'New' },
+    contacted: { bg: 'bg-[#CDB49E]/30', text: 'text-[#F5F1EC]', border: 'border-[#CDB49E]/50', label: 'Contacted' },
+    proposal_sent: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/40', label: 'Proposal Sent' },
+    deal_done: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/40', label: 'Deal Done' },
+    won: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/40', label: 'Won' },
+    lost: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/40', label: 'Lost' },
+    not_serviceable: { bg: 'bg-[#3a3a3a]', text: 'text-[#888]', border: 'border-[#555]', label: 'Not Serviceable' },
+    dormant: { bg: 'bg-[#3a3a3a]', text: 'text-[#888]', border: 'border-[#555]', label: 'Dormant' },
 };
 
 const SORT_OPTIONS = [
@@ -216,18 +217,18 @@ export default function ContactsListPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-blue-100">
+        <div className="min-h-screen bg-[#111111] text-[#F5F1EC] font-sans selection:bg-[#AD7D56]/30">
             <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-6">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-gray-200 pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-[#2a2a2a] pb-6">
                     <div>
-                        <h1 className="text-3xl font-semibold tracking-tight text-gray-900 flex items-center gap-3">
+                        <h1 className="text-3xl font-semibold tracking-tight text-[#F5F1EC] flex items-center gap-3">
                             Contacts
-                            <span className="text-base font-medium text-gray-600 bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200">
+                            <span className="text-base font-medium text-[#CDB49E] bg-[#1a1a1a] px-4 py-1.5 rounded-full border border-[#2a2a2a]">
                                 {stats?.total || 0}
                             </span>
                         </h1>
-                        <p className="text-gray-500 mt-2 text-base">
+                        <p className="text-[#CDB49E] mt-2 text-base">
                             Manage your outreach pipeline and relationships.
                         </p>
                     </div>
@@ -236,12 +237,12 @@ export default function ContactsListPage() {
                             variant="outline"
                             onClick={fetchContacts}
                             disabled={isLoading}
-                            className="bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-900 h-11 w-11 p-0 rounded-lg transition-all"
+                            className="bg-[#1a1a1a] border-[#3a3a3a] text-[#CDB49E] hover:bg-[#2a2a2a] hover:text-[#F5F1EC] hover:border-[#AD7D56] h-11 w-11 p-0 rounded-lg transition-all"
                         >
                             <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
                         </Button>
                         <Link href="/ergopack/contacts/new">
-                            <Button className="bg-gray-900 text-white hover:bg-gray-800 h-11 px-6 rounded-lg font-medium tracking-wide transition-all shadow-sm">
+                            <Button className="bg-[#AD7D56] text-white hover:bg-[#9A6B47] h-11 px-6 rounded-lg font-medium tracking-wide transition-all shadow-sm">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Add Contact
                             </Button>
@@ -252,25 +253,25 @@ export default function ContactsListPage() {
                 {/* Controls */}
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
                     <div className="relative flex-1 w-full group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-gray-600 transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#CDB49E] group-focus-within:text-[#AD7D56] transition-colors" />
                         <Input
                             placeholder="Search by company, person..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && fetchContacts()}
-                            className="pl-12 h-12 bg-white border-gray-300 text-gray-900 text-base placeholder:text-gray-400 rounded-xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+                            className="pl-12 h-12 bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] text-base placeholder:text-[#666] rounded-xl focus:ring-2 focus:ring-[#AD7D56]/30 focus:border-[#AD7D56] transition-all"
                         />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-48 h-12 bg-white border-gray-300 text-gray-700 text-base rounded-xl focus:ring-2 focus:ring-blue-500/30 hover:bg-gray-50 transition-all">
+                        <SelectTrigger className="w-full sm:w-48 h-12 bg-[#1a1a1a] border-[#3a3a3a] text-[#CDB49E] text-base rounded-xl focus:ring-2 focus:ring-[#AD7D56]/30 hover:bg-[#2a2a2a] transition-all">
                             <SelectValue placeholder="Filter by stage" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200 rounded-xl shadow-lg">
+                        <SelectContent className="bg-[#1a1a1a] border-[#3a3a3a] rounded-xl shadow-lg">
                             {STATUS_OPTIONS.map((opt) => (
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="text-gray-700 text-base focus:bg-gray-100 focus:text-gray-900 rounded-lg my-1 cursor-pointer"
+                                    className="text-[#CDB49E] text-base focus:bg-[#2a2a2a] focus:text-[#F5F1EC] rounded-lg my-1 cursor-pointer"
                                 >
                                     {opt.label}
                                 </SelectItem>
@@ -278,16 +279,16 @@ export default function ContactsListPage() {
                         </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-full sm:w-48 h-12 bg-white border-gray-300 text-gray-700 text-base rounded-xl focus:ring-2 focus:ring-blue-500/30 hover:bg-gray-50 transition-all">
+                        <SelectTrigger className="w-full sm:w-48 h-12 bg-[#1a1a1a] border-[#3a3a3a] text-[#CDB49E] text-base rounded-xl focus:ring-2 focus:ring-[#AD7D56]/30 hover:bg-[#2a2a2a] transition-all">
                             <ArrowUpDown className="w-4 h-4 mr-2" />
                             <SelectValue placeholder="Sort by" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200 rounded-xl shadow-lg">
+                        <SelectContent className="bg-[#1a1a1a] border-[#3a3a3a] rounded-xl shadow-lg">
                             {SORT_OPTIONS.map((opt) => (
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="text-gray-700 text-base focus:bg-gray-100 focus:text-gray-900 rounded-lg my-1 cursor-pointer"
+                                    className="text-[#CDB49E] text-base focus:bg-[#2a2a2a] focus:text-[#F5F1EC] rounded-lg my-1 cursor-pointer"
                                 >
                                     {opt.label}
                                 </SelectItem>
@@ -297,9 +298,9 @@ export default function ContactsListPage() {
                 </div>
 
                 {/* Data Grid */}
-                <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+                <div className="rounded-2xl border border-[#2a2a2a] overflow-hidden bg-[#1a1a1a] shadow-lg">
                     {/* Grid Header */}
-                    <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-200 bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[#2a2a2a] bg-[#151515] text-xs font-semibold text-[#CDB49E] uppercase tracking-wider">
                         <div className="col-span-3">Company</div>
                         <div className="col-span-1 hidden sm:block">Status</div>
                         <div className="col-span-2 hidden md:block">Created By</div>
@@ -310,20 +311,20 @@ export default function ContactsListPage() {
                     </div>
 
                     {/* Grid Body */}
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-[#2a2a2a]">
                         {isLoading ? (
-                            <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-                                <RefreshCw className="w-6 h-6 animate-spin mb-3 text-gray-500" />
+                            <div className="flex flex-col items-center justify-center py-24 text-[#CDB49E]">
+                                <RefreshCw className="w-6 h-6 animate-spin mb-3 text-[#AD7D56]" />
                                 <span className="text-sm font-medium">Loading data...</span>
                             </div>
                         ) : filteredContacts.length === 0 ? (
                             <div className="text-center py-24">
-                                <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4 border border-gray-200">
-                                    <Building2 className="w-6 h-6 text-gray-400" />
+                                <div className="w-16 h-16 rounded-2xl bg-[#2a2a2a] flex items-center justify-center mx-auto mb-4 border border-[#3a3a3a]">
+                                    <Building2 className="w-6 h-6 text-[#CDB49E]" />
                                 </div>
-                                <p className="text-gray-500 mb-6 font-medium text-lg">No contacts found</p>
+                                <p className="text-[#CDB49E] mb-6 font-medium text-lg">No contacts found</p>
                                 <Link href="/ergopack/contacts/new">
-                                    <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                    <Button variant="outline" className="border-[#AD7D56] text-[#AD7D56] hover:bg-[#AD7D56]/20 hover:text-[#F5F1EC]">
                                         <Plus className="w-4 h-4 mr-2" />
                                         Add First Contact
                                     </Button>
@@ -340,28 +341,28 @@ export default function ContactsListPage() {
                                         key={contact.id}
                                         href={`/ergopack/contacts/${contact.id}`}
                                         onClick={() => handleContactClick(contact.id)}
-                                        className="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-gray-50 transition-all duration-200 group cursor-pointer relative"
+                                        className="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-[#222] transition-all duration-200 group cursor-pointer relative"
                                     >
                                         {/* Hover Highlight Line */}
-                                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#AD7D56] opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                         {/* Company */}
                                         <div className="col-span-3 overflow-hidden relative">
                                             {/* Unseen Dot - Mobile optimized */}
                                             {hasUnseenUpdate && (
-                                                <div className="absolute -left-3 top-2 w-2 h-2 rounded-full bg-blue-500 animate-pulse md:hidden" />
+                                                <div className="absolute -left-3 top-2 w-2 h-2 rounded-full bg-[#AD7D56] animate-pulse md:hidden" />
                                             )}
 
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center border border-gray-200 text-gray-500 group-hover:text-gray-900 group-hover:border-gray-300 transition-all flex-shrink-0">
+                                                <div className="w-12 h-12 rounded-lg bg-[#2a2a2a] flex items-center justify-center border border-[#3a3a3a] text-[#CDB49E] group-hover:text-[#F5F1EC] group-hover:border-[#AD7D56] transition-all flex-shrink-0">
                                                     <Building2 className="w-6 h-6" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <h3 className="text-base font-semibold text-gray-900 group-hover:text-gray-900 truncate transition-colors flex items-center gap-2">
+                                                    <h3 className="text-base font-semibold text-[#F5F1EC] group-hover:text-white truncate transition-colors flex items-center gap-2">
                                                         {contact.company_name}
                                                     </h3>
                                                     {contact.contact_person && (
-                                                        <p className="text-sm text-gray-500 group-hover:text-gray-600 truncate mt-1">
+                                                        <p className="text-sm text-[#CDB49E] group-hover:text-[#F5F1EC] truncate mt-1">
                                                             {contact.contact_person}
                                                         </p>
                                                     )}
@@ -372,8 +373,8 @@ export default function ContactsListPage() {
                                         {/* Status */}
                                         <div className="col-span-1 hidden sm:flex items-center">
                                             <Badge className={cn(
-                                                "px-3 py-1 text-xs font-semibold tracking-wide uppercase rounded-full border bg-transparent",
-                                                statusConfig.text, statusConfig.border
+                                                "px-3 py-1 text-xs font-semibold tracking-wide uppercase rounded-full border",
+                                                statusConfig.bg, statusConfig.text, statusConfig.border
                                             )}>
                                                 {statusConfig.label}
                                             </Badge>
@@ -381,10 +382,10 @@ export default function ContactsListPage() {
 
                                         {/* Created By */}
                                         <div className="col-span-2 hidden md:flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-sm font-medium text-gray-600">
+                                            <div className="w-8 h-8 rounded-full bg-[#AD7D56]/30 border border-[#AD7D56]/50 flex items-center justify-center text-sm font-medium text-[#F5F1EC]">
                                                 {contact.created_by_user?.full_name?.charAt(0) || 'U'}
                                             </div>
-                                            <span className="text-sm text-gray-600 truncate max-w-[120px]">
+                                            <span className="text-sm text-[#CDB49E] truncate max-w-[120px]">
                                                 {contact.created_by_user?.full_name?.split(' ')[0] || 'Unknown'}
                                             </span>
                                         </div>
@@ -408,13 +409,13 @@ export default function ContactsListPage() {
                                                             toast.error('Error loading presentation');
                                                         }
                                                     }}
-                                                    className="w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 flex items-center justify-center text-red-600 hover:text-red-700 transition-all"
+                                                    className="w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all"
                                                     title={`Download: ${contact.presentation_file_name || 'Presentation'}`}
                                                 >
                                                     <FileText className="w-4 h-4" />
                                                 </button>
                                             ) : (
-                                                <span className="text-gray-400 text-xs">-</span>
+                                                <span className="text-[#555] text-xs">-</span>
                                             )}
                                         </div>
 
@@ -437,39 +438,39 @@ export default function ContactsListPage() {
                                                             toast.error('Error loading quotation');
                                                         }
                                                     }}
-                                                    className="w-8 h-8 rounded-lg bg-blue-100 hover:bg-blue-200 flex items-center justify-center text-blue-600 hover:text-blue-700 transition-all"
+                                                    className="w-8 h-8 rounded-lg bg-[#AD7D56]/20 hover:bg-[#AD7D56]/30 flex items-center justify-center text-[#AD7D56] hover:text-[#CDB49E] transition-all"
                                                     title={`Download: ${contact.quotation_file_name || 'Quotation'}`}
                                                 >
                                                     <Download className="w-4 h-4" />
                                                 </button>
                                             ) : (
-                                                <span className="text-gray-400 text-xs">-</span>
+                                                <span className="text-[#555] text-xs">-</span>
                                             )}
                                         </div>
 
                                         {/* Latest Activity + NEW Badge */}
-                                        <div className="col-span-3 hidden xl:flex items-center gap-3 text-gray-500 min-w-0">
+                                        <div className="col-span-3 hidden xl:flex items-center gap-3 text-[#CDB49E] min-w-0">
                                             {hasUnseenUpdate && (
-                                                <Badge className="bg-blue-600 hover:bg-blue-600 text-white border-0 text-xs font-semibold px-2.5 py-0.5 h-5 mr-1">
+                                                <Badge className="bg-[#AD7D56] hover:bg-[#AD7D56] text-white border-0 text-xs font-semibold px-2.5 py-0.5 h-5 mr-1">
                                                     NEW
                                                 </Badge>
                                             )}
 
                                             {contact.latest_activity ? (
                                                 <>
-                                                    <ActivityIcon className="w-4 h-4 flex-shrink-0 text-gray-400 group-hover:text-gray-600 transition-colors" />
-                                                    <span className="text-sm truncate group-hover:text-gray-700 transition-colors">
+                                                    <ActivityIcon className="w-4 h-4 flex-shrink-0 text-[#CDB49E] group-hover:text-[#F5F1EC] transition-colors" />
+                                                    <span className="text-sm truncate group-hover:text-[#F5F1EC] transition-colors">
                                                         {contact.latest_activity.title || 'Activity Logged'}
                                                     </span>
                                                 </>
                                             ) : (
-                                                <span className="text-sm text-gray-400 italic">No activity</span>
+                                                <span className="text-sm text-[#555] italic">No activity</span>
                                             )}
                                         </div>
 
                                         {/* Last Updated + Delete Action */}
                                         <div className="col-span-1 text-right flex items-center justify-end gap-3 group/actions">
-                                            <span className="text-sm text-gray-500 font-mono group-hover:text-gray-700 transition-colors">
+                                            <span className="text-sm text-[#CDB49E] font-mono group-hover:text-[#F5F1EC] transition-colors">
                                                 {formatDate(contact.updated_at)}
                                             </span>
 
@@ -478,7 +479,7 @@ export default function ContactsListPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover/actions:opacity-100 transition-all md:opacity-0 sm:opacity-100"
+                                                    className="h-8 w-8 text-[#555] hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/actions:opacity-100 transition-all md:opacity-0 sm:opacity-100"
                                                     onClick={(e) => handleDelete(e, contact.id, contact.company_name)}
                                                     title="Delete Contact"
                                                 >
@@ -494,7 +495,7 @@ export default function ContactsListPage() {
                 </div>
 
                 {/* Footer Note */}
-                <div className="flex justify-between items-center text-sm text-gray-500 px-2 font-mono">
+                <div className="flex justify-between items-center text-sm text-[#CDB49E] px-2 font-mono">
                     <span>
                         Showing {filteredContacts.length} contacts
                     </span>

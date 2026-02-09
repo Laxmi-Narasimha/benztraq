@@ -1,0 +1,122 @@
+[
+    {
+        "companyName": "Kant Fasteners Pvt. Ltd.",
+        "contactPerson": "Sandeep Patel",
+        "designation": "Director",
+        "phone": "+91 755 911 7196",
+        "email": "sandeep@kantfasteners.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\nWebsite: kantfasteners.com",
+        "status": "open"
+    },
+    {
+        "companyName": "WeShip",
+        "contactPerson": "",
+        "designation": "",
+        "phone": "+91 98211 54456",
+        "email": "ship@weship.in",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\n1202 B, Rajgrah Apt, 12th Floor, 13th Cross Road, Khar (W), Mumbai - 400052. Website: weship.in",
+        "status": "open"
+    },
+    {
+        "companyName": "HD FIRE PROTECT",
+        "contactPerson": "Sudhir Patil",
+        "designation": "GM - Plant Operations",
+        "phone": "+91 8879779711, +91 257 2273905",
+        "email": "sudhir@hdfire.com",
+        "city": "Thane",
+        "notes": "LOGIMAT LEADS\nD-6/2, Road No. 34, Wagle Estate, Thane 400 604, India. Website: hdfire.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Riverstone",
+        "contactPerson": "Rajkamal S",
+        "designation": "Project Manager",
+        "phone": "+91 8668173170, +1-925-218-0630",
+        "email": "rajkamal@riverstonetech.com",
+        "city": "Pleasanton, CA USA",
+        "notes": "LOGIMAT LEADS\n5890 Stoneridge Dr. Suite 209, Pleasanton, CA 94588. Website: www.riverstonetech.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Aakash Powertech",
+        "contactPerson": "Darshan Raut",
+        "designation": "Assistant Manager Marketing",
+        "phone": "+91 9999652528, +91 22 6144 1600",
+        "email": "mum.mktg1@aakashpower.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\n505, A Wing, Express Zone, W. E. Highway, Malad (E), Mumbai - 400 097. Website: www.aakashpower.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Riverstone",
+        "contactPerson": "Prabhakaran S",
+        "designation": "Project Lead",
+        "phone": "+91 7550249530, +1-925-218-0669",
+        "email": "s.prabhakaran@riverstonetech.com",
+        "city": "Pleasanton, CA USA",
+        "notes": "LOGIMAT LEADS\n5890 Stoneridge Dr. Suite 209, Pleasanton, CA 94588. Website: www.riverstonetech.com",
+        "status": "open"
+    },
+    {
+        "companyName": "GMR Aero Cargo (GMR Cargo & Logistics)",
+        "contactPerson": "Mahesh Babu Terala",
+        "designation": "Lead - IT",
+        "phone": "+91 94411 61161",
+        "email": "maheshbabu.t@gmrgroup.in",
+        "city": "Hyderabad",
+        "notes": "LOGIMAT LEADS\nAir Cargo Terminal, Rajiv Gandhi International Airport, Shamshabad - 500108, Telangana. Website: https://gmrhydcargo.in/",
+        "status": "open"
+    },
+    {
+        "companyName": "Experts Solutions",
+        "contactPerson": "Sanjeev Dudani",
+        "designation": "",
+        "phone": "+91 9821568424, 8591095015",
+        "email": "exim.expertssolutions@gmail.com, software.expertssolutions@gmail.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\nFlat No. 4 & 5 B, Lakshmi Sadan Building, Ground Floor, Behind Patil Sainath Plaza, Zaver Road End, Station Road, Mulund (W) 400 080. Website: www.expertssolutions.net",
+        "status": "open"
+    },
+    {
+        "companyName": "Cipla Ltd.",
+        "contactPerson": "Sudhansu Kumar Raghunath Padhi",
+        "designation": "Manager - Supply Chain Management",
+        "phone": "+91 98205 89260, +91 22 637 67000",
+        "email": "sudhansu.padhi@cipla.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\nR&D Centre, LBS Marg, Vikhroli West, Mumbai 400083. Website: www.cipla.com",
+        "status": "open"
+    },
+    {
+        "companyName": "TODI MILLS",
+        "contactPerson": "Tushar Mangalorkar",
+        "designation": "Sr. Manager - Business Development",
+        "phone": "+91 98196 77195, +91 22 49703362",
+        "email": "tushar@todimills.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\nA-Wing, 1st floor, Todi Estate, Sun Mill Compound, Lower Parel-West, Mumbai - 400013. Website: www.todimills.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Larsen & Toubro Limited (L&T Construction & Mining Machinery)",
+        "contactPerson": "Prashant Medpalliwar",
+        "designation": "Manager - SCM",
+        "phone": "+91 97555 96563",
+        "email": "prashant.medpalliwar@larsentoubro.com",
+        "city": "Nagpur",
+        "notes": "LOGIMAT LEADS\nLogistics Park, Survey No. 57-58-59, Kalmeshwar - Gondkhairi Road, Village: Khapri (Uma), Nagpur - 441 501, Maharashtra. Website: www.larsentoubro.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Right Moves Logistics",
+        "contactPerson": "Santosh Rajput",
+        "designation": "Chief Sales Officer",
+        "phone": "+91 8828212777",
+        "email": "santosh.r@rmlogistics.in",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\nBismillah Bldg., Plot No. 12, 2nd Floor, Office No. 24, Ranade Rd., Dadar (West), Mumbai - 28. Website: www.rmlogistics.in",
+        "status": "open"
+    }
+]

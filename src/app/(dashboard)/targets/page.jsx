@@ -72,10 +72,10 @@ function TargetProgress({ achieved, target }) {
     const percent = target > 0 ? (achieved / target) * 100 : 0;
     const clampedPercent = Math.min(percent, 100);
 
-    let colorClass = 'bg-red-500';
-    if (percent >= 100) colorClass = 'bg-emerald-500';
-    else if (percent >= 75) colorClass = 'bg-yellow-500';
-    else if (percent >= 50) colorClass = 'bg-orange-500';
+    let colorClass = 'bg-neutral-200';
+    if (percent >= 100) colorClass = 'bg-neutral-900';
+    else if (percent >= 75) colorClass = 'bg-neutral-600';
+    else if (percent >= 50) colorClass = 'bg-neutral-400';
 
     return (
         <div className="space-y-2">
@@ -83,7 +83,7 @@ function TargetProgress({ achieved, target }) {
                 <span>Achieved: {formatCurrency(achieved, true)}</span>
                 <span className="font-semibold text-foreground">{formatPercent(percent)}</span>
             </div>
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
+            <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
                 <div
                     className={cn('h-full rounded-full transition-all duration-500', colorClass)}
                     style={{ width: `${clampedPercent}%` }}
@@ -91,7 +91,7 @@ function TargetProgress({ achieved, target }) {
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Target: {formatCurrency(target, true)}</span>
-                <span className={percent >= 100 ? 'text-emerald-600' : 'text-red-500'}>
+                <span className={percent >= 100 ? 'text-black font-medium' : 'text-neutral-500'}>
                     Gap: {formatCurrency(Math.max(0, target - achieved), true)}
                 </span>
             </div>
@@ -114,13 +114,13 @@ function MonthlyBreakdown({ annualTarget, achieved }) {
                 const isCurrent = monthNum === currentMonth;
                 const isPast = monthNum < currentMonth;
 
-                let bgColor = 'bg-muted';
+                let bgColor = 'bg-neutral-200';
                 if (isPast || isCurrent) {
-                    if (percent >= 100) bgColor = 'bg-emerald-500';
-                    else if (percent >= 75) bgColor = 'bg-yellow-500';
-                    else if (percent >= 50) bgColor = 'bg-orange-400';
-                    else if (percent > 0) bgColor = 'bg-red-400';
-                    else bgColor = 'bg-red-200';
+                    if (percent >= 100) bgColor = 'bg-neutral-900'; // Target Met
+                    else if (percent >= 75) bgColor = 'bg-neutral-600';
+                    else if (percent >= 50) bgColor = 'bg-neutral-400';
+                    else if (percent > 0) bgColor = 'bg-neutral-300';
+                    else bgColor = 'bg-neutral-200';
                 }
 
                 return (
@@ -128,9 +128,9 @@ function MonthlyBreakdown({ annualTarget, achieved }) {
                         <div
                             className={cn(
                                 "h-8 rounded-sm flex items-end justify-center overflow-hidden relative",
-                                isCurrent && "ring-2 ring-primary ring-offset-1"
+                                isCurrent && "ring-1 ring-black ring-offset-1"
                             )}
-                            style={{ backgroundColor: 'var(--muted)' }}
+                            style={{ backgroundColor: '#f5f5f5' }}
                         >
                             <div
                                 className={cn("w-full transition-all", bgColor)}
@@ -139,7 +139,7 @@ function MonthlyBreakdown({ annualTarget, achieved }) {
                         </div>
                         <span className={cn(
                             "text-[10px]",
-                            isCurrent ? "font-bold text-primary" : "text-muted-foreground"
+                            isCurrent ? "font-bold text-black" : "text-neutral-500"
                         )}>
                             {month}
                         </span>
@@ -533,10 +533,10 @@ export default function TargetsPage() {
                                         <div className="flex items-center gap-3">
                                             <div className={cn(
                                                 "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium",
-                                                percent >= 100 ? "bg-emerald-100 text-emerald-700" :
-                                                    percent >= 75 ? "bg-yellow-100 text-yellow-700" :
-                                                        percent >= 50 ? "bg-orange-100 text-orange-700" :
-                                                            "bg-red-100 text-red-700"
+                                                percent >= 100 ? "bg-black text-white" :
+                                                    percent >= 75 ? "bg-neutral-600 text-white" :
+                                                        percent >= 50 ? "bg-neutral-300 text-black" :
+                                                            "bg-neutral-100 text-neutral-500"
                                             )}>
                                                 {formatPercent(percent)}
                                             </div>

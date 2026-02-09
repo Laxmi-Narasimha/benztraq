@@ -1,0 +1,82 @@
+[
+    {
+        "companyName": "MUVRO Technologies Pvt. Ltd.",
+        "contactPerson": "Ashish Kumar",
+        "designation": "VP",
+        "phone": "+91 7457800131, +91 7457800130",
+        "email": "ashish@muvro.com, info@muvro.com",
+        "city": "Ghaziabad",
+        "notes": "LOGIMAT LEADS\nPlot No. 1195, NH-34, Morta, Ghaziabad (UP) 201003, India. Website: www.muvro.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Saint-Gobain India Pvt. Ltd. (Gyproc)",
+        "contactPerson": "Nitin Warwatkar",
+        "designation": "National Manager - Logistics",
+        "phone": "+91 9890781956, +91 22 4021 2121",
+        "email": "nitin.warwatkar@saint-gobain.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\n5th Floor, Leela Business Park, Andheri Kurla Road, Andheri (E), Mumbai - 400 059. Website: www.gyproc.in",
+        "status": "open"
+    },
+    {
+        "companyName": "Delite Systems Engineering (I) Pvt. Ltd.",
+        "contactPerson": "Manish D Sanghvi",
+        "designation": "Managing Director",
+        "phone": "+91 98201 34070, +91 22 6739 6101/102",
+        "email": "manish@delite.in, info@delite.in",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\n201 Shalaka, Plot No: 32, TPS II, Juhu Road, Santacruz (West), Mumbai - 400054, India. Website: www.delite.in",
+        "status": "open"
+    },
+    {
+        "companyName": "UPL Limited",
+        "contactPerson": "Dr. Anup Chaple",
+        "designation": "Head - Maxpro+",
+        "phone": "+91 98209 58126, 02646-250336/251223",
+        "email": "anup.chaple@upl-ltd.com",
+        "city": "Ankleshwar",
+        "notes": "LOGIMAT LEADS\nUnit-1 Plot No. 117/118, GIDC, Ankleshwar - 393002, Dist. Bharuch, Gujarat, India. Website: www.upl-ltd.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Godrej KÖRBER",
+        "contactPerson": "Nitin P. Kadam",
+        "designation": "Associate Chief Manager - Procurement",
+        "phone": "+91 98338 11764, +91 22 6139 3800",
+        "email": "nitin.kadam@godrejkoerber.com",
+        "city": "Navi Mumbai",
+        "notes": "LOGIMAT LEADS\n701, A wing, Reliable Tech Park, Off Thane Belapur road, Airoli, Navi Mumbai 400708, India",
+        "status": "open"
+    },
+    {
+        "companyName": "Toyota Kirloskar Auto Parts Pvt. Ltd.",
+        "contactPerson": "Ravindra Keragodu Puttaswamy",
+        "designation": "Deputy General Manager (Material & Inventory Control)",
+        "phone": "+91 95388 48763",
+        "email": "ravindra@tkap.co.in",
+        "city": "Bangalore",
+        "notes": "LOGIMAT LEADS\nPlot No. 21, Bidadi Industrial Area, Bidadi, Bangalore South District, Pin - 562109, Karnataka, India. Website: www.tkap.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Eastern Petroleum Pvt. Ltd. (Eastto)",
+        "contactPerson": "Ashish V. Dalvi",
+        "designation": "Maintenance Engineer",
+        "phone": "+91 9136932171, +91 9773668539, +91 22 4232 4121",
+        "email": "maintenance1@easternpetroleum.in",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\nUnit No. 1, Riddhi Siddhi, Corporate Park, V.N. Purav Marg, Chembur, Mumbai - 400071. Website: www.easternpetroleum.in, www.eastto.in",
+        "status": "open"
+    },
+    {
+        "companyName": "Alstef India Pvt Ltd (ALSTEF Group)",
+        "contactPerson": "Rohan Tonage",
+        "designation": "Industrial Director",
+        "phone": "+91 98817 34144",
+        "email": "rohan.tonage@alstefgroup.com",
+        "city": "Pune",
+        "notes": "LOGIMAT LEADS\nGlobal Industrial Park, Gat No. 208, Village Phulgaon, Taluka Haveli, District Pune - 412216. Website: www.alstefgroup.com",
+        "status": "open"
+    }
+]

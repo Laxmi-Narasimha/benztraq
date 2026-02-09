@@ -1,0 +1,122 @@
+[
+    {
+        "companyName": "NORD Drivesystems Pvt. Ltd.",
+        "contactPerson": "Avinash Koli",
+        "designation": "Sr. Engineer - Technical Sales",
+        "phone": "+91 9920063088",
+        "email": "avinash.koli@nord.com",
+        "city": "Navi Mumbai",
+        "notes": "LOGIMAT LEADS\n604, 6th Floor, Ambience Court, Plot No. 02, Sector 19D, Vashi, Navi Mumbai - 400705. Website: www.nord.com",
+        "status": "open"
+    },
+    {
+        "companyName": "ELYIUM ENGINEERING",
+        "contactPerson": "Nishant V. Patil",
+        "designation": "",
+        "phone": "+91 95523 15111",
+        "email": "elyiumengineering@gmail.com",
+        "city": "Bhiwandi",
+        "notes": "LOGIMAT LEADS\nShop No. 1, B-Wing, Green Park Residency, Padgha, Bhiwandi - 421 101",
+        "status": "open"
+    },
+    {
+        "companyName": "Harspan Engineering Pvt. Ltd.",
+        "contactPerson": "Dnyaneshwar Borude",
+        "designation": "Sr. Manager - Maintenance",
+        "phone": "+91 86570 12587",
+        "email": "dnyaneshwar.borude@harspan.com",
+        "city": "Akola",
+        "notes": "LOGIMAT LEADS\nPlot No. J-11 and J-III, MIDC - III, Shivani, Akola - 444104. Website: www.harspan.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Thermo Fisher Scientific",
+        "contactPerson": "Saurabh Vartak",
+        "designation": "Senior Manager - Logistics",
+        "phone": "+91 9969377258",
+        "email": "saurabh.vartak@thermofisher.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\n403-404, 'B' Wing, Delphi, Hiranandani Business Park, Powai, Mumbai - 400076. Website: www.thermofisher.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Reliance Life Sciences",
+        "contactPerson": "Surendra Deodhar",
+        "designation": "Head - Materials Management",
+        "phone": "+91 99870 37800",
+        "email": "surendra.deodhar@relbio.com",
+        "city": "Navi Mumbai",
+        "notes": "LOGIMAT LEADS\nDhirubhai Ambani Life Sciences Centre, R-282, TTC Area of MIDC, Rabale, Navi Mumbai - 400701. Website: www.rellife.com",
+        "status": "open"
+    },
+    {
+        "companyName": "MNK Service",
+        "contactPerson": "Kamal Agrawal",
+        "designation": "CEO",
+        "phone": "+91 98796 37141",
+        "email": "mail@mnkethics.com",
+        "city": "",
+        "notes": "LOGIMAT LEADS\nWebsite: www.mnkethics.com",
+        "status": "open"
+    },
+    {
+        "companyName": "SUYASH GLOBAL PVT. LTD.",
+        "contactPerson": "Dnyaneshwar Borude",
+        "designation": "Sr. Manager - Maintenance",
+        "phone": "+91 86570 12587",
+        "email": "dnyaneshwar.borude@suyashglobal.com",
+        "city": "Navi Mumbai",
+        "notes": "LOGIMAT LEADS\nA-477, T.T.C. Industrial Area, Mahape, Navi Mumbai - 400701. Website: www.suyashglobal.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Kesharaiya (Krafton Engineering)",
+        "contactPerson": "",
+        "designation": "",
+        "phone": "+91 85917 19147",
+        "email": "projects@kesharaiya.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\n28 Shah & Nahar Ind. Est., Dhanraj Mill Comp., Lower Parel, Mumbai - 400013. Website: www.kesharaiya.com",
+        "status": "open"
+    },
+    {
+        "companyName": "APEX METAL INDIA",
+        "contactPerson": "Alpesh D Metha",
+        "designation": "Partner",
+        "phone": "+91 98193 47211",
+        "email": "alpesh@apexmet.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\n101-Ankush Tower, 1st Floor, 67-10th Khetwadi Lane, Mumbai - 400004. Website: www.apexmet.com",
+        "status": "open"
+    },
+    {
+        "companyName": "ARMSTRONG DEMATIC",
+        "contactPerson": "Shantilal Patel",
+        "designation": "Head - Solution Design",
+        "phone": "+91 9673002657",
+        "email": "shantilal.patel@armstrongdematic.com",
+        "city": "",
+        "notes": "LOGIMAT LEADS\nWebsite: www.armstrongdematic.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Bharat Bijlee Limited",
+        "contactPerson": "Amit Kumar Singh",
+        "designation": "Senior Manager - Fabrication",
+        "phone": "+91 9930471276",
+        "email": "amit.singh@bharatbijlee.com",
+        "city": "Navi Mumbai",
+        "notes": "LOGIMAT LEADS\nNo. 2 MIDC, Thane Belapur Road, Airoli, Navi Mumbai - 400708. Website: www.bharatbijlee.com",
+        "status": "open"
+    },
+    {
+        "companyName": "Pidilite Industries Limited",
+        "contactPerson": "Kavit Pandya",
+        "designation": "Chief - Projects",
+        "phone": "+91 99099 95991",
+        "email": "kavit.panya@pidilite.com",
+        "city": "Mumbai",
+        "notes": "LOGIMAT LEADS\nRamkrishna Mandir Road, Andheri (East), Mumbai - 400059. Website: www.pidilite.com",
+        "status": "open"
+    }
+]

@@ -1,7 +1,7 @@
 
 const BASE_URL = 'https://benztraq.vercel.app';
 // const BASE_URL = 'http://localhost:3000'; // For local testing if needed
-const DEFAULT_PASSWORD = 'ChangeMe123!';
+const DEFAULT_PASSWORD = 'Benz@2024';
 
 const ASMS = [
     { name: 'MP ASM', email: 'abhishek@benz-packaging.com', region: 'Madhya Pradesh' },
@@ -17,32 +17,12 @@ async function runVerification() {
 
     // 0. Bootstrap / Seed Users
     let activePassword = DEFAULT_PASSWORD;
+    /*
     try {
         console.log('🌱 Seeding Users...');
-        const seedRes = await fetch(`${BASE_URL}/api/admin/seed-users`, {
-            method: 'POST',
-            headers: {
-                'x-bootstrap-secret': 'benz-seed-2024'
-            }
-        });
-        const seedData = await seedRes.json();
-        if (seedRes.ok) {
-            console.log(`✅ Users Seeded: ${seedData.message}`);
-            if (seedData.defaultPassword) {
-                console.log(`🔑 Using Seeded Password: ${seedData.defaultPassword}`);
-                activePassword = seedData.defaultPassword;
-            }
-        } else {
-            console.warn(`⚠️ User Seeding returned ${seedRes.status}: ${JSON.stringify(seedData)}`);
-        }
-    } catch (e) {
-        console.warn('⚠️ User Seeding skipped/failed:', e.message);
-    }
-
-    // 0.1 Seed Targets (Optional)
-    try {
-        await fetch(`${BASE_URL}/api/seed-targets`); // It's a GET, fires and seed
-    } catch (e) { }
+        // ... skipped ...
+    } catch (e) {}
+    */
 
     const results = {};
 

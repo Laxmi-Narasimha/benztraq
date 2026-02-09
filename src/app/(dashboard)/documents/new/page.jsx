@@ -220,7 +220,7 @@ function SearchableDropdown({
                 className={`w-full flex items-center justify-between px-4 py-2.5 text-left 
                     bg-white rounded-xl transition-all duration-200
                     ${disabled ? 'bg-stone-50 cursor-not-allowed text-stone-400' : 'hover:bg-stone-50 cursor-pointer'}
-                    ${isOpen ? 'ring-2 ring-teal-500/20 border-teal-500 shadow-lg' : 'border border-stone-200 hover:border-stone-300'}`}
+                    ${isOpen ? 'ring-2 ring-black/5 border-black shadow-sm' : 'border border-stone-200 hover:border-stone-300'}`}
             >
                 <div className="flex-1 truncate mr-2">
                     {selectedOption ? (
@@ -256,7 +256,7 @@ function SearchableDropdown({
                                 onKeyDown={handleKeyDown}
                                 placeholder="Type to search..."
                                 className="w-full pl-9 pr-3 py-2 text-sm bg-stone-50 rounded-lg border-0 
-                                    focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                    focus:outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all"
                             />
                         </div>
                     </div>
@@ -277,11 +277,11 @@ function SearchableDropdown({
                                     onMouseEnter={() => setHighlightedIndex(idx)}
                                     className={`w-full px-3 py-2.5 text-left text-sm rounded-lg transition-colors
                                         flex items-center justify-between
-                                        ${idx === highlightedIndex ? 'bg-teal-50 text-teal-700' : 'text-stone-700 hover:bg-stone-50'}
+                                        ${idx === highlightedIndex ? 'bg-neutral-100 text-neutral-900' : 'text-stone-700 hover:bg-stone-50'}
                                         ${value === option[valueKey] ? 'font-medium' : ''}`}
                                 >
                                     <span className="truncate">{option[displayKey]}</span>
-                                    {value === option[valueKey] && <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />}
+                                    {value === option[valueKey] && <Check className="w-4 h-4 text-neutral-900 flex-shrink-0" />}
                                 </button>
                             ))
                         )}
@@ -606,9 +606,9 @@ export default function NewQuotationPage() {
                             <button
                                 onClick={() => handleSave('sale')}
                                 disabled={saving}
-                                className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl 
-                                    hover:from-teal-600 hover:to-cyan-700 disabled:opacity-50 flex items-center gap-2 
-                                    text-sm font-medium shadow-lg shadow-teal-500/25 transition-all active:scale-[0.98]"
+                                className="px-5 py-2.5 bg-neutral-900 text-white rounded-xl 
+                                    hover:bg-black disabled:opacity-50 flex items-center gap-2 
+                                    text-sm font-medium shadow-sm transition-all active:scale-[0.98]"
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                                 Confirm Order
@@ -623,13 +623,13 @@ export default function NewQuotationPage() {
                         <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-700 animate-in slide-in-from-top-2">
                             <AlertCircle className="w-5 h-5 flex-shrink-0" />
                             <span className="font-medium">{error}</span>
-                            <button onClick={() => setError('')} className="ml-auto p-1 hover:bg-red-100 rounded-lg">
+                            <button onClick={() => setError('')} className="ml-auto p-1 hover:bg-neutral-100 rounded-lg">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
                     )}
                     {success && (
-                        <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3 text-emerald-700 animate-in slide-in-from-top-2">
+                        <div className="mt-6 bg-neutral-50 border border-neutral-200 rounded-xl p-4 flex items-center gap-3 text-neutral-900 animate-in slide-in-from-top-2">
                             <Check className="w-5 h-5 flex-shrink-0" />
                             <span className="font-medium">{success}</span>
                         </div>
@@ -643,8 +643,8 @@ export default function NewQuotationPage() {
                         {/* Customer Section */}
                         <section className="bg-white rounded-2xl border border-stone-200/60 p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
-                                    <Building2 className="w-5 h-5 text-white" />
+                                <div className="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center border border-neutral-200">
+                                    <Building2 className="w-5 h-5 text-neutral-900" />
                                 </div>
                                 <div>
                                     <h2 className="font-semibold text-stone-800">Customer</h2>
@@ -682,7 +682,7 @@ export default function NewQuotationPage() {
                                             onChange={(e) => setDocument(prev => ({ ...prev, partner_gstin: e.target.value.toUpperCase() }))}
                                             placeholder="22AAAAA0000A1Z5"
                                             className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
-                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                                focus:ring-2 focus:ring-black/5 focus:border-black hover:border-stone-300"
                                         />
                                     </div>
                                     <div>
@@ -707,7 +707,7 @@ export default function NewQuotationPage() {
                                         rows={2}
                                         placeholder="Customer billing address..."
                                         className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm resize-none transition-all
-                                            focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                            focus:ring-2 focus:ring-black/5 focus:border-black hover:border-stone-300"
                                     />
                                 </div>
                             </div>
@@ -716,8 +716,8 @@ export default function NewQuotationPage() {
                         {/* Order Details Section */}
                         <section className="bg-white rounded-2xl border border-stone-200/60 p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-                                    <FileText className="w-5 h-5 text-white" />
+                                <div className="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center border border-neutral-200">
+                                    <FileText className="w-5 h-5 text-neutral-900" />
                                 </div>
                                 <div>
                                     <h2 className="font-semibold text-stone-800">Order Details</h2>
@@ -734,7 +734,7 @@ export default function NewQuotationPage() {
                                             value={document.date_order}
                                             onChange={(e) => setDocument(prev => ({ ...prev, date_order: e.target.value }))}
                                             className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
-                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                                focus:ring-2 focus:ring-black/5 focus:border-black hover:border-stone-300"
                                         />
                                     </div>
                                     <div>
@@ -744,7 +744,7 @@ export default function NewQuotationPage() {
                                             value={document.validity_date}
                                             onChange={(e) => setDocument(prev => ({ ...prev, validity_date: e.target.value }))}
                                             className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
-                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                                focus:ring-2 focus:ring-black/5 focus:border-black hover:border-stone-300"
                                         />
                                     </div>
                                 </div>
@@ -757,7 +757,7 @@ export default function NewQuotationPage() {
                                                 value={document.payment_term_note}
                                                 onChange={(e) => setDocument(prev => ({ ...prev, payment_term_note: e.target.value }))}
                                                 className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm appearance-none transition-all
-                                                    focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                                    focus:ring-2 focus:ring-black/5 focus:border-black hover:border-stone-300"
                                             >
                                                 {PAYMENT_TERMS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                                             </select>
@@ -772,7 +772,7 @@ export default function NewQuotationPage() {
                                             onChange={(e) => setDocument(prev => ({ ...prev, client_order_ref: e.target.value }))}
                                             placeholder="Optional"
                                             className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm transition-all
-                                                focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 hover:border-stone-300"
+                                                focus:ring-2 focus:ring-black/5 focus:border-black hover:border-stone-300"
                                         />
                                     </div>
                                 </div>
@@ -780,15 +780,13 @@ export default function NewQuotationPage() {
                                 {/* Tax Position Badge */}
                                 <div className={`p-4 rounded-xl flex items-center justify-between text-sm
                                     ${document.fiscal_position === 'interstate'
-                                        ? 'bg-amber-50 border border-amber-200'
-                                        : 'bg-emerald-50 border border-emerald-200'}`}
+                                        ? 'bg-stone-50 border border-stone-200'
+                                        : 'bg-neutral-50 border border-neutral-200'}`}
                                 >
-                                    <span className={document.fiscal_position === 'interstate' ? 'text-amber-700' : 'text-emerald-700'}>
+                                    <span className="text-neutral-700">
                                         Tax Position
                                     </span>
-                                    <span className={`px-3 py-1 rounded-lg font-medium ${document.fiscal_position === 'interstate'
-                                        ? 'bg-amber-100 text-amber-800'
-                                        : 'bg-emerald-100 text-emerald-800'}`}>
+                                    <span className={`px-3 py-1 rounded-lg font-medium bg-white border border-stone-200 text-neutral-900 shadow-sm`}>
                                         {document.fiscal_position === 'interstate' ? 'Inter-State (IGST)' : 'Intra-State (CGST+SGST)'}
                                     </span>
                                 </div>
@@ -800,8 +798,8 @@ export default function NewQuotationPage() {
                     <section className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between bg-gradient-to-r from-stone-50 to-white">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20">
-                                    <Package className="w-5 h-5 text-white" />
+                                <div className="w-10 h-10 bg-neutral-100 rounded-xl flex items-center justify-center border border-neutral-200">
+                                    <Package className="w-5 h-5 text-neutral-900" />
                                 </div>
                                 <div>
                                     <h2 className="font-semibold text-stone-800">Products</h2>

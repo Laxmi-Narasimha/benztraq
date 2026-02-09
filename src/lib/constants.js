@@ -277,6 +277,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     {
         title: 'Admin',
         items: [
+            { title: 'Director Dashboard', href: '/admin/dashboard', icon: 'LayoutDashboard', roles: [USER_ROLES.VP, USER_ROLES.DIRECTOR] },
             { title: 'Admin Panel', href: '/admin', icon: 'Shield', roles: [USER_ROLES.VP] },
             { title: 'Manage Users', href: '/admin/users', icon: 'Users', roles: [USER_ROLES.VP] },
             { title: 'Roles & Permissions', href: '/admin/roles', icon: 'Settings', roles: [USER_ROLES.VP] },

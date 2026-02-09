@@ -160,7 +160,7 @@ function DateRangePicker({ filters, setDateRange, setDatePreset }) {
                         'shadow-premium-sm hover:shadow-premium'
                     )}
                 >
-                    <CalendarDays className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <CalendarDays className="w-4 h-4 text-black dark:text-white" />
                     <span>{formatDateRange()}</span>
                 </button>
             </PopoverTrigger>
@@ -233,8 +233,8 @@ function ActiveFilters({ filters, clearFilters }) {
         <div className="flex items-center gap-2">
             <div className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium',
-                'bg-teal-50 text-teal-700 border border-teal-200',
-                'dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800'
+                'bg-neutral-100 text-neutral-800 border border-neutral-200',
+                'dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700'
             )}>
                 <Filter className="w-3 h-3" />
                 <span>{activeFilterCount} active</span>

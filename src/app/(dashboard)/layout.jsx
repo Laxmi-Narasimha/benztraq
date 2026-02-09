@@ -43,14 +43,13 @@ function DevelopmentBanner() {
     if (!isVisible) return null;
 
     return (
-        <div className="bg-amber-500 text-amber-950 px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium relative">
-            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+        <div className="bg-neutral-900 text-white px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium relative border-b border-neutral-800">
             <span className="text-center">
-                🚧 Development in progress with more reliable features and workflows. If the system breaks anywhere, do not worry. 🚧
+                Development in progress including reliable features and workflows. System stablity is being monitored.
             </span>
             <button
                 onClick={handleDismiss}
-                className="absolute right-2 p-1 hover:bg-amber-600 rounded-sm transition-colors"
+                className="absolute right-2 p-1 hover:bg-neutral-800 rounded-sm transition-colors text-neutral-400 hover:text-white"
                 aria-label="Dismiss banner"
             >
                 <X className="h-4 w-4" />
