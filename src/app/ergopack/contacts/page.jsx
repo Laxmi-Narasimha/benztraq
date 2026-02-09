@@ -451,5 +451,6 @@ export default function ContactsListPage() {
                     </div>
                 </div>
             </div>
-            );
+        </div>
+    );
 }
