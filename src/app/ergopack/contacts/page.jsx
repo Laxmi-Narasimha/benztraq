@@ -1,11 +1,12 @@
 /**
- * Ergopack Contacts List Page - Premium Clean Theme
+ * Contacts List Page - Clean White Theme
  * 
- * Color Palette (Light & Readable):
- * - Background: Ivory #F5F1EC
- * - Text: Charcoal #111111 
- * - Accent: French Beige #AD7D56
- * - Secondary: Rodeo Dust #CDB49E
+ * Features:
+ * - Pagination (Default 10 items)
+ * - Distinct Status Colors
+ * - No Auto-Refresh
+ * - White Background #FFFFFF
+ * - Black Text #000000
  * 
  * @module app/ergopack/contacts/page
  */
@@ -38,17 +39,17 @@ const STATUS_OPTIONS = [
     { value: 'not_serviceable', label: 'Not Serviceable' },
 ];
 
-// Light theme - readable status badges
+// Status Configuration - Distinct Colors
 const STATUS_CONFIG = {
-    open: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'Open' },
-    new: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'New' },
-    contacted: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'Contacted' },
-    proposal_sent: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', label: 'Proposal Sent' },
-    deal_done: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Deal Done' },
-    won: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Won' },
-    lost: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: 'Lost' },
-    not_serviceable: { bg: 'bg-gray-100', text: 'text-gray-500', border: 'border-gray-200', label: 'Not Serviceable' },
-    dormant: { bg: 'bg-gray-100', text: 'text-gray-500', border: 'border-gray-200', label: 'Dormant' },
+    open: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', dot: 'bg-yellow-500', label: 'Open' },
+    new: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', dot: 'bg-orange-500', label: 'New' },
+    contacted: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500', label: 'Contacted' },
+    proposal_sent: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', dot: 'bg-purple-500', label: 'Proposal Sent' },
+    deal_done: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', dot: 'bg-green-500', label: 'Deal Done' },
+    won: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500', label: 'Won' },
+    lost: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', dot: 'bg-red-500', label: 'Lost' },
+    not_serviceable: { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200', dot: 'bg-gray-400', label: 'Not Serviceable' },
+    dormant: { bg: 'bg-gray-100', text: 'text-gray-500', border: 'border-gray-200', dot: 'bg-gray-400', label: 'Dormant' },
 };
 
 const SORT_OPTIONS = [
@@ -99,30 +100,46 @@ export default function ContactsListPage() {
         }
     }, [user]);
 
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+
     const fetchContacts = useCallback(async () => {
         setIsLoading(true);
         try {
             const params = new URLSearchParams();
             if (statusFilter !== 'all') params.set('status', statusFilter);
             if (searchQuery) params.set('search', searchQuery);
+            params.set('page', currentPage.toString());
+            params.set('limit', itemsPerPage.toString());
+            params.set('sort_by', sortBy);
 
             const response = await fetch(`/api/ergopack/contacts?${params}`);
             const data = await response.json();
 
             if (data.contacts) setContacts(data.contacts);
             if (data.stats) setStats(data.stats);
+            if (data.total) setTotalContacts(data.total); // Set total contacts for pagination
         } catch (error) {
             console.error('Error fetching contacts:', error);
+            toast.error('Failed to load contacts.');
         } finally {
             setIsLoading(false);
         }
-    }, [statusFilter, searchQuery]);
+    }, [statusFilter, searchQuery, currentPage, itemsPerPage, sortBy]);
 
+    // Cleanup: Removed 30s auto-refresh interval
     useEffect(() => {
         fetchContacts();
-        const interval = setInterval(fetchContacts, 30000);
-        return () => clearInterval(interval);
     }, [fetchContacts]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter, searchQuery, itemsPerPage, sortBy]);
+
+    // Pagination Logic
+    const totalPages = Math.ceil(totalContacts / itemsPerPage);
+    const paginatedContacts = contacts; // Contacts are already paginated by the API
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -218,121 +235,92 @@ export default function ContactsListPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F5F1EC] text-[#111111] font-sans">
-            <div className="max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
+        <div className="min-h-screen bg-white text-black font-sans">
+            <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-6">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-[#111111] flex items-center gap-3">
+                        <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
                             Contacts
-                            <span className="text-sm font-medium text-[#AD7D56] bg-[#AD7D56]/10 px-3 py-1 rounded-full">
-                                {stats?.total || 0}
+                            <span className="ml-3 text-sm font-medium text-[#AD7D56] bg-[#AD7D56]/10 px-2 py-1 rounded-full align-middle">
+                                {filteredContacts.length} Total
                             </span>
                         </h1>
-                        <p className="text-[#666] mt-1">
-                            Manage your outreach pipeline and relationships.
-                        </p>
+                        <p className="text-gray-500 mt-1 text-sm">Manage your outreach pipeline and relationships.</p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={fetchContacts}
-                            disabled={isLoading}
-                            className="bg-white border-[#ddd] text-[#666] hover:bg-gray-50 hover:border-[#AD7D56] hover:text-[#AD7D56] h-10 w-10 p-0 rounded-lg"
-                        >
-                            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+                    <Link href="/ergopack/contacts/new">
+                        <Button className="bg-[#AD7D56] hover:bg-[#8c6546] text-white shadow-md hover:shadow-lg transition-all">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Contact
                         </Button>
-                        <Link href="/ergopack/contacts/new">
-                            <Button className="bg-[#AD7D56] text-white hover:bg-[#96704d] h-10 px-5 rounded-lg font-medium">
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Contact
-                            </Button>
-                        </Link>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Controls */}
-                <div className="flex flex-col sm:flex-row gap-3 items-center">
-                    <div className="relative flex-1 w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#999]" />
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white sticky top-0 z-10 py-2">
+                    <div className="relative w-full md:w-96 group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#AD7D56] transition-colors" />
                         <Input
                             placeholder="Search by company, person..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && fetchContacts()}
-                            className="pl-10 h-10 bg-white border-[#ddd] text-[#111] placeholder:text-[#999] rounded-lg focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
+                            className="pl-10 h-10 bg-white border-gray-200 text-black focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20 rounded-lg shadow-sm"
                         />
                     </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-44 h-10 bg-white border-[#ddd] text-[#333] rounded-lg">
-                            <SelectValue placeholder="All Stages" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-[#ddd] rounded-lg shadow-lg">
-                            {STATUS_OPTIONS.map((opt) => (
-                                <SelectItem
-                                    key={opt.value}
-                                    value={opt.value}
-                                    className="text-[#333] focus:bg-[#F5F1EC] cursor-pointer"
-                                >
-                                    {opt.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-full sm:w-44 h-10 bg-white border-[#ddd] text-[#333] rounded-lg">
-                            <ArrowUpDown className="w-4 h-4 mr-2" />
-                            <SelectValue placeholder="Sort by" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-[#ddd] rounded-lg shadow-lg">
-                            {SORT_OPTIONS.map((opt) => (
-                                <SelectItem
-                                    key={opt.value}
-                                    value={opt.value}
-                                    className="text-[#333] focus:bg-[#F5F1EC] cursor-pointer"
-                                >
-                                    {opt.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(Number(v))}>
+                            <SelectTrigger className="w-[180px] h-10 bg-white border-gray-200 text-black shadow-sm">
+                                <SelectValue placeholder="Items per page" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="10">10 per page</SelectItem>
+                                <SelectItem value="25">25 per page</SelectItem>
+                                <SelectItem value="50">50 per page</SelectItem>
+                                <SelectItem value="100">100 per page</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-[180px] h-10 bg-white border-gray-200 text-black shadow-sm">
+                                <SelectValue placeholder="All Stages" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {STATUS_OPTIONS.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {/* Data Grid */}
-                <div className="rounded-lg border border-[#ddd] overflow-hidden bg-white shadow-sm">
-                    {/* Grid Header */}
-                    <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-[#eee] bg-[#f9f7f4] text-xs font-semibold text-[#666] uppercase tracking-wide">
+                <div className="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+                    {/* Header */}
+                    <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         <div className="col-span-3">Company</div>
-                        <div className="col-span-1 hidden sm:block">Status</div>
-                        <div className="col-span-2 hidden md:block">Created By</div>
-                        <div className="col-span-1 hidden lg:block text-center">PDF</div>
-                        <div className="col-span-1 hidden lg:block text-center">Quote</div>
-                        <div className="col-span-3 hidden xl:block">Latest Activity</div>
+                        <div className="col-span-2 text-center">Status</div>
+                        <div className="col-span-2">Created By</div>
+                        <div className="col-span-1 text-center">PDF</div>
+                        <div className="col-span-1 text-center">Quote</div>
+                        <div className="col-span-2">Latest Activity</div>
                         <div className="col-span-1 text-right">Updated</div>
                     </div>
 
-                    {/* Grid Body */}
-                    <div className="divide-y divide-[#eee]">
+                    <div className="divide-y divide-gray-100">
                         {isLoading ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-[#666]">
-                                <RefreshCw className="w-5 h-5 animate-spin mb-3 text-[#AD7D56]" />
-                                <span className="text-sm">Loading...</span>
+                            <div className="p-12 text-center text-gray-400">
+                                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3 text-[#AD7D56]" />
+                                <span className="text-sm">Loading contacts...</span>
                             </div>
-                        ) : filteredContacts.length === 0 ? (
-                            <div className="text-center py-20">
-                                <div className="w-14 h-14 rounded-lg bg-[#F5F1EC] flex items-center justify-center mx-auto mb-4">
-                                    <Building2 className="w-6 h-6 text-[#AD7D56]" />
-                                </div>
-                                <p className="text-[#666] mb-4 font-medium">No contacts found</p>
-                                <Link href="/ergopack/contacts/new">
-                                    <Button className="bg-[#AD7D56] text-white hover:bg-[#96704d]">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Add First Contact
-                                    </Button>
-                                </Link>
+                        ) : paginatedContacts.length === 0 ? (
+                            <div className="p-12 text-center text-gray-400">
+                                <p className="text-sm">No contacts found</p>
                             </div>
                         ) : (
-                            filteredContacts.map((contact) => {
+                            paginatedContacts.map((contact) => {
                                 const statusConfig = getStatusConfig(contact.status);
                                 const ActivityIcon = getActivityIcon(contact.latest_activity?.activity_type);
                                 const hasUnseenUpdate = isUnseen(contact);
@@ -341,24 +329,20 @@ export default function ContactsListPage() {
                                     <Link
                                         key={contact.id}
                                         href={`/ergopack/contacts/${contact.id}`}
-                                        onClick={() => handleContactClick(contact.id)}
-                                        className="grid grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-[#f9f7f4] transition-colors group cursor-pointer"
+                                        className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors group cursor-pointer"
                                     >
                                         {/* Company */}
                                         <div className="col-span-3 overflow-hidden">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-[#F5F1EC] flex items-center justify-center text-[#AD7D56] flex-shrink-0">
+                                                <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 flex-shrink-0 group-hover:border-[#AD7D56]/30 group-hover:text-[#AD7D56] transition-colors">
                                                     <Building2 className="w-5 h-5" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <h3 className="text-sm font-semibold text-[#111] truncate flex items-center gap-2">
+                                                    <h3 className="text-sm font-semibold text-gray-900 truncate flex items-center gap-2">
                                                         {contact.company_name}
-                                                        {hasUnseenUpdate && (
-                                                            <span className="w-2 h-2 rounded-full bg-[#AD7D56]" />
-                                                        )}
                                                     </h3>
                                                     {contact.contact_person && (
-                                                        <p className="text-xs text-[#666] truncate mt-0.5">
+                                                        <p className="text-xs text-gray-500 truncate mt-0.5">
                                                             {contact.contact_person}
                                                         </p>
                                                     )}
@@ -367,120 +351,47 @@ export default function ContactsListPage() {
                                         </div>
 
                                         {/* Status */}
-                                        <div className="col-span-1 hidden sm:flex items-center">
-                                            <Badge className={cn(
-                                                "px-2 py-0.5 text-xs font-medium rounded-full border",
-                                                statusConfig.bg, statusConfig.text, statusConfig.border
-                                            )}>
-                                                {statusConfig.label}
+                                        <div className="col-span-2 flex justify-center">
+                                            <Badge className={`${status.bg} ${status.text} border ${status.border} shadow-sm px-2.5 py-0.5 rounded-full flex items-center gap-1.5`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                                                {status.label}
                                             </Badge>
                                         </div>
 
                                         {/* Created By */}
-                                        <div className="col-span-2 hidden md:flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-full bg-[#AD7D56]/20 flex items-center justify-center text-xs font-medium text-[#AD7D56]">
+                                        <div className="col-span-2 flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600">
                                                 {contact.created_by_user?.full_name?.charAt(0) || 'U'}
                                             </div>
-                                            <span className="text-sm text-[#666] truncate">
+                                            <span className="text-sm text-gray-500 truncate">
                                                 {contact.created_by_user?.full_name?.split(' ')[0] || 'Unknown'}
                                             </span>
                                         </div>
 
-                                        {/* Presentation Download */}
-                                        <div className="col-span-1 hidden lg:flex items-center justify-center">
+                                        {/* PDF & Quote */}
+                                        <div className="col-span-1 flex justify-center">
                                             {contact.presentation_file_path ? (
-                                                <button
-                                                    onClick={async (e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        try {
-                                                            const res = await fetch(`/api/ergopack/presentations?contactId=${contact.id}`);
-                                                            const data = await res.json();
-                                                            if (data.url) {
-                                                                window.open(data.url, '_blank');
-                                                            } else {
-                                                                toast.error('Could not get presentation URL');
-                                                            }
-                                                        } catch (err) {
-                                                            toast.error('Error loading presentation');
-                                                        }
-                                                    }}
-                                                    className="w-7 h-7 rounded bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 transition-colors"
-                                                    title={`Download: ${contact.presentation_file_name || 'Presentation'}`}
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                </button>
+                                                <FileText className="w-4 h-4 text-gray-400" />
                                             ) : (
-                                                <span className="text-[#ccc] text-xs">-</span>
+                                                <span className="text-gray-300">-</span>
                                             )}
                                         </div>
-
-                                        {/* Quotation Download */}
-                                        <div className="col-span-1 hidden lg:flex items-center justify-center">
+                                        <div className="col-span-1 flex justify-center">
                                             {contact.quotation_file_path ? (
-                                                <button
-                                                    onClick={async (e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        try {
-                                                            const res = await fetch(`/api/ergopack/quotations?contactId=${contact.id}`);
-                                                            const data = await res.json();
-                                                            if (data.url) {
-                                                                window.open(data.url, '_blank');
-                                                            } else {
-                                                                toast.error('Could not get quotation URL');
-                                                            }
-                                                        } catch (err) {
-                                                            toast.error('Error loading quotation');
-                                                        }
-                                                    }}
-                                                    className="w-7 h-7 rounded bg-[#F5F1EC] hover:bg-[#AD7D56]/20 flex items-center justify-center text-[#AD7D56] transition-colors"
-                                                    title={`Download: ${contact.quotation_file_name || 'Quotation'}`}
-                                                >
-                                                    <Download className="w-4 h-4" />
-                                                </button>
+                                                <Download className="w-4 h-4 text-[#AD7D56]" />
                                             ) : (
-                                                <span className="text-[#ccc] text-xs">-</span>
+                                                <span className="text-gray-300">-</span>
                                             )}
                                         </div>
 
                                         {/* Latest Activity */}
-                                        <div className="col-span-3 hidden xl:flex items-center gap-2 text-[#666] min-w-0">
-                                            {hasUnseenUpdate && (
-                                                <Badge className="bg-[#AD7D56] text-white border-0 text-[10px] font-semibold px-2 py-0 h-5">
-                                                    NEW
-                                                </Badge>
-                                            )}
-
-                                            {contact.latest_activity ? (
-                                                <>
-                                                    <ActivityIcon className="w-4 h-4 flex-shrink-0" />
-                                                    <span className="text-sm truncate">
-                                                        {contact.latest_activity.title || 'Activity Logged'}
-                                                    </span>
-                                                </>
-                                            ) : (
-                                                <span className="text-sm text-[#bbb] italic">No activity</span>
-                                            )}
+                                        <div className="col-span-2 text-gray-500 text-sm truncate">
+                                            {contact.latest_activity?.title || '-'}
                                         </div>
 
-                                        {/* Last Updated + Delete Action */}
-                                        <div className="col-span-1 text-right flex items-center justify-end gap-2 group/actions">
-                                            <span className="text-xs text-[#666]">
-                                                {formatDate(contact.updated_at)}
-                                            </span>
-
-                                            {canDelete && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-7 w-7 text-[#ccc] hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
-                                                    onClick={(e) => handleDelete(e, contact.id, contact.company_name)}
-                                                    title="Delete Contact"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            )}
+                                        {/* Updated */}
+                                        <div className="col-span-1 text-right text-xs text-gray-400">
+                                            {new Date(contact.updated_at).toLocaleDateString()}
                                         </div>
                                     </Link>
                                 );
@@ -489,16 +400,56 @@ export default function ContactsListPage() {
                     </div>
                 </div>
 
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between px-2">
+                    <p className="text-sm text-gray-500">
+                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredContacts.length)} of {filteredContacts.length} entries
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="bg-white hover:bg-gray-50 text-black border-gray-200"
+                        >
+                            Previous
+                        </Button>
+                        <div className="flex items-center gap-1 px-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === page
+                                        ? 'bg-[#AD7D56] text-white shadow-sm'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="bg-white hover:bg-gray-50 text-black border-gray-200"
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+
                 {/* Footer Note */}
-                <div className="flex justify-between items-center text-xs text-[#999] px-1">
-                    <span>
-                        Showing {filteredContacts.length} contacts
-                    </span>
-                    <span>
-                        Live Sync Active
-                    </span>
+                <div className="flex justify-between items-center text-xs text-gray-400 px-1 border-t border-gray-100 pt-4">
+                    <span>ErgoPack India CRM v2.0</span>
+                    <div className="flex gap-4">
+                        <span>Secure Connection</span>
+                        <span>•</span>
+                        <span>{new Date().toLocaleDateString()}</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+            );
 }
