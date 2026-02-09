@@ -1,10 +1,11 @@
 /**
- * Contact Detail Page - Premium Earthy Theme
+ * Contact Detail Page - Premium Clean Theme
  * 
- * Color Palette: Charcoal #111111, Beige #AD7D56, Rodeo #CDB49E, Ivory #F5F1EC
- * Unified fields matching New Lead form.
- * Prominent "Log Activity" button.
- * "Create Quotation" feature integrated.
+ * Color Palette (Light & Readable):
+ * - Background: Ivory #F5F1EC
+ * - Text: Charcoal #111111 
+ * - Accent: French Beige #AD7D56
+ * - Secondary: Rodeo Dust #CDB49E
  * 
  * @module app/ergopack/contacts/[id]/page
  */
@@ -361,19 +362,19 @@ export default function ContactDetailPage({ params }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#111111]">
+        <div className="min-h-screen bg-[#F5F1EC]">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-[#111111]/90 backdrop-blur-xl border-b border-[#2a2a2a]">
-                <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-[#ddd]">
+                <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                         <Link href="/ergopack/contacts">
-                            <button className="text-[#CDB49E] hover:text-[#F5F1EC] transition-colors">
-                                <ArrowLeft className="w-6 h-6" />
+                            <button className="text-[#666] hover:text-[#111] transition-colors">
+                                <ArrowLeft className="w-5 h-5" />
                             </button>
                         </Link>
                         <div>
-                            <h1 className="text-xl font-semibold text-[#F5F1EC]">{contact.company_name}</h1>
-                            <Badge className="bg-[#AD7D56]/20 text-[#AD7D56] border border-[#AD7D56]/40 text-xs capitalize mt-1">
+                            <h1 className="text-lg font-bold text-[#111]">{contact.company_name}</h1>
+                            <Badge className="bg-amber-50 text-amber-700 border border-amber-200 text-xs capitalize mt-0.5">
                                 {contact.status?.replace('_', ' ')}
                             </Badge>
                         </div>
@@ -384,7 +385,7 @@ export default function ContactDetailPage({ params }) {
                             variant="outline"
                             size="sm"
                             onClick={() => setShowQuotationModal(true)}
-                            className="border-[#AD7D56] text-[#AD7D56] hover:bg-[#AD7D56]/20 h-8"
+                            className="border-[#AD7D56] text-[#AD7D56] hover:bg-[#AD7D56]/10 h-8"
                         >
                             <FileText className="w-3.5 h-3.5 mr-1" />
                             Create Quote
@@ -394,7 +395,7 @@ export default function ContactDetailPage({ params }) {
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleDelete}
-                                className="text-[#555] hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+                                className="text-[#ccc] hover:text-red-600 hover:bg-red-50 h-8 w-8"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </Button>
@@ -403,7 +404,7 @@ export default function ContactDetailPage({ params }) {
                             size="sm"
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-[#AD7D56] text-white hover:bg-[#9A6B47] h-8"
+                            className="bg-[#AD7D56] text-white hover:bg-[#96704d] h-8"
                         >
                             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1" />}
                             Save
@@ -413,107 +414,107 @@ export default function ContactDetailPage({ params }) {
             </div>
 
             {/* Content */}
-            <div className="max-w-6xl mx-auto px-4 py-6">
+            <div className="max-w-5xl mx-auto px-4 py-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left - Fields (matching New Lead form) */}
-                    <div className="lg:col-span-2 space-y-6">
+                    {/* Left - Fields */}
+                    <div className="lg:col-span-2 bg-white rounded-lg border border-[#ddd] p-6 shadow-sm space-y-5">
                         {/* Row 1: Company + Contact */}
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <Building2 className="w-4 h-4" /> Company
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <Building2 className="w-3.5 h-3.5" /> Company
                                 </Label>
                                 <Input
                                     value={contact.company_name || ''}
                                     onChange={(e) => handleChange('company_name', e.target.value)}
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <User className="w-4 h-4" /> Contact Person
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <User className="w-3.5 h-3.5" /> Contact Person
                                 </Label>
                                 <Input
                                     value={contact.contact_person || ''}
                                     onChange={(e) => handleChange('contact_person', e.target.value)}
                                     placeholder="-"
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
                         </div>
 
                         {/* Row 2: Email + Phone */}
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <Mail className="w-4 h-4" /> Email
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <Mail className="w-3.5 h-3.5" /> Email
                                 </Label>
                                 <Input
                                     value={contact.email || ''}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     placeholder="-"
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <Phone className="w-4 h-4" /> Phone
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <Phone className="w-3.5 h-3.5" /> Phone
                                 </Label>
                                 <Input
                                     value={contact.phone || ''}
                                     onChange={(e) => handleChange('phone', e.target.value)}
                                     placeholder="-"
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
                         </div>
 
                         {/* Row 3: City + State */}
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" /> City
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5" /> City
                                 </Label>
                                 <Input
                                     value={contact.city || ''}
                                     onChange={(e) => handleChange('city', e.target.value)}
                                     placeholder="-"
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide">State</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide">State</Label>
                                 <Input
                                     value={contact.state || ''}
                                     onChange={(e) => handleChange('state', e.target.value)}
                                     placeholder="-"
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
                         </div>
 
                         {/* Row 4: Industry + Status */}
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <Briefcase className="w-4 h-4" /> Industry
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <Briefcase className="w-3.5 h-3.5" /> Industry
                                 </Label>
                                 <Input
                                     value={contact.industry || ''}
                                     onChange={(e) => handleChange('industry', e.target.value)}
                                     placeholder="-"
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide">Status</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide">Status</Label>
                                 <Select value={contact.status || 'open'} onValueChange={(v) => handleChange('status', v)}>
-                                    <SelectTrigger className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] text-base h-12">
+                                    <SelectTrigger className="bg-white border-[#ddd] text-[#111] h-10">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-[#1a1a1a] border-[#3a3a3a]">
+                                    <SelectContent className="bg-white border-[#ddd]">
                                         {STATUS_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value} className="text-[#F5F1EC] text-base focus:bg-[#2a2a2a]">
+                                            <SelectItem key={opt.value} value={opt.value} className="text-[#111] focus:bg-[#F5F1EC]">
                                                 {opt.label}
                                             </SelectItem>
                                         ))}
@@ -523,12 +524,12 @@ export default function ContactDetailPage({ params }) {
                         </div>
 
                         {/* Row 5: Suggested Model + Product Interest */}
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <Package className="w-4 h-4" /> Suggested Models
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <Package className="w-3.5 h-3.5" /> Suggested Models
                                 </Label>
-                                <div className="flex flex-wrap gap-2 p-3 bg-[#1a1a1a] border border-[#3a3a3a] rounded-md min-h-[48px]">
+                                <div className="flex flex-wrap gap-2 p-3 bg-[#f9f7f4] border border-[#ddd] rounded-md min-h-[40px]">
                                     {SUGGESTED_MODELS.filter(opt => opt.value).map((opt) => {
                                         const models = (contact.suggested_model || '').split(',').filter(Boolean);
                                         const isSelected = models.includes(opt.value);
@@ -542,9 +543,9 @@ export default function ContactDetailPage({ params }) {
                                                         : [...models, opt.value];
                                                     handleChange('suggested_model', newModels.join(','));
                                                 }}
-                                                className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-all ${isSelected
+                                                className={`px-2.5 py-1 text-xs font-medium rounded border transition-colors ${isSelected
                                                     ? 'bg-[#AD7D56] border-[#AD7D56] text-white'
-                                                    : 'bg-[#2a2a2a] border-[#3a3a3a] text-[#CDB49E] hover:border-[#AD7D56]'
+                                                    : 'bg-white border-[#ddd] text-[#666] hover:border-[#AD7D56]'
                                                     }`}
                                             >
                                                 {opt.label}
@@ -553,56 +554,55 @@ export default function ContactDetailPage({ params }) {
                                     })}
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide">Product Interest</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide">Product Interest</Label>
                                 <Input
                                     value={contact.product_interest || ''}
                                     onChange={(e) => handleChange('product_interest', e.target.value)}
                                     placeholder="-"
-                                    className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base h-12 focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-10 focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                                 />
                             </div>
                         </div>
 
                         {/* Notes */}
-                        <div className="space-y-2">
-                            <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide">Notes</Label>
+                        <div className="space-y-1.5">
+                            <Label className="text-[#666] text-xs font-medium uppercase tracking-wide">Notes</Label>
                             <Textarea
                                 value={contact.notes || ''}
                                 onChange={(e) => handleChange('notes', e.target.value)}
                                 placeholder="Add notes..."
-                                rows={4}
-                                className="bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#555] text-base resize-none focus:border-[#AD7D56] focus:ring-[#AD7D56]/20"
+                                rows={3}
+                                className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] resize-none focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                             />
                         </div>
 
                         {/* Company Presentation */}
-                        <div className="space-y-3 pt-5 mt-5 border-t border-[#2a2a2a]">
-                            <Label className="text-[#CDB49E] text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                <FileText className="w-4 h-4" /> Company Presentation
+                        <div className="space-y-2 pt-4 mt-4 border-t border-[#eee]">
+                            <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                <FileText className="w-3.5 h-3.5" /> Company Presentation
                             </Label>
 
                             {presentationInfo?.hasPresentation ? (
-                                /* Show existing presentation */
-                                <div className="bg-zinc-900/70 border border-zinc-700 rounded-lg p-5">
+                                <div className="bg-[#f9f7f4] border border-[#ddd] rounded-lg p-4">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
-                                                <FileText className="w-6 h-6 text-red-400" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                                                <FileText className="w-5 h-5 text-red-600" />
                                             </div>
                                             <div>
-                                                <p className="text-base text-white font-medium">{presentationInfo.fileName}</p>
-                                                <p className="text-sm text-zinc-500">
+                                                <p className="text-sm text-[#111] font-medium">{presentationInfo.fileName}</p>
+                                                <p className="text-xs text-[#666]">
                                                     Uploaded {new Date(presentationInfo.uploadedAt).toLocaleDateString()}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                             <a
                                                 href={presentationInfo.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded bg-white border border-[#ddd] hover:bg-gray-50 text-[#666] transition-colors"
                                                 title="View"
                                             >
                                                 <Eye className="w-4 h-4" />
@@ -610,14 +610,14 @@ export default function ContactDetailPage({ params }) {
                                             <a
                                                 href={presentationInfo.url}
                                                 download={presentationInfo.fileName}
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded bg-white border border-[#ddd] hover:bg-gray-50 text-[#666] transition-colors"
                                                 title="Download"
                                             >
                                                 <Download className="w-4 h-4" />
                                             </a>
                                             <button
                                                 onClick={handlePresentationDelete}
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-red-900/50 text-zinc-400 hover:text-red-400 transition-colors"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded bg-white border border-[#ddd] hover:bg-red-50 text-[#ccc] hover:text-red-600 transition-colors"
                                                 title="Delete"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -632,16 +632,16 @@ export default function ContactDetailPage({ params }) {
                                     onDragLeave={handleDragLeave}
                                     onDrop={handleDrop}
                                     className={cn(
-                                        "border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer",
+                                        "border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer",
                                         isDragging
-                                            ? "border-emerald-500 bg-emerald-500/10"
-                                            : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/30"
+                                            ? "border-[#AD7D56] bg-[#AD7D56]/10"
+                                            : "border-[#ddd] hover:border-[#AD7D56] bg-[#f9f7f4]"
                                     )}
                                 >
                                     {isUploadingPresentation ? (
                                         <div className="flex flex-col items-center gap-2">
-                                            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-                                            <p className="text-sm text-zinc-400">Uploading...</p>
+                                            <Loader2 className="w-6 h-6 animate-spin text-[#AD7D56]" />
+                                            <p className="text-sm text-[#666]">Uploading...</p>
                                         </div>
                                     ) : (
                                         <>
@@ -653,13 +653,13 @@ export default function ContactDetailPage({ params }) {
                                                 id="presentation-upload"
                                             />
                                             <label htmlFor="presentation-upload" className="cursor-pointer">
-                                                <div className="flex flex-col items-center gap-3">
-                                                    <div className="w-14 h-14 rounded-xl bg-zinc-800 flex items-center justify-center">
-                                                        <Upload className="w-7 h-7 text-zinc-400" />
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="w-10 h-10 rounded-lg bg-white border border-[#ddd] flex items-center justify-center">
+                                                        <Upload className="w-5 h-5 text-[#666]" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-base text-zinc-300">Drop PDF here or click to upload</p>
-                                                        <p className="text-sm text-zinc-500 mt-1">Max file size: 10MB</p>
+                                                        <p className="text-sm text-[#333]">Drop PDF here or click to upload</p>
+                                                        <p className="text-xs text-[#999] mt-0.5">Max file size: 10MB</p>
                                                     </div>
                                                 </div>
                                             </label>
@@ -671,29 +671,29 @@ export default function ContactDetailPage({ params }) {
 
                         {/* Saved Quotation */}
                         {quotationInfo?.hasQuotation && (
-                            <div className="space-y-3">
-                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
-                                    <FileText className="w-4 h-4" /> Saved Quotation
+                            <div className="space-y-2 pt-4 mt-4 border-t border-[#eee]">
+                                <Label className="text-[#666] text-xs font-medium uppercase tracking-wide flex items-center gap-1.5">
+                                    <FileText className="w-3.5 h-3.5" /> Saved Quotation
                                 </Label>
-                                <div className="bg-zinc-900/70 border border-zinc-700 rounded-lg p-5">
+                                <div className="bg-[#f9f7f4] border border-[#ddd] rounded-lg p-4">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                                <FileText className="w-6 h-6 text-blue-400" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                                <FileText className="w-5 h-5 text-blue-600" />
                                             </div>
                                             <div>
-                                                <p className="text-base text-white font-medium">{quotationInfo.fileName}</p>
-                                                <p className="text-sm text-zinc-500">
+                                                <p className="text-sm text-[#111] font-medium">{quotationInfo.fileName}</p>
+                                                <p className="text-xs text-[#666]">
                                                     Saved {new Date(quotationInfo.uploadedAt).toLocaleDateString()}
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                             <a
                                                 href={quotationInfo.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded bg-white border border-[#ddd] hover:bg-gray-50 text-[#666] transition-colors"
                                                 title="View"
                                             >
                                                 <Eye className="w-4 h-4" />
@@ -701,14 +701,14 @@ export default function ContactDetailPage({ params }) {
                                             <a
                                                 href={quotationInfo.url}
                                                 download={quotationInfo.fileName}
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded bg-white border border-[#ddd] hover:bg-gray-50 text-[#666] transition-colors"
                                                 title="Download"
                                             >
                                                 <Download className="w-4 h-4" />
                                             </a>
                                             <button
                                                 onClick={handleQuotationDelete}
-                                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 hover:bg-red-900/50 text-zinc-400 hover:text-red-400 transition-colors"
+                                                className="inline-flex items-center justify-center w-8 h-8 rounded bg-white border border-[#ddd] hover:bg-red-50 text-[#ccc] hover:text-red-600 transition-colors"
                                                 title="Delete"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -720,54 +720,54 @@ export default function ContactDetailPage({ params }) {
                         )}
 
                         {/* Meta Info */}
-                        <div className="pt-5 border-t border-[#2a2a2a] flex gap-8 text-sm text-[#CDB49E]">
+                        <div className="pt-4 border-t border-[#eee] flex gap-6 text-xs text-[#666]">
                             <div>
                                 <span className="uppercase tracking-wide font-medium">Created</span>
-                                <span className="ml-2 text-[#F5F1EC]">{new Date(contact.created_at).toLocaleDateString()}</span>
+                                <span className="ml-1.5 text-[#111]">{new Date(contact.created_at).toLocaleDateString()}</span>
                             </div>
                             <div>
                                 <span className="uppercase tracking-wide font-medium">By</span>
-                                <span className="ml-2 text-[#F5F1EC]">{contact.created_by_user?.full_name || '-'}</span>
+                                <span className="ml-1.5 text-[#111]">{contact.created_by_user?.full_name || '-'}</span>
                             </div>
                             <div>
                                 <span className="uppercase tracking-wide font-medium">Updated</span>
-                                <span className="ml-2 text-[#F5F1EC]">{contact.updated_by_user?.full_name || '-'}</span>
+                                <span className="ml-1.5 text-[#111]">{contact.updated_by_user?.full_name || '-'}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Right - Activity */}
-                    <div className="lg:col-span-1 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] shadow-lg p-5">
-                        <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-sm uppercase tracking-wide text-[#CDB49E] font-semibold">Activity</h2>
+                    <div className="lg:col-span-1 bg-white rounded-lg border border-[#ddd] shadow-sm p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xs uppercase tracking-wide text-[#666] font-semibold">Activity</h2>
                             <Button
                                 size="sm"
                                 onClick={() => setShowActivityForm(!showActivityForm)}
                                 className={cn(
-                                    "h-9 text-sm",
+                                    "h-8 text-xs",
                                     showActivityForm
-                                        ? "bg-[#2a2a2a] text-[#CDB49E]"
-                                        : "bg-[#AD7D56] hover:bg-[#9A6B47] text-white"
+                                        ? "bg-gray-100 text-[#666] border border-[#ddd]"
+                                        : "bg-[#AD7D56] hover:bg-[#96704d] text-white"
                                 )}
                             >
-                                <Plus className="w-4 h-4 mr-1" />
+                                <Plus className="w-3.5 h-3.5 mr-1" />
                                 Log Activity
                             </Button>
                         </div>
 
                         {/* Add Activity Form */}
                         {showActivityForm && (
-                            <div className="mb-5 space-y-4 pb-5 border-b border-[#3a3a3a]">
-                                <div className="flex flex-wrap gap-2">
+                            <div className="mb-4 space-y-3 pb-4 border-b border-[#eee]">
+                                <div className="flex flex-wrap gap-1.5">
                                     {ACTIVITY_TYPES.map((t) => (
                                         <button
                                             key={t.value}
                                             onClick={() => setNewActivity({ ...newActivity, activityType: t.value })}
                                             className={cn(
-                                                "px-3 py-1.5 rounded text-sm font-medium transition-colors",
+                                                "px-2.5 py-1 rounded text-xs font-medium transition-colors",
                                                 newActivity.activityType === t.value
                                                     ? 'bg-[#AD7D56] text-white'
-                                                    : 'bg-[#2a2a2a] text-[#CDB49E] hover:bg-[#3a3a3a]'
+                                                    : 'bg-gray-100 text-[#666] hover:bg-gray-200'
                                             )}
                                         >
                                             {t.label}
@@ -778,46 +778,46 @@ export default function ContactDetailPage({ params }) {
                                     value={newActivity.title}
                                     onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
                                     placeholder="Title..."
-                                    className="bg-[#2a2a2a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#666] text-base h-11 focus:border-[#AD7D56]"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] h-9 text-sm focus:border-[#AD7D56]"
                                 />
                                 <Textarea
                                     value={newActivity.description}
                                     onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
                                     placeholder="Details (optional)..."
                                     rows={2}
-                                    className="bg-[#2a2a2a] border-[#3a3a3a] text-[#F5F1EC] placeholder:text-[#666] text-base resize-none focus:border-[#AD7D56]"
+                                    className="bg-white border-[#ddd] text-[#111] placeholder:text-[#bbb] text-sm resize-none focus:border-[#AD7D56]"
                                 />
-                                <Button onClick={handleAddActivity} className="w-full bg-[#AD7D56] text-white hover:bg-[#9A6B47] text-base h-10">
+                                <Button onClick={handleAddActivity} className="w-full bg-[#AD7D56] text-white hover:bg-[#96704d] text-sm h-8">
                                     Add Activity
                                 </Button>
                             </div>
                         )}
 
                         {/* Timeline */}
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                             {activities.length === 0 ? (
-                                <p className="text-[#555] text-sm text-center py-6">No activity yet</p>
+                                <p className="text-[#999] text-xs text-center py-4">No activity yet</p>
                             ) : (
                                 activities.map((activity, index) => {
                                     const Icon = ACTIVITY_ICONS[activity.activity_type] || MessageSquare;
                                     return (
-                                        <div key={activity.id} className="flex gap-3 group">
+                                        <div key={activity.id} className="flex gap-2.5 group">
                                             <div className="relative flex flex-col items-center">
-                                                <div className="w-7 h-7 rounded-full bg-[#2a2a2a] flex items-center justify-center flex-shrink-0 group-hover:bg-[#AD7D56]/30 transition-colors">
-                                                    <Icon className="w-3.5 h-3.5 text-[#CDB49E]" />
+                                                <div className="w-6 h-6 rounded-full bg-[#f9f7f4] border border-[#eee] flex items-center justify-center flex-shrink-0 group-hover:bg-[#AD7D56]/10 transition-colors">
+                                                    <Icon className="w-3 h-3 text-[#AD7D56]" />
                                                 </div>
                                                 {index < activities.length - 1 && (
-                                                    <div className="w-px flex-1 bg-[#3a3a3a] mt-1" />
+                                                    <div className="w-px flex-1 bg-[#eee] mt-1" />
                                                 )}
                                             </div>
-                                            <div className="flex-1 pb-4">
-                                                <p className="text-sm text-[#F5F1EC] font-medium">
+                                            <div className="flex-1 pb-3">
+                                                <p className="text-sm text-[#111] font-medium">
                                                     {activity.title || activity.activity_type?.replace('_', ' ')}
                                                 </p>
                                                 {activity.description && (
-                                                    <p className="text-sm text-[#CDB49E] mt-1 leading-relaxed">{activity.description}</p>
+                                                    <p className="text-xs text-[#666] mt-0.5 leading-relaxed">{activity.description}</p>
                                                 )}
-                                                <p className="text-sm text-[#555] mt-1">
+                                                <p className="text-xs text-[#999] mt-0.5">
                                                     {activity.created_by_user?.full_name} · {new Date(activity.created_at).toLocaleDateString()}
                                                 </p>
                                             </div>

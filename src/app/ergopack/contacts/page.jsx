@@ -1,11 +1,11 @@
 /**
- * Ergopack Contacts List Page - Premium Earthy Theme
+ * Ergopack Contacts List Page - Premium Clean Theme
  * 
- * Color Palette:
- * - Charcoal Black: #111111
- * - French Beige: #AD7D56  
- * - Rodeo Dust: #CDB49E
- * - Ivory White: #F5F1EC
+ * Color Palette (Light & Readable):
+ * - Background: Ivory #F5F1EC
+ * - Text: Charcoal #111111 
+ * - Accent: French Beige #AD7D56
+ * - Secondary: Rodeo Dust #CDB49E
  * 
  * @module app/ergopack/contacts/page
  */
@@ -38,16 +38,17 @@ const STATUS_OPTIONS = [
     { value: 'not_serviceable', label: 'Not Serviceable' },
 ];
 
+// Light theme - readable status badges
 const STATUS_CONFIG = {
-    open: { bg: 'bg-[#AD7D56]/20', text: 'text-[#AD7D56]', border: 'border-[#AD7D56]/40', label: 'Open' },
-    new: { bg: 'bg-[#AD7D56]/20', text: 'text-[#AD7D56]', border: 'border-[#AD7D56]/40', label: 'New' },
-    contacted: { bg: 'bg-[#CDB49E]/30', text: 'text-[#F5F1EC]', border: 'border-[#CDB49E]/50', label: 'Contacted' },
-    proposal_sent: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/40', label: 'Proposal Sent' },
-    deal_done: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/40', label: 'Deal Done' },
-    won: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/40', label: 'Won' },
-    lost: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/40', label: 'Lost' },
-    not_serviceable: { bg: 'bg-[#3a3a3a]', text: 'text-[#888]', border: 'border-[#555]', label: 'Not Serviceable' },
-    dormant: { bg: 'bg-[#3a3a3a]', text: 'text-[#888]', border: 'border-[#555]', label: 'Dormant' },
+    open: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'Open' },
+    new: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'New' },
+    contacted: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'Contacted' },
+    proposal_sent: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', label: 'Proposal Sent' },
+    deal_done: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Deal Done' },
+    won: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Won' },
+    lost: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: 'Lost' },
+    not_serviceable: { bg: 'bg-gray-100', text: 'text-gray-500', border: 'border-gray-200', label: 'Not Serviceable' },
+    dormant: { bg: 'bg-gray-100', text: 'text-gray-500', border: 'border-gray-200', label: 'Dormant' },
 };
 
 const SORT_OPTIONS = [
@@ -217,32 +218,32 @@ export default function ContactsListPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#111111] text-[#F5F1EC] font-sans selection:bg-[#AD7D56]/30">
-            <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-6">
+        <div className="min-h-screen bg-[#F5F1EC] text-[#111111] font-sans">
+            <div className="max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-[#2a2a2a] pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6">
                     <div>
-                        <h1 className="text-3xl font-semibold tracking-tight text-[#F5F1EC] flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-[#111111] flex items-center gap-3">
                             Contacts
-                            <span className="text-base font-medium text-[#CDB49E] bg-[#1a1a1a] px-4 py-1.5 rounded-full border border-[#2a2a2a]">
+                            <span className="text-sm font-medium text-[#AD7D56] bg-[#AD7D56]/10 px-3 py-1 rounded-full">
                                 {stats?.total || 0}
                             </span>
                         </h1>
-                        <p className="text-[#CDB49E] mt-2 text-base">
+                        <p className="text-[#666] mt-1">
                             Manage your outreach pipeline and relationships.
                         </p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                         <Button
                             variant="outline"
                             onClick={fetchContacts}
                             disabled={isLoading}
-                            className="bg-[#1a1a1a] border-[#3a3a3a] text-[#CDB49E] hover:bg-[#2a2a2a] hover:text-[#F5F1EC] hover:border-[#AD7D56] h-11 w-11 p-0 rounded-lg transition-all"
+                            className="bg-white border-[#ddd] text-[#666] hover:bg-gray-50 hover:border-[#AD7D56] hover:text-[#AD7D56] h-10 w-10 p-0 rounded-lg"
                         >
                             <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
                         </Button>
                         <Link href="/ergopack/contacts/new">
-                            <Button className="bg-[#AD7D56] text-white hover:bg-[#9A6B47] h-11 px-6 rounded-lg font-medium tracking-wide transition-all shadow-sm">
+                            <Button className="bg-[#AD7D56] text-white hover:bg-[#96704d] h-10 px-5 rounded-lg font-medium">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Add Contact
                             </Button>
@@ -251,27 +252,27 @@ export default function ContactsListPage() {
                 </div>
 
                 {/* Controls */}
-                <div className="flex flex-col sm:flex-row gap-4 items-center">
-                    <div className="relative flex-1 w-full group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#CDB49E] group-focus-within:text-[#AD7D56] transition-colors" />
+                <div className="flex flex-col sm:flex-row gap-3 items-center">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#999]" />
                         <Input
                             placeholder="Search by company, person..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && fetchContacts()}
-                            className="pl-12 h-12 bg-[#1a1a1a] border-[#3a3a3a] text-[#F5F1EC] text-base placeholder:text-[#666] rounded-xl focus:ring-2 focus:ring-[#AD7D56]/30 focus:border-[#AD7D56] transition-all"
+                            className="pl-10 h-10 bg-white border-[#ddd] text-[#111] placeholder:text-[#999] rounded-lg focus:border-[#AD7D56] focus:ring-1 focus:ring-[#AD7D56]/20"
                         />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-48 h-12 bg-[#1a1a1a] border-[#3a3a3a] text-[#CDB49E] text-base rounded-xl focus:ring-2 focus:ring-[#AD7D56]/30 hover:bg-[#2a2a2a] transition-all">
-                            <SelectValue placeholder="Filter by stage" />
+                        <SelectTrigger className="w-full sm:w-44 h-10 bg-white border-[#ddd] text-[#333] rounded-lg">
+                            <SelectValue placeholder="All Stages" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1a1a1a] border-[#3a3a3a] rounded-xl shadow-lg">
+                        <SelectContent className="bg-white border-[#ddd] rounded-lg shadow-lg">
                             {STATUS_OPTIONS.map((opt) => (
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="text-[#CDB49E] text-base focus:bg-[#2a2a2a] focus:text-[#F5F1EC] rounded-lg my-1 cursor-pointer"
+                                    className="text-[#333] focus:bg-[#F5F1EC] cursor-pointer"
                                 >
                                     {opt.label}
                                 </SelectItem>
@@ -279,16 +280,16 @@ export default function ContactsListPage() {
                         </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-full sm:w-48 h-12 bg-[#1a1a1a] border-[#3a3a3a] text-[#CDB49E] text-base rounded-xl focus:ring-2 focus:ring-[#AD7D56]/30 hover:bg-[#2a2a2a] transition-all">
+                        <SelectTrigger className="w-full sm:w-44 h-10 bg-white border-[#ddd] text-[#333] rounded-lg">
                             <ArrowUpDown className="w-4 h-4 mr-2" />
                             <SelectValue placeholder="Sort by" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1a1a1a] border-[#3a3a3a] rounded-xl shadow-lg">
+                        <SelectContent className="bg-white border-[#ddd] rounded-lg shadow-lg">
                             {SORT_OPTIONS.map((opt) => (
                                 <SelectItem
                                     key={opt.value}
                                     value={opt.value}
-                                    className="text-[#CDB49E] text-base focus:bg-[#2a2a2a] focus:text-[#F5F1EC] rounded-lg my-1 cursor-pointer"
+                                    className="text-[#333] focus:bg-[#F5F1EC] cursor-pointer"
                                 >
                                     {opt.label}
                                 </SelectItem>
@@ -298,9 +299,9 @@ export default function ContactsListPage() {
                 </div>
 
                 {/* Data Grid */}
-                <div className="rounded-2xl border border-[#2a2a2a] overflow-hidden bg-[#1a1a1a] shadow-lg">
+                <div className="rounded-lg border border-[#ddd] overflow-hidden bg-white shadow-sm">
                     {/* Grid Header */}
-                    <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[#2a2a2a] bg-[#151515] text-xs font-semibold text-[#CDB49E] uppercase tracking-wider">
+                    <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-[#eee] bg-[#f9f7f4] text-xs font-semibold text-[#666] uppercase tracking-wide">
                         <div className="col-span-3">Company</div>
                         <div className="col-span-1 hidden sm:block">Status</div>
                         <div className="col-span-2 hidden md:block">Created By</div>
@@ -311,20 +312,20 @@ export default function ContactsListPage() {
                     </div>
 
                     {/* Grid Body */}
-                    <div className="divide-y divide-[#2a2a2a]">
+                    <div className="divide-y divide-[#eee]">
                         {isLoading ? (
-                            <div className="flex flex-col items-center justify-center py-24 text-[#CDB49E]">
-                                <RefreshCw className="w-6 h-6 animate-spin mb-3 text-[#AD7D56]" />
-                                <span className="text-sm font-medium">Loading data...</span>
+                            <div className="flex flex-col items-center justify-center py-20 text-[#666]">
+                                <RefreshCw className="w-5 h-5 animate-spin mb-3 text-[#AD7D56]" />
+                                <span className="text-sm">Loading...</span>
                             </div>
                         ) : filteredContacts.length === 0 ? (
-                            <div className="text-center py-24">
-                                <div className="w-16 h-16 rounded-2xl bg-[#2a2a2a] flex items-center justify-center mx-auto mb-4 border border-[#3a3a3a]">
-                                    <Building2 className="w-6 h-6 text-[#CDB49E]" />
+                            <div className="text-center py-20">
+                                <div className="w-14 h-14 rounded-lg bg-[#F5F1EC] flex items-center justify-center mx-auto mb-4">
+                                    <Building2 className="w-6 h-6 text-[#AD7D56]" />
                                 </div>
-                                <p className="text-[#CDB49E] mb-6 font-medium text-lg">No contacts found</p>
+                                <p className="text-[#666] mb-4 font-medium">No contacts found</p>
                                 <Link href="/ergopack/contacts/new">
-                                    <Button variant="outline" className="border-[#AD7D56] text-[#AD7D56] hover:bg-[#AD7D56]/20 hover:text-[#F5F1EC]">
+                                    <Button className="bg-[#AD7D56] text-white hover:bg-[#96704d]">
                                         <Plus className="w-4 h-4 mr-2" />
                                         Add First Contact
                                     </Button>
@@ -341,28 +342,23 @@ export default function ContactsListPage() {
                                         key={contact.id}
                                         href={`/ergopack/contacts/${contact.id}`}
                                         onClick={() => handleContactClick(contact.id)}
-                                        className="grid grid-cols-12 gap-4 px-6 py-5 items-center hover:bg-[#222] transition-all duration-200 group cursor-pointer relative"
+                                        className="grid grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-[#f9f7f4] transition-colors group cursor-pointer"
                                     >
-                                        {/* Hover Highlight Line */}
-                                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#AD7D56] opacity-0 group-hover:opacity-100 transition-opacity" />
-
                                         {/* Company */}
-                                        <div className="col-span-3 overflow-hidden relative">
-                                            {/* Unseen Dot - Mobile optimized */}
-                                            {hasUnseenUpdate && (
-                                                <div className="absolute -left-3 top-2 w-2 h-2 rounded-full bg-[#AD7D56] animate-pulse md:hidden" />
-                                            )}
-
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-lg bg-[#2a2a2a] flex items-center justify-center border border-[#3a3a3a] text-[#CDB49E] group-hover:text-[#F5F1EC] group-hover:border-[#AD7D56] transition-all flex-shrink-0">
-                                                    <Building2 className="w-6 h-6" />
+                                        <div className="col-span-3 overflow-hidden">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-[#F5F1EC] flex items-center justify-center text-[#AD7D56] flex-shrink-0">
+                                                    <Building2 className="w-5 h-5" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <h3 className="text-base font-semibold text-[#F5F1EC] group-hover:text-white truncate transition-colors flex items-center gap-2">
+                                                    <h3 className="text-sm font-semibold text-[#111] truncate flex items-center gap-2">
                                                         {contact.company_name}
+                                                        {hasUnseenUpdate && (
+                                                            <span className="w-2 h-2 rounded-full bg-[#AD7D56]" />
+                                                        )}
                                                     </h3>
                                                     {contact.contact_person && (
-                                                        <p className="text-sm text-[#CDB49E] group-hover:text-[#F5F1EC] truncate mt-1">
+                                                        <p className="text-xs text-[#666] truncate mt-0.5">
                                                             {contact.contact_person}
                                                         </p>
                                                     )}
@@ -373,7 +369,7 @@ export default function ContactsListPage() {
                                         {/* Status */}
                                         <div className="col-span-1 hidden sm:flex items-center">
                                             <Badge className={cn(
-                                                "px-3 py-1 text-xs font-semibold tracking-wide uppercase rounded-full border",
+                                                "px-2 py-0.5 text-xs font-medium rounded-full border",
                                                 statusConfig.bg, statusConfig.text, statusConfig.border
                                             )}>
                                                 {statusConfig.label}
@@ -381,11 +377,11 @@ export default function ContactsListPage() {
                                         </div>
 
                                         {/* Created By */}
-                                        <div className="col-span-2 hidden md:flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-[#AD7D56]/30 border border-[#AD7D56]/50 flex items-center justify-center text-sm font-medium text-[#F5F1EC]">
+                                        <div className="col-span-2 hidden md:flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-full bg-[#AD7D56]/20 flex items-center justify-center text-xs font-medium text-[#AD7D56]">
                                                 {contact.created_by_user?.full_name?.charAt(0) || 'U'}
                                             </div>
-                                            <span className="text-sm text-[#CDB49E] truncate max-w-[120px]">
+                                            <span className="text-sm text-[#666] truncate">
                                                 {contact.created_by_user?.full_name?.split(' ')[0] || 'Unknown'}
                                             </span>
                                         </div>
@@ -409,13 +405,13 @@ export default function ContactsListPage() {
                                                             toast.error('Error loading presentation');
                                                         }
                                                     }}
-                                                    className="w-8 h-8 rounded-lg bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all"
+                                                    className="w-7 h-7 rounded bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 transition-colors"
                                                     title={`Download: ${contact.presentation_file_name || 'Presentation'}`}
                                                 >
                                                     <FileText className="w-4 h-4" />
                                                 </button>
                                             ) : (
-                                                <span className="text-[#555] text-xs">-</span>
+                                                <span className="text-[#ccc] text-xs">-</span>
                                             )}
                                         </div>
 
@@ -438,48 +434,47 @@ export default function ContactsListPage() {
                                                             toast.error('Error loading quotation');
                                                         }
                                                     }}
-                                                    className="w-8 h-8 rounded-lg bg-[#AD7D56]/20 hover:bg-[#AD7D56]/30 flex items-center justify-center text-[#AD7D56] hover:text-[#CDB49E] transition-all"
+                                                    className="w-7 h-7 rounded bg-[#F5F1EC] hover:bg-[#AD7D56]/20 flex items-center justify-center text-[#AD7D56] transition-colors"
                                                     title={`Download: ${contact.quotation_file_name || 'Quotation'}`}
                                                 >
                                                     <Download className="w-4 h-4" />
                                                 </button>
                                             ) : (
-                                                <span className="text-[#555] text-xs">-</span>
+                                                <span className="text-[#ccc] text-xs">-</span>
                                             )}
                                         </div>
 
-                                        {/* Latest Activity + NEW Badge */}
-                                        <div className="col-span-3 hidden xl:flex items-center gap-3 text-[#CDB49E] min-w-0">
+                                        {/* Latest Activity */}
+                                        <div className="col-span-3 hidden xl:flex items-center gap-2 text-[#666] min-w-0">
                                             {hasUnseenUpdate && (
-                                                <Badge className="bg-[#AD7D56] hover:bg-[#AD7D56] text-white border-0 text-xs font-semibold px-2.5 py-0.5 h-5 mr-1">
+                                                <Badge className="bg-[#AD7D56] text-white border-0 text-[10px] font-semibold px-2 py-0 h-5">
                                                     NEW
                                                 </Badge>
                                             )}
 
                                             {contact.latest_activity ? (
                                                 <>
-                                                    <ActivityIcon className="w-4 h-4 flex-shrink-0 text-[#CDB49E] group-hover:text-[#F5F1EC] transition-colors" />
-                                                    <span className="text-sm truncate group-hover:text-[#F5F1EC] transition-colors">
+                                                    <ActivityIcon className="w-4 h-4 flex-shrink-0" />
+                                                    <span className="text-sm truncate">
                                                         {contact.latest_activity.title || 'Activity Logged'}
                                                     </span>
                                                 </>
                                             ) : (
-                                                <span className="text-sm text-[#555] italic">No activity</span>
+                                                <span className="text-sm text-[#bbb] italic">No activity</span>
                                             )}
                                         </div>
 
                                         {/* Last Updated + Delete Action */}
-                                        <div className="col-span-1 text-right flex items-center justify-end gap-3 group/actions">
-                                            <span className="text-sm text-[#CDB49E] font-mono group-hover:text-[#F5F1EC] transition-colors">
+                                        <div className="col-span-1 text-right flex items-center justify-end gap-2 group/actions">
+                                            <span className="text-xs text-[#666]">
                                                 {formatDate(contact.updated_at)}
                                             </span>
 
-                                            {/* Delete Button (Visible on hover for authorized users) */}
                                             {canDelete && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-[#555] hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover/actions:opacity-100 transition-all md:opacity-0 sm:opacity-100"
+                                                    className="h-7 w-7 text-[#ccc] hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
                                                     onClick={(e) => handleDelete(e, contact.id, contact.company_name)}
                                                     title="Delete Contact"
                                                 >
@@ -495,7 +490,7 @@ export default function ContactsListPage() {
                 </div>
 
                 {/* Footer Note */}
-                <div className="flex justify-between items-center text-sm text-[#CDB49E] px-2 font-mono">
+                <div className="flex justify-between items-center text-xs text-[#999] px-1">
                     <span>
                         Showing {filteredContacts.length} contacts
                     </span>
