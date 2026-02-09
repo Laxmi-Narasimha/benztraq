@@ -360,19 +360,19 @@ export default function ContactDetailPage({ params }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#050505]">
+        <div className="min-h-screen bg-[#0a0a0a]">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-[#050505]/90 backdrop-blur-xl border-b border-zinc-900">
-                <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+            <div className="sticky top-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-zinc-800">
+                <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
                         <Link href="/ergopack/contacts">
-                            <button className="text-zinc-500 hover:text-white transition-colors">
-                                <ArrowLeft className="w-5 h-5" />
+                            <button className="text-zinc-400 hover:text-white transition-colors">
+                                <ArrowLeft className="w-6 h-6" />
                             </button>
                         </Link>
                         <div>
-                            <h1 className="text-lg font-light text-white">{contact.company_name}</h1>
-                            <Badge className="bg-zinc-800 text-zinc-300 text-[10px] capitalize">
+                            <h1 className="text-xl font-semibold text-white">{contact.company_name}</h1>
+                            <Badge className="bg-zinc-700 text-zinc-200 text-xs capitalize mt-1">
                                 {contact.status?.replace('_', ' ')}
                             </Badge>
                         </div>
@@ -415,104 +415,104 @@ export default function ContactDetailPage({ params }) {
             <div className="max-w-6xl mx-auto px-4 py-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left - Fields (matching New Lead form) */}
-                    <div className="lg:col-span-2 space-y-5">
+                    <div className="lg:col-span-2 space-y-6">
                         {/* Row 1: Company + Contact */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <Building2 className="w-3 h-3" /> Company
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <Building2 className="w-4 h-4" /> Company
                                 </Label>
                                 <Input
                                     value={contact.company_name || ''}
                                     onChange={(e) => handleChange('company_name', e.target.value)}
-                                    className="bg-zinc-900/50 border-zinc-800 text-white h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white text-base h-12"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <User className="w-3 h-3" /> Contact Person
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <User className="w-4 h-4" /> Contact Person
                                 </Label>
                                 <Input
                                     value={contact.contact_person || ''}
                                     onChange={(e) => handleChange('contact_person', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
                                 />
                             </div>
                         </div>
 
                         {/* Row 2: Email + Phone */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <Mail className="w-3 h-3" /> Email
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <Mail className="w-4 h-4" /> Email
                                 </Label>
                                 <Input
                                     value={contact.email || ''}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <Phone className="w-3 h-3" /> Phone
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <Phone className="w-4 h-4" /> Phone
                                 </Label>
                                 <Input
                                     value={contact.phone || ''}
                                     onChange={(e) => handleChange('phone', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
                                 />
                             </div>
                         </div>
 
                         {/* Row 3: City + State */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" /> City
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" /> City
                                 </Label>
                                 <Input
                                     value={contact.city || ''}
                                     onChange={(e) => handleChange('city', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest">State</Label>
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">State</Label>
                                 <Input
                                     value={contact.state || ''}
                                     onChange={(e) => handleChange('state', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
                                 />
                             </div>
                         </div>
 
                         {/* Row 4: Industry + Status */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <Briefcase className="w-3 h-3" /> Industry
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <Briefcase className="w-4 h-4" /> Industry
                                 </Label>
                                 <Input
                                     value={contact.industry || ''}
                                     onChange={(e) => handleChange('industry', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest">Status</Label>
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">Status</Label>
                                 <Select value={contact.status || 'open'} onValueChange={(v) => handleChange('status', v)}>
-                                    <SelectTrigger className="bg-zinc-900/50 border-zinc-800 text-white h-9">
+                                    <SelectTrigger className="bg-zinc-900/70 border-zinc-700 text-white text-base h-12">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-800">
+                                    <SelectContent className="bg-zinc-900 border-zinc-700">
                                         {STATUS_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value} className="text-white focus:bg-zinc-800">
+                                            <SelectItem key={opt.value} value={opt.value} className="text-white text-base focus:bg-zinc-700">
                                                 {opt.label}
                                             </SelectItem>
                                         ))}
@@ -522,12 +522,12 @@ export default function ContactDetailPage({ params }) {
                         </div>
 
                         {/* Row 5: Suggested Model + Product Interest */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <Package className="w-3 h-3" /> Suggested Models
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <Package className="w-4 h-4" /> Suggested Models
                                 </Label>
-                                <div className="flex flex-wrap gap-2 p-2 bg-zinc-900/50 border border-zinc-800 rounded-md min-h-[36px]">
+                                <div className="flex flex-wrap gap-2 p-3 bg-zinc-900/70 border border-zinc-700 rounded-md min-h-[48px]">
                                     {SUGGESTED_MODELS.filter(opt => opt.value).map((opt) => {
                                         const models = (contact.suggested_model || '').split(',').filter(Boolean);
                                         const isSelected = models.includes(opt.value);
@@ -541,9 +541,9 @@ export default function ContactDetailPage({ params }) {
                                                         : [...models, opt.value];
                                                     handleChange('suggested_model', newModels.join(','));
                                                 }}
-                                                className={`px-2 py-1 text-xs rounded-md border transition-all ${isSelected
+                                                className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-all ${isSelected
                                                     ? 'bg-emerald-600 border-emerald-500 text-white'
-                                                    : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                                                    : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-zinc-500'
                                                     }`}
                                             >
                                                 {opt.label}
@@ -552,46 +552,46 @@ export default function ContactDetailPage({ params }) {
                                     })}
                                 </div>
                             </div>
-                            <div className="space-y-1">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest">Product Interest</Label>
+                            <div className="space-y-2">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">Product Interest</Label>
                                 <Input
                                     value={contact.product_interest || ''}
                                     onChange={(e) => handleChange('product_interest', e.target.value)}
                                     placeholder="-"
-                                    className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 h-9 font-light"
+                                    className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base h-12"
                                 />
                             </div>
                         </div>
 
                         {/* Notes */}
-                        <div className="space-y-1">
-                            <Label className="text-zinc-500 text-[10px] uppercase tracking-widest">Notes</Label>
+                        <div className="space-y-2">
+                            <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide">Notes</Label>
                             <Textarea
                                 value={contact.notes || ''}
                                 onChange={(e) => handleChange('notes', e.target.value)}
                                 placeholder="Add notes..."
-                                rows={3}
-                                className="bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-700 font-light resize-none"
+                                rows={4}
+                                className="bg-zinc-900/70 border-zinc-700 text-white placeholder:text-zinc-600 text-base resize-none"
                             />
                         </div>
 
                         {/* Company Presentation */}
-                        <div className="space-y-2 pt-4 mt-4 border-t border-zinc-900">
-                            <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                <FileText className="w-3 h-3" /> Company Presentation
+                        <div className="space-y-3 pt-5 mt-5 border-t border-zinc-800">
+                            <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                <FileText className="w-4 h-4" /> Company Presentation
                             </Label>
 
                             {presentationInfo?.hasPresentation ? (
                                 /* Show existing presentation */
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                                <div className="bg-zinc-900/70 border border-zinc-700 rounded-lg p-5">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
-                                                <FileText className="w-5 h-5 text-red-400" />
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                                <FileText className="w-6 h-6 text-red-400" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-white font-light">{presentationInfo.fileName}</p>
-                                                <p className="text-[10px] text-zinc-600">
+                                                <p className="text-base text-white font-medium">{presentationInfo.fileName}</p>
+                                                <p className="text-sm text-zinc-500">
                                                     Uploaded {new Date(presentationInfo.uploadedAt).toLocaleDateString()}
                                                 </p>
                                             </div>
@@ -652,13 +652,13 @@ export default function ContactDetailPage({ params }) {
                                                 id="presentation-upload"
                                             />
                                             <label htmlFor="presentation-upload" className="cursor-pointer">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center">
-                                                        <Upload className="w-6 h-6 text-zinc-500" />
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="w-14 h-14 rounded-xl bg-zinc-800 flex items-center justify-center">
+                                                        <Upload className="w-7 h-7 text-zinc-400" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm text-zinc-400">Drop PDF here or click to upload</p>
-                                                        <p className="text-[10px] text-zinc-600 mt-1">Max file size: 10MB</p>
+                                                        <p className="text-base text-zinc-300">Drop PDF here or click to upload</p>
+                                                        <p className="text-sm text-zinc-500 mt-1">Max file size: 10MB</p>
                                                     </div>
                                                 </div>
                                             </label>
@@ -670,19 +670,19 @@ export default function ContactDetailPage({ params }) {
 
                         {/* Saved Quotation */}
                         {quotationInfo?.hasQuotation && (
-                            <div className="space-y-2">
-                                <Label className="text-zinc-500 text-[10px] uppercase tracking-widest flex items-center gap-1">
-                                    <FileText className="w-3 h-3" /> Saved Quotation
+                            <div className="space-y-3">
+                                <Label className="text-zinc-400 text-sm font-medium uppercase tracking-wide flex items-center gap-2">
+                                    <FileText className="w-4 h-4" /> Saved Quotation
                                 </Label>
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                                <div className="bg-zinc-900/70 border border-zinc-700 rounded-lg p-5">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                                <FileText className="w-5 h-5 text-blue-400" />
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                                <FileText className="w-6 h-6 text-blue-400" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-white font-light">{quotationInfo.fileName}</p>
-                                                <p className="text-[10px] text-zinc-600">
+                                                <p className="text-base text-white font-medium">{quotationInfo.fileName}</p>
+                                                <p className="text-sm text-zinc-500">
                                                     Saved {new Date(quotationInfo.uploadedAt).toLocaleDateString()}
                                                 </p>
                                             </div>
@@ -719,54 +719,54 @@ export default function ContactDetailPage({ params }) {
                         )}
 
                         {/* Meta Info */}
-                        <div className="pt-4 border-t border-zinc-900 flex gap-6 text-[10px] text-zinc-600">
+                        <div className="pt-5 border-t border-zinc-800 flex gap-8 text-sm text-zinc-500">
                             <div>
-                                <span className="uppercase tracking-wider">Created</span>
-                                <span className="ml-2 text-zinc-500">{new Date(contact.created_at).toLocaleDateString()}</span>
+                                <span className="uppercase tracking-wide font-medium">Created</span>
+                                <span className="ml-2 text-zinc-400">{new Date(contact.created_at).toLocaleDateString()}</span>
                             </div>
                             <div>
-                                <span className="uppercase tracking-wider">By</span>
-                                <span className="ml-2 text-zinc-500">{contact.created_by_user?.full_name || '-'}</span>
+                                <span className="uppercase tracking-wide font-medium">By</span>
+                                <span className="ml-2 text-zinc-400">{contact.created_by_user?.full_name || '-'}</span>
                             </div>
                             <div>
-                                <span className="uppercase tracking-wider">Updated</span>
-                                <span className="ml-2 text-zinc-500">{contact.updated_by_user?.full_name || '-'}</span>
+                                <span className="uppercase tracking-wide font-medium">Updated</span>
+                                <span className="ml-2 text-zinc-400">{contact.updated_by_user?.full_name || '-'}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Right - Activity */}
-                    <div className="lg:col-span-1 bg-zinc-900/30 rounded-xl border border-zinc-800/60 p-4">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Activity</h2>
+                    <div className="lg:col-span-1 bg-zinc-900/50 rounded-xl border border-zinc-700 p-5">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-sm uppercase tracking-wide text-zinc-300 font-semibold">Activity</h2>
                             <Button
                                 size="sm"
                                 onClick={() => setShowActivityForm(!showActivityForm)}
                                 className={cn(
-                                    "h-7 text-xs",
+                                    "h-9 text-sm",
                                     showActivityForm
-                                        ? "bg-zinc-800 text-zinc-400"
+                                        ? "bg-zinc-700 text-zinc-300"
                                         : "bg-emerald-600 hover:bg-emerald-500 text-white"
                                 )}
                             >
-                                <Plus className="w-3 h-3 mr-1" />
+                                <Plus className="w-4 h-4 mr-1" />
                                 Log Activity
                             </Button>
                         </div>
 
                         {/* Add Activity Form */}
                         {showActivityForm && (
-                            <div className="mb-4 space-y-3 pb-4 border-b border-zinc-800/50">
-                                <div className="flex flex-wrap gap-1.5">
+                            <div className="mb-5 space-y-4 pb-5 border-b border-zinc-700">
+                                <div className="flex flex-wrap gap-2">
                                     {ACTIVITY_TYPES.map((t) => (
                                         <button
                                             key={t.value}
                                             onClick={() => setNewActivity({ ...newActivity, activityType: t.value })}
                                             className={cn(
-                                                "px-2.5 py-1 rounded text-[10px] transition-colors",
+                                                "px-3 py-1.5 rounded text-sm font-medium transition-colors",
                                                 newActivity.activityType === t.value
                                                     ? 'bg-white text-black'
-                                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                                                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                                             )}
                                         >
                                             {t.label}
@@ -777,46 +777,46 @@ export default function ContactDetailPage({ params }) {
                                     value={newActivity.title}
                                     onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
                                     placeholder="Title..."
-                                    className="bg-zinc-900 border-zinc-800 text-white text-xs h-8"
+                                    className="bg-zinc-900 border-zinc-700 text-white text-base h-11"
                                 />
                                 <Textarea
                                     value={newActivity.description}
                                     onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
                                     placeholder="Details (optional)..."
                                     rows={2}
-                                    className="bg-zinc-900 border-zinc-800 text-white text-xs resize-none"
+                                    className="bg-zinc-900 border-zinc-700 text-white text-base resize-none"
                                 />
-                                <Button onClick={handleAddActivity} className="w-full bg-white text-black hover:bg-zinc-200 text-xs h-8">
+                                <Button onClick={handleAddActivity} className="w-full bg-white text-black hover:bg-zinc-200 text-base h-10">
                                     Add Activity
                                 </Button>
                             </div>
                         )}
 
                         {/* Timeline */}
-                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
                             {activities.length === 0 ? (
-                                <p className="text-zinc-600 text-xs text-center py-4">No activity yet</p>
+                                <p className="text-zinc-500 text-sm text-center py-6">No activity yet</p>
                             ) : (
                                 activities.map((activity, index) => {
                                     const Icon = ACTIVITY_ICONS[activity.activity_type] || MessageSquare;
                                     return (
-                                        <div key={activity.id} className="flex gap-2 group">
+                                        <div key={activity.id} className="flex gap-3 group">
                                             <div className="relative flex flex-col items-center">
-                                                <div className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-700 transition-colors">
-                                                    <Icon className="w-2.5 h-2.5 text-zinc-400" />
+                                                <div className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-700 transition-colors">
+                                                    <Icon className="w-3.5 h-3.5 text-zinc-400" />
                                                 </div>
                                                 {index < activities.length - 1 && (
-                                                    <div className="w-px flex-1 bg-zinc-800/50 mt-1" />
+                                                    <div className="w-px flex-1 bg-zinc-700 mt-1" />
                                                 )}
                                             </div>
-                                            <div className="flex-1 pb-3">
-                                                <p className="text-xs text-white font-light">
+                                            <div className="flex-1 pb-4">
+                                                <p className="text-sm text-white font-medium">
                                                     {activity.title || activity.activity_type?.replace('_', ' ')}
                                                 </p>
                                                 {activity.description && (
-                                                    <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">{activity.description}</p>
+                                                    <p className="text-sm text-zinc-400 mt-1 leading-relaxed">{activity.description}</p>
                                                 )}
-                                                <p className="text-[10px] text-zinc-600 mt-1">
+                                                <p className="text-sm text-zinc-500 mt-1">
                                                     {activity.created_by_user?.full_name} · {new Date(activity.created_at).toLocaleDateString()}
                                                 </p>
                                             </div>
