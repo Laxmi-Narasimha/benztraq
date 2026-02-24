@@ -36,7 +36,7 @@ import {
     ChevronRight,
     Shield,
     Plus,
-    Sparkles,
+    // Sparkles removed - using Benz logo image instead
     Search,
 } from 'lucide-react';
 import { formatInitials } from '@/lib/utils/formatting';
@@ -181,7 +181,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 {!collapsed && (
                     <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-md bg-neutral-900 dark:bg-white flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 text-white dark:text-neutral-900" />
+                            <img src="/assets/blue-logo.png" alt="Benz" className="w-5 h-5 object-contain" />
                         </div>
                         <div>
                             <h1 className="text-sm font-bold text-neutral-900 dark:text-white tracking-tight">

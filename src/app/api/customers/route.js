@@ -162,18 +162,46 @@ export async function POST(request) {
         }
 
         // Generate customer code if not provided
+        // Generate customer code if not provided
         let customerCode = body.customer_code;
-        if (!customerCode && (!body.parent_id || body.company_type === 'company')) {
-            // Only generate code for main partners or companies
-            // Get next sequence number
-            const { count } = await supabase
-                .from('customers')
-                .select('*', { count: 'exact', head: true });
-            customerCode = `CUST-${String((count || 0) + 1).padStart(5, '0')}`;
-        }
 
-        // Check for duplicate customer_code
-        if (customerCode) {
+        if (!customerCode && (!body.parent_id || body.company_type === 'company')) {
+            // Robust code generation with retries
+            let attempts = 0;
+            const maxAttempts = 3;
+            let isUnique = false;
+
+            while (!isUnique && attempts < maxAttempts) {
+                attempts++;
+                // Get next sequence number based on count + attempts offset
+                const { count } = await supabase
+                    .from('customers')
+                    .select('*', { count: 'exact', head: true });
+
+                // Add randomness to reduce race condition probability
+                const offset = attempts > 1 ? Math.floor(Math.random() * 100) : 0;
+                const nextNum = (count || 0) + attempts + offset;
+                const candidateCode = `CUST-${String(nextNum).padStart(5, '0')}`;
+
+                // Check if this code exists
+                const { data: existing } = await supabase
+                    .from('customers')
+                    .select('id')
+                    .eq('customer_code', candidateCode)
+                    .single();
+
+                if (!existing) {
+                    customerCode = candidateCode;
+                    isUnique = true;
+                }
+            }
+
+            if (!isUnique) {
+                // Fallback to timestamp if sequence fails repeatedly
+                customerCode = `CUST-${Date.now().toString().slice(-8)}`;
+            }
+        } else if (customerCode) {
+            // If code was provided manually, check for duplicates
             const { data: existing } = await supabase
                 .from('customers')
                 .select('id')

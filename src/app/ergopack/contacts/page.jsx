@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
     Building2, Search, Plus, RefreshCw, Trash2,
     User, Clock, Phone, Mail, FileText, MessageSquare, CalendarCheck,
-    Ban, CheckCircle, XCircle, AlertCircle, Download, Eye, ArrowUpDown, ArrowDown, ArrowUp
+    Ban, CheckCircle, XCircle, AlertCircle, Download, Eye, ArrowUpDown, ArrowDown, ArrowUp, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';

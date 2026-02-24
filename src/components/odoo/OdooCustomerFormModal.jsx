@@ -67,7 +67,7 @@ const TAG_COLORS = [
     'bg-green-100 text-green-700',
     'bg-blue-100 text-blue-700',
     'bg-indigo-100 text-indigo-700',
-    'bg-purple-100 text-purple-700',
+    'bg-sky-100 text-sky-700',
     'bg-pink-100 text-pink-700',
 ];
 
@@ -267,8 +267,8 @@ export default function OdooCustomerFormModal({
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="px-3 py-1.5 bg-purple-700 text-white text-sm font-medium rounded 
-                            hover:bg-purple-800 disabled:opacity-50 transition-colors flex items-center gap-2"
+                        className="px-3 py-1.5 bg-sky-700 text-white text-sm font-medium rounded 
+                            hover:bg-sky-800 disabled:opacity-50 transition-colors flex items-center gap-2"
                     >
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Save
@@ -300,7 +300,7 @@ export default function OdooCustomerFormModal({
                                 name="company_type"
                                 checked={!formData.is_company}
                                 onChange={() => handleCompanyToggle(false)}
-                                className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                                className="w-4 h-4 text-sky-600 focus:ring-sky-500"
                             />
                             <User className="w-4 h-4 text-gray-500" />
                             <span className="text-sm font-medium text-gray-700">Individual</span>
@@ -311,7 +311,7 @@ export default function OdooCustomerFormModal({
                                 name="company_type"
                                 checked={formData.is_company}
                                 onChange={() => handleCompanyToggle(true)}
-                                className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                                className="w-4 h-4 text-sky-600 focus:ring-sky-500"
                             />
                             <Building2 className="w-4 h-4 text-gray-500" />
                             <span className="text-sm font-medium text-gray-700">Company</span>
@@ -329,7 +329,7 @@ export default function OdooCustomerFormModal({
                                 onChange={(e) => handleChange('name', e.target.value)}
                                 placeholder={formData.is_company ? "e.g. Lumber Inc" : "e.g. John Smith"}
                                 className="w-full text-2xl font-light text-gray-800 border-0 border-b-2 border-gray-200 
-                                    focus:border-purple-500 focus:ring-0 pb-2 bg-transparent placeholder:text-gray-300"
+                                    focus:border-sky-500 focus:ring-0 pb-2 bg-transparent placeholder:text-gray-300"
                             />
                         </div>
                         {/* Photo placeholder */}
@@ -352,7 +352,7 @@ export default function OdooCustomerFormModal({
                                     onChange={(e) => handleChange('street', e.target.value)}
                                     placeholder="Street..."
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 />
                                 <input
                                     type="text"
@@ -360,7 +360,7 @@ export default function OdooCustomerFormModal({
                                     onChange={(e) => handleChange('street2', e.target.value)}
                                     placeholder="Street 2..."
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 />
                                 <div className="grid grid-cols-3 gap-2">
                                     <input
@@ -369,7 +369,7 @@ export default function OdooCustomerFormModal({
                                         onChange={(e) => handleChange('city', e.target.value)}
                                         placeholder="City"
                                         className="px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                            focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                            focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                     />
                                     <input
                                         type="text"
@@ -377,13 +377,13 @@ export default function OdooCustomerFormModal({
                                         onChange={(e) => handleChange('zip', e.target.value)}
                                         placeholder="ZIP"
                                         className="px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                            focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                            focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                     />
                                     <select
                                         value={formData.state}
                                         onChange={(e) => handleChange('state', e.target.value)}
                                         className="px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                            focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                            focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                     >
                                         <option value="">State</option>
                                         {INDIAN_STATES.map(state => (
@@ -395,7 +395,7 @@ export default function OdooCustomerFormModal({
                                     value={formData.country_id}
                                     onChange={(e) => handleChange('country_id', e.target.value)}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 >
                                     <option value="IN">India</option>
                                 </select>
@@ -408,7 +408,7 @@ export default function OdooCustomerFormModal({
                                     value={formData.l10n_in_gst_treatment}
                                     onChange={(e) => handleChange('l10n_in_gst_treatment', e.target.value)}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 >
                                     {GST_TREATMENTS.map(treatment => (
                                         <option key={treatment.value} value={treatment.value}>
@@ -430,7 +430,7 @@ export default function OdooCustomerFormModal({
                                     placeholder="e.g. 27AABCU9603R1ZM"
                                     maxLength={15}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 uppercase"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 uppercase"
                                 />
                             </div>
 
@@ -444,7 +444,7 @@ export default function OdooCustomerFormModal({
                                     placeholder="e.g. ABCTY1234D"
                                     maxLength={10}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 uppercase"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 uppercase"
                                 />
                             </div>
                         </div>
@@ -462,7 +462,7 @@ export default function OdooCustomerFormModal({
                                     value={formData.phone}
                                     onChange={(e) => handleChange('phone', e.target.value)}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 />
                             </div>
 
@@ -477,7 +477,7 @@ export default function OdooCustomerFormModal({
                                     value={formData.mobile}
                                     onChange={(e) => handleChange('mobile', e.target.value)}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 />
                             </div>
 
@@ -492,7 +492,7 @@ export default function OdooCustomerFormModal({
                                     value={formData.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 />
                             </div>
 
@@ -508,7 +508,7 @@ export default function OdooCustomerFormModal({
                                     onChange={(e) => handleChange('website', e.target.value)}
                                     placeholder="e.g. https://www.odoo.com"
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 />
                             </div>
 
@@ -522,7 +522,7 @@ export default function OdooCustomerFormModal({
                                     type="text"
                                     placeholder='e.g. "B2B", "VIP", "Consulting"...'
                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                        focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                                        focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                                 />
                             </div>
                         </div>
@@ -542,7 +542,7 @@ export default function OdooCustomerFormModal({
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors
                                         ${activeTab === tab.id
-                                            ? 'border-purple-600 text-purple-600'
+                                            ? 'border-sky-600 text-sky-600'
                                             : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                                 >
                                     {tab.label}
@@ -592,7 +592,7 @@ export default function OdooCustomerFormModal({
                                         placeholder="Internal notes..."
                                         rows={4}
                                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md 
-                                            focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 resize-none"
+                                            focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
                                     />
                                 </div>
                             )}

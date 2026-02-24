@@ -42,7 +42,7 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                                     value={type}
                                     checked={formData.type === type}
                                     onChange={handleInputChange}
-                                    className="text-purple-600 focus:ring-purple-500"
+                                    className="text-sky-600 focus:ring-sky-500"
                                 />
                                 {type === 'contact' ? 'Contact' : type + ' Address'}
                             </label>
@@ -58,7 +58,7 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
-                                    className="w-full text-lg font-medium border-b border-gray-300 focus:border-purple-600 outline-none pb-1"
+                                    className="w-full text-lg font-medium border-b border-gray-300 focus:border-sky-600 outline-none pb-1"
                                     placeholder="Contact Name e.g. Mr. John Doe"
                                 />
                             </div>
@@ -70,14 +70,14 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                                     value={formData.street}
                                     onChange={handleInputChange}
                                     placeholder="Street..."
-                                    className="w-full p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-purple-500 focus:bg-gray-50 transition-colors outline-none text-sm"
+                                    className="w-full p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-sky-500 focus:bg-gray-50 transition-colors outline-none text-sm"
                                 />
                                 <input
                                     name="street2"
                                     value={formData.street2}
                                     onChange={handleInputChange}
                                     placeholder="Street 2..."
-                                    className="w-full p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-purple-500 focus:bg-gray-50 transition-colors outline-none text-sm"
+                                    className="w-full p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-sky-500 focus:bg-gray-50 transition-colors outline-none text-sm"
                                 />
                                 <div className="flex gap-2">
                                     <input
@@ -85,19 +85,19 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                                         value={formData.city}
                                         onChange={handleInputChange}
                                         placeholder="City"
-                                        className="w-1/3 p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-purple-500 outline-none text-sm"
+                                        className="w-1/3 p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-sky-500 outline-none text-sm"
                                     />
                                     <input
                                         name="state_id"
                                         placeholder="State"
-                                        className="w-1/3 p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-purple-500 outline-none text-sm"
+                                        className="w-1/3 p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-sky-500 outline-none text-sm"
                                     />
                                     <input
                                         name="zip"
                                         value={formData.zip}
                                         onChange={handleInputChange}
                                         placeholder="ZIP"
-                                        className="w-1/3 p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-purple-500 outline-none text-sm"
+                                        className="w-1/3 p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-sky-500 outline-none text-sm"
                                     />
                                 </div>
                                 <input
@@ -105,7 +105,7 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                                     value={formData.country_id}
                                     onChange={handleInputChange}
                                     placeholder="Country"
-                                    className="w-full p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-purple-500 outline-none text-sm"
+                                    className="w-full p-2 border border-transparent border-b-gray-300 hover:border-b-gray-400 focus:border-b-sky-500 outline-none text-sm"
                                 />
                             </div>
                         </div>
@@ -114,15 +114,15 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                         <div className="space-y-4 pt-6">
                             <div className="grid grid-cols-3 items-center">
                                 <label className="text-sm text-gray-600">Email</label>
-                                <input name="email" value={formData.email} onChange={handleInputChange} className="col-span-2 border-b border-gray-300 w-full p-1 text-sm outline-none focus:border-purple-500" />
+                                <input name="email" value={formData.email} onChange={handleInputChange} className="col-span-2 border-b border-gray-300 w-full p-1 text-sm outline-none focus:border-sky-500" />
                             </div>
                             <div className="grid grid-cols-3 items-center">
                                 <label className="text-sm text-gray-600">Phone</label>
-                                <input name="phone" value={formData.phone} onChange={handleInputChange} className="col-span-2 border-b border-gray-300 w-full p-1 text-sm outline-none focus:border-purple-500" />
+                                <input name="phone" value={formData.phone} onChange={handleInputChange} className="col-span-2 border-b border-gray-300 w-full p-1 text-sm outline-none focus:border-sky-500" />
                             </div>
                             <div className="grid grid-cols-3 items-center">
                                 <label className="text-sm text-gray-600">Mobile</label>
-                                <input name="mobile" value={formData.mobile} onChange={handleInputChange} className="col-span-2 border-b border-gray-300 w-full p-1 text-sm outline-none focus:border-purple-500" />
+                                <input name="mobile" value={formData.mobile} onChange={handleInputChange} className="col-span-2 border-b border-gray-300 w-full p-1 text-sm outline-none focus:border-sky-500" />
                             </div>
 
                             <div className="pt-4">
@@ -132,7 +132,7 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                                     value={formData.comment}
                                     onChange={handleInputChange}
                                     placeholder="Notes..."
-                                    className="w-full border border-gray-300 rounded p-2 text-sm h-24 focus:border-purple-500 outline-none"
+                                    className="w-full border border-gray-300 rounded p-2 text-sm h-24 focus:border-sky-500 outline-none"
                                 ></textarea>
                             </div>
                         </div>
@@ -140,7 +140,7 @@ const PartnerAddressForm = ({ isOpen, onClose, onSave, parentName }) => {
                 </div>
 
                 <div className="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50">
-                    <button onClick={() => onSave(formData)} className="px-4 py-2 bg-purple-600 text-white rounded shadow-sm hover:bg-purple-700 text-sm font-medium">
+                    <button onClick={() => onSave(formData)} className="px-4 py-2 bg-sky-600 text-white rounded shadow-sm hover:bg-sky-700 text-sm font-medium">
                         Save & Close
                     </button>
                     <button onClick={onClose} className="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded shadow-sm hover:bg-gray-50 text-sm font-medium">

@@ -18,7 +18,7 @@ import {
     Search,
     ChevronDown,
     X,
-    Sparkles
+    CheckCircle
 } from 'lucide-react';
 import {
     computeLineAmounts,
@@ -29,7 +29,7 @@ import {
     COMPANY_STATE_CODE
 } from '@/lib/services/tax-computation';
 import OdooCustomerSelect from '@/components/odoo/OdooCustomerSelect';
-import OdooPartnerForm from './OdooPartnerForm';
+import CustomerFormModal from '@/components/crm/CustomerFormModal';
 
 // Indian States
 const INDIAN_STATES = [
@@ -113,8 +113,8 @@ function SearchableDropdown({
         const spaceBelow = viewportHeight - rect.bottom;
 
         setPosition({
-            top: spaceBelow >= dropdownHeight ? rect.bottom + window.scrollY + 4 : rect.top + window.scrollY - dropdownHeight - 4,
-            left: rect.left + window.scrollX,
+            top: spaceBelow >= dropdownHeight ? rect.bottom + 4 : rect.top - dropdownHeight - 4,
+            left: rect.left,
             width: Math.max(rect.width, 280)
         });
     }, []);
@@ -610,7 +610,7 @@ export default function NewQuotationPage() {
                                     hover:bg-black disabled:opacity-50 flex items-center gap-2 
                                     text-sm font-medium shadow-sm transition-all active:scale-[0.98]"
                             >
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                                 Confirm Order
                             </button>
                         </div>
@@ -966,7 +966,7 @@ export default function NewQuotationPage() {
             </div>
 
             {/* Customer Modal */}
-            <OdooPartnerForm
+            <CustomerFormModal
                 isOpen={showCustomerModal}
                 onClose={() => { setShowCustomerModal(false); setPendingCustomerName(''); }}
                 onSave={handleCustomerCreated}

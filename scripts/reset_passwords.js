@@ -1,92 +1,80 @@
 /**
- * Reset All User Passwords
- * Resets passwords for all production users to Benz@2024
+ * Reset Password Script
+ * Resets all user password hashes to match the expected passwords from seed-users.
+ * 
+ * Usage: node scripts/reset_passwords.js
  */
 
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 
-const supabaseUrl = 'https://qyovguexmivhvefgbmkg.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5b3ZndWV4bWl2aHZlZmdibWtnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDk5OTI5MSwiZXhwIjoyMDUwNTc1MjkxfQ.JcmOWIyNZKq9wAYBqQ7p8OQHPN0czpVGLKbZzKXN1Qc';
+// Read .env.local manually
+const envPath = path.resolve(process.cwd(), '.env.local');
+const envContent = fs.readFileSync(envPath, 'utf-8');
+const env = {};
+envContent.split('\n').forEach(line => {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+    const idx = line.indexOf('=');
+    if (idx > 0) {
+        env[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+    }
+});
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
-// The password we want to set for ALL users
-const NEW_PASSWORD = 'Benz@2024';
+const SALT_ROUNDS = 12;
+const DEFAULT_PASSWORD = env.SEED_DEFAULT_PASSWORD || 'Benz@2024';
+const DIRECTOR_PASSWORD = env.SEED_DIRECTOR_PASSWORD || 'Hound@1102';
 
-const USERS_TO_RESET = [
-    'laxmi@benz-packaging.com',
+const DIRECTOR_EMAILS = [
     'manan@benz-packaging.com',
     'chaitanya@benz-packaging.com',
     'prashansa@benz-packaging.com',
-    'pulak@benz-packaging.com',
-    'abhishek@benz-packaging.com',
-    'wh.jaipur@benz-packaging.com',
-    'banglore@benz-packaging.com',
-    'rfq@benz-packaging.com',
-    'it@benz-packaging.com',
-    'west@benz-packaging.com',
-    'isha@benz-packaging.com'
 ];
 
 async function resetPasswords() {
-    console.log('🔒 Resetting All User Passwords to: Benz@2024\n');
+    console.log('Resetting password hashes...');
+    console.log('DEFAULT_PASSWORD:', DEFAULT_PASSWORD);
+    console.log('DIRECTOR_PASSWORD:', DIRECTOR_PASSWORD);
 
-    try {
-        // Get all users
-        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const defaultHash = await bcrypt.hash(DEFAULT_PASSWORD, SALT_ROUNDS);
+    const directorHash = await bcrypt.hash(DIRECTOR_PASSWORD, SALT_ROUNDS);
 
-        if (listError) {
-            console.error('❌ Failed to list users:', listError);
-            return;
-        }
+    console.log('Verify default hash:', await bcrypt.compare(DEFAULT_PASSWORD, defaultHash));
+    console.log('Verify director hash:', await bcrypt.compare(DIRECTOR_PASSWORD, directorHash));
 
-        console.log(`Found ${users.length} total users in auth.users\n`);
+    const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('user_id, email, full_name');
 
-        let successCount = 0;
-        let failCount = 0;
-
-        for (const email of USERS_TO_RESET) {
-            const user = users.find(u => u.email === email);
-
-            if (!user) {
-                console.log(`⚠️  ${email.padEnd(40)} - NOT FOUND (needs to be created)`);
-                failCount++;
-                continue;
-            }
-
-            // Reset password using Supabase Auth Admin API
-            const { data, error } = await supabase.auth.admin.updateUserById(
-                user.id,
-                { password: NEW_PASSWORD }
-            );
-
-            if (error) {
-                console.log(`❌ ${email.padEnd(40)} - FAILED: ${error.message}`);
-                failCount++;
-            } else {
-                console.log(`✅ ${email.padEnd(40)} - Password reset to Benz@2024`);
-                successCount++;
-            }
-        }
-
-        console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-        console.log(`✅ Success: ${successCount}`);
-        console.log(`❌ Failed:  ${failCount}`);
-        console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
-
-        if (successCount > 0) {
-            console.log('🎉 All passwords have been reset to: Benz@2024');
-            console.log('\nYou can now login with any of these accounts:');
-            console.log('- Email: laxmi@benz-packaging.com');
-            console.log('- Email: abhishek@benz-packaging.com');
-            console.log('- Email: manan@benz-packaging.com');
-            console.log('- Password: Benz@2024 (for all)');
-        }
-
-    } catch (err) {
-        console.error('❌ Unexpected error:', err.message);
-        console.error(err);
+    if (error) {
+        console.error('Error fetching profiles:', error);
+        return;
     }
+
+    console.log(`Found ${profiles.length} profiles`);
+
+    for (const profile of profiles) {
+        const isDirector = DIRECTOR_EMAILS.includes(profile.email?.toLowerCase());
+        const hash = isDirector ? directorHash : defaultHash;
+        const pwd = isDirector ? DIRECTOR_PASSWORD : DEFAULT_PASSWORD;
+
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ password_hash: hash })
+            .eq('user_id', profile.user_id);
+
+        if (updateError) {
+            console.error(`  X ${profile.email}: ${updateError.message}`);
+        } else {
+            console.log(`  OK ${profile.email} -> password: "${pwd}"`);
+        }
+    }
+
+    console.log('\nDone! All passwords reset.');
 }
 
-resetPasswords();
+resetPasswords().catch(console.error);

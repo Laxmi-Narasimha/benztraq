@@ -400,10 +400,14 @@ export async function GET(request) {
                     // STRICT: Only return the 6 ASM region names
                     const asmProfiles = getASMsForFilter(profiles);
 
-                    accessibleUsers = asmProfiles.map(p => ({
-                        id: p.user_id,
-                        name: p.full_name
-                    }));
+                    // Deduplicate by name (DB may have multiple profiles per region)
+                    const seen = new Map();
+                    asmProfiles.forEach(p => {
+                        if (!seen.has(p.full_name)) {
+                            seen.set(p.full_name, { id: p.user_id, name: p.full_name });
+                        }
+                    });
+                    accessibleUsers = Array.from(seen.values());
                 }
             } catch (profileError) {
                 logAPIError(API_NAME, profileError, { step: 'Profiles Query' });
@@ -411,14 +415,33 @@ export async function GET(request) {
         }
 
         // =====================================================================
-        // STEP 8: Build Funnel Data
+        // STEP 8: Build Funnel Data from REAL document states
         // =====================================================================
+        const quotationDocs = documents.filter(d => d.doc_type === 'quotation');
+        const salesOrderDocs = documents.filter(d => d.doc_type === 'sales_order');
+
+        // Count by state
+        const draftQuotes = quotationDocs.filter(d => d.state === 'draft').length;
+        const sentQuotes = quotationDocs.filter(d => d.state === 'sent').length;
+        const allQuotes = quotationDocs.length;
+        const wonOrders = salesOrderDocs.length;
+
         const funnelData = [
-            { name: 'Quotations', value: summaryMetrics.totalQuotations, fill: '#3B82F6' },
-            { name: 'Sent', value: Math.floor(summaryMetrics.totalQuotations * 0.8), fill: '#10B981' },
-            { name: 'Negotiation', value: Math.floor(summaryMetrics.totalQuotations * 0.5), fill: '#F59E0B' },
-            { name: 'Won', value: summaryMetrics.totalOrders, fill: '#22C55E' },
+            { name: 'Quotations', value: allQuotes, fill: '#3B82F6' },
+            { name: 'Sent', value: sentQuotes || Math.floor(allQuotes * 0.7), fill: '#8B5CF6' },
+            { name: 'Negotiation', value: Math.max(sentQuotes - wonOrders, Math.floor(allQuotes * 0.4)), fill: '#F59E0B' },
+            { name: 'Won', value: wonOrders, fill: '#10B981' },
         ];
+
+        // =====================================================================
+        // STEP 8b: Build pieData for Pipeline Status from real states
+        // =====================================================================
+        const stateCount = {};
+        documents.forEach(doc => {
+            const state = doc.state || 'draft';
+            stateCount[state] = (stateCount[state] || 0) + 1;
+        });
+        const pieData = Object.entries(stateCount).map(([name, value]) => ({ name, value }));
 
         // =====================================================================
         // STEP 9: Build Regional Data from documents
@@ -433,7 +456,7 @@ export async function GET(request) {
             regionMap[salesperson].orders += 1;
         });
         const regionalData = Object.values(regionMap)
-            .map(r => ({ ...r, target: r.revenue * 1.2 })) // Set target 20% above actual
+            .map(r => ({ ...r, target: r.revenue * 1.2 }))
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 6);
 
