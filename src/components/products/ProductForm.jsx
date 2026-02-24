@@ -359,19 +359,27 @@ const ProductForm = memo(function ProductForm({
 
                     {/* ── SECTION 3: STOCK & TRACKING ── */}
                     {section.id === 3 && activeSection === 3 && (
-                        <div className="px-4 py-4 space-y-5 border border-stone-100 rounded-b-lg -mt-1">
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="relative px-4 py-4 space-y-5 border border-stone-100 rounded-b-lg -mt-1">
+                            {/* Coming Soon Overlay */}
+                            <div className="absolute inset-0 bg-stone-50/80 backdrop-blur-[1px] z-10 rounded-b-lg flex flex-col items-center justify-center gap-2">
+                                <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                    Inventory module coming soon
+                                </div>
+                                <p className="text-xs text-stone-500">Stock tracking, reorder points &amp; batch tracking will be available shortly.</p>
+                            </div>
+                            {/* Fields (greyed, behind overlay) */}
+                            <div className="grid grid-cols-2 gap-4 opacity-40 pointer-events-none select-none">
                                 <div className="space-y-1.5">
                                     <Label htmlFor="initial_stock">Initial Stock</Label>
                                     <Input id="initial_stock" type="number" min="0"
                                         value={formData.initial_stock || ""}
-                                        onChange={(e) => onFieldChange("initial_stock", e.target.value)}
-                                        placeholder="0" />
+                                        onChange={() => { }} placeholder="0" disabled />
                                     <p className="text-xs text-stone-400">Opening stock balance</p>
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label>Tracking Method</Label>
-                                    <Select value={formData.tracking_method || "none"} onValueChange={(v) => onFieldChange("tracking_method", v)}>
+                                    <Select value={formData.tracking_method || "none"} disabled>
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="none">None</SelectItem>
@@ -382,22 +390,16 @@ const ProductForm = memo(function ProductForm({
                                     </Select>
                                 </div>
                             </div>
-
-                            {/* Reorder & Overstock */}
-                            <div className="border-t border-stone-100 pt-4">
-                                <Label className="text-sm font-medium mb-3 block">Reorder & Overstock</Label>
+                            <div className="border-t border-stone-100 pt-4 opacity-40 pointer-events-none select-none">
+                                <Label className="text-sm font-medium mb-3 block">Reorder &amp; Overstock</Label>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <Label className="text-xs text-stone-400">Reorder Point</Label>
-                                        <Input type="number" min="0" value={formData.reorder_point || ""}
-                                            onChange={(e) => onFieldChange("reorder_point", e.target.value)}
-                                            placeholder="Low stock alert threshold" />
+                                        <Input type="number" min="0" value="" onChange={() => { }} placeholder="Low stock alert threshold" disabled />
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label className="text-xs text-stone-400">Overstock Point</Label>
-                                        <Input type="number" min="0" value={formData.overstock_point || ""}
-                                            onChange={(e) => onFieldChange("overstock_point", e.target.value)}
-                                            placeholder="Max stock alert threshold" />
+                                        <Input type="number" min="0" value="" onChange={() => { }} placeholder="Max stock alert threshold" disabled />
                                     </div>
                                 </div>
                             </div>
