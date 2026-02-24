@@ -24,12 +24,12 @@ import { cn } from '@/lib/utils';
 // METRIC CARD — Glassmorphism style with trend indicator
 // ============================================================================
 
-function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, loading, accent = 'neutral' }) {
+function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, loading }) {
     if (loading) {
         return (
             <Card className="overflow-hidden">
                 <CardContent className="p-5">
-                    <Skeleton className="h-9 w-9 rounded-lg mb-4" />
+                    <Skeleton className="h-9 w-9 rounded-md mb-4" />
                     <Skeleton className="h-4 w-20 mb-2" />
                     <Skeleton className="h-7 w-32 mb-1" />
                     <Skeleton className="h-3 w-24" />
@@ -38,52 +38,33 @@ function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, 
         );
     }
 
-    const accentStyles = {
-        green: 'from-emerald-500/10 to-transparent border-emerald-200/50',
-        blue: 'from-blue-500/10 to-transparent border-blue-200/50',
-        sky: 'from-sky-500/10 to-transparent border-sky-200/50',
-        amber: 'from-amber-500/10 to-transparent border-amber-200/50',
-        rose: 'from-rose-500/10 to-transparent border-rose-200/50',
-        neutral: 'from-neutral-100/50 to-transparent border-neutral-200/80',
-    };
-
-    const iconStyles = {
-        green: 'bg-emerald-100 text-emerald-600',
-        blue: 'bg-blue-100 text-blue-600',
-        sky: 'bg-sky-100 text-sky-600',
-        amber: 'bg-amber-100 text-amber-600',
-        rose: 'bg-rose-100 text-rose-600',
-        neutral: 'bg-neutral-100 text-neutral-500',
-    };
-
     const TrendIcon = trendDirection === 'up' ? ArrowUpRight : ArrowDownRight;
     const hasTrend = trend !== null && trend !== undefined && trend !== 0;
 
     return (
-        <Card className={cn(
-            "overflow-hidden bg-gradient-to-br transition-all duration-200 hover:shadow-md",
-            accentStyles[accent]
-        )}>
+        <Card className="overflow-hidden hover:shadow-sm transition-shadow duration-150">
             <CardContent className="p-5">
-                <div className="flex justify-between items-start mb-3">
-                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", iconStyles[accent])}>
-                        <Icon className="h-5 w-5" />
+                <div className="flex justify-between items-start mb-4">
+                    <div className="w-9 h-9 rounded-md bg-neutral-100 flex items-center justify-center">
+                        <Icon className="h-4 w-4 text-neutral-500" />
                     </div>
                     {hasTrend && (
                         <div className={cn(
-                            "flex items-center gap-0.5 text-xs font-semibold px-2 py-1 rounded-full",
+                            "flex items-center text-xs font-medium px-2 py-0.5 rounded",
                             trendDirection === 'up'
-                                ? 'text-emerald-700 bg-emerald-100'
-                                : 'text-red-600 bg-red-100'
+                                ? 'text-emerald-700 bg-emerald-50'
+                                : 'text-red-700 bg-red-50'
                         )}>
-                            <TrendIcon className="h-3 w-3" />
+                            <TrendIcon className="h-3 w-3 mr-1" />
                             {Math.abs(trend)}%
                         </div>
                     )}
                 </div>
-                <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1">{title}</p>
-                <p className="text-2xl font-bold text-neutral-900 tracking-tight">{value}</p>
-                {subtext && <p className="text-xs text-neutral-400 mt-1">{subtext}</p>}
+                <div className="space-y-1">
+                    <p className="text-sm font-medium text-neutral-500">{title}</p>
+                    <p className="text-2xl font-bold text-neutral-900 tracking-tight">{value}</p>
+                </div>
+                {subtext && <p className="text-xs text-neutral-400 mt-2">{subtext}</p>}
             </CardContent>
         </Card>
     );
@@ -560,7 +541,6 @@ export default function DashboardPage() {
                     trend={kpis.revenueChange || null}
                     trendDirection={(kpis.revenueChange || 0) >= 0 ? 'up' : 'down'}
                     icon={IndianRupee}
-                    accent="green"
                     loading={loading}
                 />
                 <MetricCard
@@ -568,7 +548,6 @@ export default function DashboardPage() {
                     value={formatCurrency(summary.totalQuotedValue || 0, { compact: true })}
                     subtext={`${summary.totalQuotations || 0} quotations`}
                     icon={FileText}
-                    accent="blue"
                     loading={loading}
                 />
                 <MetricCard
@@ -578,7 +557,6 @@ export default function DashboardPage() {
                     trend={kpis.ordersChange || null}
                     trendDirection={(kpis.ordersChange || 0) >= 0 ? 'up' : 'down'}
                     icon={ShoppingCart}
-                    accent="sky"
                     loading={loading}
                 />
                 <MetricCard
@@ -586,7 +564,6 @@ export default function DashboardPage() {
                     value={`${summary.conversionRate || 0}%`}
                     subtext="Quotes → Orders"
                     icon={Percent}
-                    accent="amber"
                     loading={loading}
                 />
                 <MetricCard
@@ -596,7 +573,6 @@ export default function DashboardPage() {
                     trend={kpis.targetAchievement >= 100 ? 10 : kpis.targetAchievement >= 80 ? 5 : null}
                     trendDirection={kpis.targetAchievement >= 80 ? 'up' : 'down'}
                     icon={Target}
-                    accent="rose"
                     loading={loading}
                 />
                 <MetricCard
@@ -604,7 +580,6 @@ export default function DashboardPage() {
                     value={formatCurrency(summary.avgOrderValue || 0, { compact: true })}
                     subtext="Per sales order"
                     icon={BarChart3}
-                    accent="neutral"
                     loading={loading}
                 />
             </div>
