@@ -12,6 +12,11 @@ export const metadata = {
   title: "BENZTRAQ | Sales Performance Dashboard",
   description: "Premium internal application for tracking sales performance, quotations, and sales orders.",
   keywords: ["benztraq", "sales", "performance", "dashboard", "quotations", "sales orders"],
+  icons: {
+    icon: "/assets/blue-logo.png",
+    shortcut: "/assets/blue-logo.png",
+    apple: "/assets/blue-logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
