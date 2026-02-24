@@ -76,7 +76,7 @@ export default function ProductsPage() {
     const [editingProduct, setEditingProduct] = useState(null);
 
     // Form state - kept in parent for controlled form
-    const [formData, setFormData] = useState({
+    const defaultForm = {
         item_code: "",
         item_name: "",
         description: "",
@@ -92,8 +92,22 @@ export default function ProductsPage() {
         dimension_uom: "mm",
         thickness_micron: "",
         gsm: "",
-        ply_count: ""
-    });
+        ply_count: "",
+        item_type: "Goods",
+        buying_price: "",
+        landed_cost: "",
+        tags: "",
+        internal_notes: "",
+        gross_weight: "",
+        net_weight: "",
+        tracking_method: "none",
+        invoicing_policy: "ordered",
+        is_stock_item: true,
+        is_sales_item: true,
+        is_purchase_item: true,
+        maintain_stock: true,
+    };
+    const [formData, setFormData] = useState(defaultForm);
 
     // Fetch products
     const fetchProducts = useCallback(async () => {
@@ -189,24 +203,7 @@ export default function ProductsPage() {
 
     // Reset form
     const resetForm = useCallback(() => {
-        setFormData({
-            item_code: "",
-            item_name: "",
-            description: "",
-            item_group_id: "",
-            brand_id: "",
-            stock_uom: "PCS",
-            standard_rate: 0,
-            hsn_sac_code: "",
-            gst_rate: 18,
-            length: "",
-            width: "",
-            height: "",
-            dimension_uom: "mm",
-            thickness_micron: "",
-            gsm: "",
-            ply_count: ""
-        });
+        setFormData(defaultForm);
     }, []);
 
     // Create product
@@ -223,10 +220,14 @@ export default function ProductsPage() {
                 body: JSON.stringify({
                     ...formData,
                     standard_rate: parseFloat(formData.standard_rate) || 0,
+                    buying_price: formData.buying_price ? parseFloat(formData.buying_price) : null,
+                    landed_cost: formData.landed_cost ? parseFloat(formData.landed_cost) : null,
                     gst_rate: parseFloat(formData.gst_rate) || 18,
                     length: formData.length ? parseFloat(formData.length) : null,
                     width: formData.width ? parseFloat(formData.width) : null,
                     height: formData.height ? parseFloat(formData.height) : null,
+                    gross_weight: formData.gross_weight ? parseFloat(formData.gross_weight) : null,
+                    net_weight: formData.net_weight ? parseFloat(formData.net_weight) : null,
                     thickness_micron: formData.thickness_micron ? parseFloat(formData.thickness_micron) : null,
                     gsm: formData.gsm ? parseFloat(formData.gsm) : null,
                     ply_count: formData.ply_count ? parseInt(formData.ply_count) : null,
@@ -270,7 +271,20 @@ export default function ProductsPage() {
             dimension_uom: product.dimension_uom || "mm",
             thickness_micron: product.thickness_micron || "",
             gsm: product.gsm || "",
-            ply_count: product.ply_count || ""
+            ply_count: product.ply_count || "",
+            item_type: product.item_type || "Goods",
+            buying_price: product.buying_price || "",
+            landed_cost: product.landed_cost || "",
+            tags: product.tags || "",
+            internal_notes: product.internal_notes || "",
+            gross_weight: product.gross_weight || "",
+            net_weight: product.net_weight || "",
+            tracking_method: product.tracking_method || "none",
+            invoicing_policy: product.invoicing_policy || "ordered",
+            is_stock_item: product.is_stock_item ?? true,
+            is_sales_item: product.is_sales_item ?? true,
+            is_purchase_item: product.is_purchase_item ?? true,
+            maintain_stock: product.maintain_stock ?? true,
         });
         setIsEditOpen(true);
     };

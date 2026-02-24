@@ -30,6 +30,10 @@ import {
 } from '@/lib/services/tax-computation';
 import OdooCustomerSelect from '@/components/odoo/OdooCustomerSelect';
 import CustomerFormModal from '@/components/crm/CustomerFormModal';
+import ProductForm from '@/components/products/ProductForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 // Indian States
 const INDIAN_STATES = [
@@ -92,7 +96,8 @@ function SearchableDropdown({
     searchKeys = ["name"],
     className = "",
     disabled = false,
-    filterFn = null
+    filterFn = null,
+    onCreateNew = null
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
@@ -265,7 +270,17 @@ function SearchableDropdown({
                         {displayOptions.length === 0 ? (
                             <div className="px-4 py-6 text-sm text-stone-500 text-center">
                                 <Search className="w-6 h-6 text-stone-300 mx-auto mb-2" />
-                                No results found
+                                <p>No results found</p>
+                                {onCreateNew && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); setIsOpen(false); setSearch(''); onCreateNew(search); }}
+                                        className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 text-white text-xs font-medium rounded-lg hover:bg-stone-700 transition-colors"
+                                    >
+                                        <Plus className="w-3 h-3" />
+                                        Create Product
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             displayOptions.map((option, idx) => (
@@ -311,6 +326,20 @@ export default function NewQuotationPage() {
     const [success, setSuccess] = useState('');
     const [showCustomerModal, setShowCustomerModal] = useState(false);
     const [pendingCustomerName, setPendingCustomerName] = useState('');
+
+    // Create Product modal state
+    const [showCreateProductModal, setShowCreateProductModal] = useState(false);
+    const [newProductData, setNewProductData] = useState({
+        item_code: '', item_name: '', description: '', item_group_id: '', brand_id: '',
+        stock_uom: 'PCS', standard_rate: 0, hsn_sac_code: '', gst_rate: 18,
+        length: '', width: '', height: '', dimension_uom: 'mm',
+        thickness_micron: '', gsm: '', ply_count: '', item_type: 'Goods',
+        buying_price: '', landed_cost: '', tags: '', internal_notes: '',
+        gross_weight: '', net_weight: '', tracking_method: 'none',
+        invoicing_policy: 'ordered', is_stock_item: true, is_sales_item: true,
+        is_purchase_item: true, maintain_stock: true,
+    });
+    const [productSaving, setProductSaving] = useState(false);
 
     const [document, setDocument] = useState({
         partner_id: '',
@@ -370,6 +399,56 @@ export default function NewQuotationPage() {
             })));
         } catch (err) {
             console.error('Failed to load products:', err);
+        }
+    };
+
+    // Create Product handler
+    const handleProductCreate = async () => {
+        if (!newProductData.item_name) {
+            setError('Product name is required');
+            return;
+        }
+        setProductSaving(true);
+        try {
+            const code = newProductData.item_code || `PROD-${Date.now()}`;
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...newProductData,
+                    item_code: code,
+                    standard_rate: parseFloat(newProductData.standard_rate) || 0,
+                    buying_price: newProductData.buying_price ? parseFloat(newProductData.buying_price) : null,
+                    landed_cost: newProductData.landed_cost ? parseFloat(newProductData.landed_cost) : null,
+                    gst_rate: parseFloat(newProductData.gst_rate) || 18,
+                    length: newProductData.length ? parseFloat(newProductData.length) : null,
+                    width: newProductData.width ? parseFloat(newProductData.width) : null,
+                    height: newProductData.height ? parseFloat(newProductData.height) : null,
+                    gross_weight: newProductData.gross_weight ? parseFloat(newProductData.gross_weight) : null,
+                    net_weight: newProductData.net_weight ? parseFloat(newProductData.net_weight) : null,
+                    thickness_micron: newProductData.thickness_micron ? parseFloat(newProductData.thickness_micron) : null,
+                    gsm: newProductData.gsm ? parseFloat(newProductData.gsm) : null,
+                    ply_count: newProductData.ply_count ? parseInt(newProductData.ply_count) : null,
+                    item_group_id: newProductData.item_group_id || null,
+                    brand_id: newProductData.brand_id || null,
+                    hsn_sac_code: newProductData.hsn_sac_code || null,
+                }),
+            });
+            const data = await res.json();
+            if (res.ok && data.product) {
+                setShowCreateProductModal(false);
+                setNewProductData(prev => ({ ...prev, item_code: '', item_name: '', description: '' }));
+                await loadProducts(); // Refresh products list
+                setSuccess(`Product "${data.product.item_name}" created!`);
+                setTimeout(() => setSuccess(''), 3000);
+            } else {
+                setError(data.error || 'Failed to create product');
+            }
+        } catch (err) {
+            console.error('Create product error:', err);
+            setError('Failed to create product');
+        } finally {
+            setProductSaving(false);
         }
     };
 
@@ -853,6 +932,14 @@ export default function NewQuotationPage() {
                                                         valueKey="id"
                                                         searchKeys={["name", "hsn_code", "item_code"]}
                                                         className="w-full"
+                                                        onCreateNew={(searchTerm) => {
+                                                            setNewProductData(prev => ({
+                                                                ...prev,
+                                                                item_name: searchTerm || '',
+                                                                item_code: '',
+                                                            }));
+                                                            setShowCreateProductModal(true);
+                                                        }}
                                                     />
                                                 </td>
                                                 <td className="px-4 py-4">
@@ -972,6 +1059,31 @@ export default function NewQuotationPage() {
                 onSave={handleCustomerCreated}
                 initialName={pendingCustomerName}
             />
+
+            {/* Create Product Modal */}
+            <Dialog open={showCreateProductModal} onOpenChange={setShowCreateProductModal}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Create Product</DialogTitle>
+                        <DialogDescription>Add a new product to your catalog</DialogDescription>
+                    </DialogHeader>
+                    <ProductForm
+                        formData={newProductData}
+                        onFieldChange={(field, value) => setNewProductData(prev => ({ ...prev, [field]: value }))}
+                        itemGroups={[]}
+                        brands={[]}
+                        hsnCodes={[]}
+                    />
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowCreateProductModal(false)}>
+                            Discard
+                        </Button>
+                        <Button onClick={handleProductCreate} disabled={productSaving}>
+                            {productSaving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</> : 'Save & Close'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

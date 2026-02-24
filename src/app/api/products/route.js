@@ -127,7 +127,7 @@ export async function POST(request) {
             );
         }
 
-        // Prepare product data
+        // Prepare product data — includes all expanded fields
         const productData = {
             item_code: body.item_code,
             item_name: body.item_name,
@@ -149,7 +149,17 @@ export async function POST(request) {
             is_sales_item: body.is_sales_item ?? true,
             is_purchase_item: body.is_purchase_item ?? true,
             maintain_stock: body.maintain_stock ?? true,
-            created_by: currentUser.id
+            created_by: currentUser.id,
+            // Expanded fields
+            item_type: body.item_type || 'Goods',
+            buying_price: body.buying_price || null,
+            landed_cost: body.landed_cost || null,
+            gross_weight: body.gross_weight || null,
+            net_weight: body.net_weight || null,
+            tags: body.tags || null,
+            internal_notes: body.internal_notes || null,
+            tracking_method: body.tracking_method || 'none',
+            invoicing_policy: body.invoicing_policy || 'ordered',
         };
 
         const { data, error } = await supabase
