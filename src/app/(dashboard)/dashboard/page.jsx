@@ -9,124 +9,268 @@ import { HeroChart } from '@/components/dashboard/hero-chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-    TrendingUp, TrendingDown, DollarSign, FileText, ShoppingCart,
+    TrendingUp, TrendingDown, IndianRupee, FileText, ShoppingCart,
     Target, Users, RefreshCw, AlertCircle, BarChart3, Building2,
-    ArrowUpRight, ArrowDownRight, Package, Percent, IndianRupee
+    ArrowUpRight, ArrowDownRight, Package, Percent, Trophy,
+    MapPin, ChevronRight
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatting';
-import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
+import { subMonths, endOfMonth, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-// ============================================================================
-// METRIC CARD — Glassmorphism style with trend indicator
-// ============================================================================
-
-function MetricCard({ title, value, subtext, trend, trendDirection, icon: Icon, loading }) {
-    if (loading) {
-        return (
-            <Card className="overflow-hidden">
-                <CardContent className="p-5">
-                    <Skeleton className="h-9 w-9 rounded-md mb-4" />
-                    <Skeleton className="h-4 w-20 mb-2" />
-                    <Skeleton className="h-7 w-32 mb-1" />
-                    <Skeleton className="h-3 w-24" />
-                </CardContent>
-            </Card>
-        );
-    }
-
-    const TrendIcon = trendDirection === 'up' ? ArrowUpRight : ArrowDownRight;
-    const hasTrend = trend !== null && trend !== undefined && trend !== 0;
-
+// ─────────────────────────────────────────────────────────────────────────────
+// KPI CARD — clean, white, minimal
+// ─────────────────────────────────────────────────────────────────────────────
+function KpiCard({ label, value, sub, trend, icon: Icon, loading }) {
+    if (loading) return (
+        <Card><CardContent className="p-5"><Skeleton className="h-4 w-16 mb-3" /><Skeleton className="h-7 w-28 mb-1" /><Skeleton className="h-3 w-20" /></CardContent></Card>
+    );
+    const up = trend > 0;
     return (
-        <Card className="overflow-hidden hover:shadow-sm transition-shadow duration-150">
+        <Card className="hover:shadow-sm transition-shadow">
             <CardContent className="p-5">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="w-9 h-9 rounded-md bg-neutral-100 flex items-center justify-center">
-                        <Icon className="h-4 w-4 text-neutral-500" />
+                <div className="flex items-center justify-between mb-3">
+                    <div className="w-8 h-8 rounded bg-stone-100 flex items-center justify-center">
+                        <Icon className="h-4 w-4 text-stone-500" />
                     </div>
-                    {hasTrend && (
-                        <div className={cn(
-                            "flex items-center text-xs font-medium px-2 py-0.5 rounded",
-                            trendDirection === 'up'
-                                ? 'text-emerald-700 bg-emerald-50'
-                                : 'text-red-700 bg-red-50'
-                        )}>
-                            <TrendIcon className="h-3 w-3 mr-1" />
+                    {trend !== undefined && trend !== null && trend !== 0 && (
+                        <span className={cn("text-xs font-medium flex items-center gap-0.5",
+                            up ? "text-emerald-600" : "text-red-500")}>
+                            {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                             {Math.abs(trend)}%
-                        </div>
+                        </span>
                     )}
                 </div>
-                <div className="space-y-1">
-                    <p className="text-sm font-medium text-neutral-500">{title}</p>
-                    <p className="text-2xl font-bold text-neutral-900 tracking-tight">{value}</p>
-                </div>
-                {subtext && <p className="text-xs text-neutral-400 mt-2">{subtext}</p>}
+                <p className="text-xs text-stone-400 font-medium mb-1">{label}</p>
+                <p className="text-xl font-bold text-stone-900 tracking-tight">{value}</p>
+                {sub && <p className="text-xs text-stone-400 mt-1.5">{sub}</p>}
             </CardContent>
         </Card>
     );
 }
 
-// ============================================================================
-// SALES FUNNEL — Real pipeline stages from document states  
-// ============================================================================
-function SalesFunnel({ data, loading }) {
-    if (loading) {
-        return (
-            <div className="space-y-4">
-                <Skeleton className="h-10 w-full rounded-lg" />
-                <Skeleton className="h-10 w-4/5 rounded-lg" />
-                <Skeleton className="h-10 w-3/5 rounded-lg" />
-            </div>
-        );
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// TARGET ACHIEVEMENT — per-region progress bars
+// ─────────────────────────────────────────────────────────────────────────────
+function RegionalTargets({ targets, loading }) {
+    if (loading) return (
+        <div className="space-y-4">{[1, 2, 3, 4].map(i => <div key={i}><Skeleton className="h-4 w-28 mb-2" /><Skeleton className="h-3 w-full" /></div>)}</div>
+    );
+    if (!targets || targets.length === 0) return (
+        <div className="text-center py-10 text-stone-400">
+            <Target className="h-10 w-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No targets set for this year</p>
+            <p className="text-xs mt-1">Go to Targets to set regional goals</p>
+        </div>
+    );
 
-    if (!data || data.length === 0) {
-        return (
-            <div className="text-center py-8 text-neutral-400">
-                <BarChart3 className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No pipeline data yet</p>
-            </div>
-        );
-    }
-
-    const maxValue = Math.max(...data.map(d => d.value || 0), 1);
-    const stageColors = ['#3B82F6', '#8B5CF6', '#F59E0B', '#10B981'];
-    const stageIcons = ['📋', '📤', '🤝', '✅'];
+    const sorted = [...targets].sort((a, b) => {
+        const aPct = a.annualTarget > 0 ? (a.totalAchieved / a.annualTarget) : 0;
+        const bPct = b.annualTarget > 0 ? (b.totalAchieved / b.annualTarget) : 0;
+        return bPct - aPct;
+    });
 
     return (
-        <div className="space-y-3">
-            {data.map((stage, index) => {
-                const width = (stage.value / maxValue) * 100;
-                const dropoff = index > 0 && data[index - 1].value > 0
-                    ? Math.round((1 - stage.value / data[index - 1].value) * 100)
-                    : 0;
-
+        <div className="space-y-4">
+            {sorted.map((t, i) => {
+                const pct = t.annualTarget > 0 ? Math.min(Math.round((t.totalAchieved / t.annualTarget) * 100), 100) : 0;
+                const overTarget = t.totalAchieved >= t.annualTarget && t.annualTarget > 0;
                 return (
-                    <div key={index}>
+                    <div key={i}>
                         <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-sm font-medium text-neutral-700 flex items-center gap-2">
-                                <span className="text-base">{stageIcons[index] || '📊'}</span>
-                                {stage.name}
-                            </span>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-neutral-900">{stage.value}</span>
-                                {index > 0 && dropoff > 0 && (
-                                    <span className="text-xs text-red-500 font-medium">-{dropoff}%</span>
-                                )}
+                                <MapPin className="h-3.5 w-3.5 text-stone-400" />
+                                <span className="text-sm font-medium text-stone-800">{t.salespersonName}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-stone-500">
+                                <span>{formatCurrency(t.totalAchieved, { compact: true })}</span>
+                                <span className="text-stone-300">/</span>
+                                <span>{formatCurrency(t.annualTarget, { compact: true })}</span>
+                                <span className={cn("font-bold min-w-[36px] text-right",
+                                    pct >= 80 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-red-500"
+                                )}>{pct}%</span>
                             </div>
                         </div>
-                        <div className="h-8 bg-neutral-100 rounded-lg overflow-hidden relative">
-                            <div
-                                className="h-full rounded-lg transition-all duration-700 ease-out"
-                                style={{
-                                    width: `${Math.max(width, 8)}%`,
-                                    backgroundColor: stageColors[index] || '#6B7280',
-                                }}
-                            />
+                        <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                            <div className={cn("h-full rounded-full transition-all duration-700",
+                                overTarget ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400"
+                            )} style={{ width: `${Math.max(pct, 2)}%` }} />
+                        </div>
+                    </div>
+                );
+            })}
+            {/* Total summary */}
+            {(() => {
+                const totalTarget = sorted.reduce((s, t) => s + t.annualTarget, 0);
+                const totalAchieved = sorted.reduce((s, t) => s + t.totalAchieved, 0);
+                const totalPct = totalTarget > 0 ? Math.round((totalAchieved / totalTarget) * 100) : 0;
+                return (
+                    <div className="pt-3 mt-3 border-t border-stone-100">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-stone-900">Total</span>
+                            <div className="flex items-center gap-3 text-xs">
+                                <span className="text-stone-600 font-medium">{formatCurrency(totalAchieved, { compact: true })}</span>
+                                <span className="text-stone-300">/</span>
+                                <span className="text-stone-500">{formatCurrency(totalTarget, { compact: true })}</span>
+                                <span className={cn("font-bold",
+                                    totalPct >= 80 ? "text-emerald-600" : "text-amber-600"
+                                )}>{totalPct}%</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REGIONAL PERFORMANCE TABLE — revenue, orders, avg per region
+// ─────────────────────────────────────────────────────────────────────────────
+function RegionalPerformance({ data, loading }) {
+    if (loading) return (
+        <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full" />)}</div>
+    );
+    if (!data || data.length === 0) return (
+        <div className="text-center py-10 text-stone-400">
+            <MapPin className="h-10 w-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No regional data</p>
+        </div>
+    );
+    const maxRevenue = Math.max(...data.map(d => d.revenue), 1);
+    return (
+        <div className="overflow-hidden">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="border-b border-stone-100">
+                        <th className="text-left py-2 text-xs font-medium text-stone-400 uppercase">Region</th>
+                        <th className="text-right py-2 text-xs font-medium text-stone-400 uppercase">Orders</th>
+                        <th className="text-right py-2 text-xs font-medium text-stone-400 uppercase">Revenue</th>
+                        <th className="text-right py-2 text-xs font-medium text-stone-400 uppercase w-28">Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.map((r, i) => {
+                        const share = maxRevenue > 0 ? (r.revenue / maxRevenue) * 100 : 0;
+                        return (
+                            <tr key={i} className="border-b border-stone-50 hover:bg-stone-50 transition-colors">
+                                <td className="py-2.5 font-medium text-stone-800">{r.region}</td>
+                                <td className="py-2.5 text-right text-stone-600">{r.orders}</td>
+                                <td className="py-2.5 text-right font-medium text-stone-900">
+                                    {formatCurrency(r.revenue, { compact: true })}
+                                </td>
+                                <td className="py-2.5 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                        <div className="w-16 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                                            <div className="h-full bg-stone-800 rounded-full" style={{ width: `${share}%` }} />
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOP PRODUCTS — list with bars
+// ─────────────────────────────────────────────────────────────────────────────
+function TopProducts({ data, loading }) {
+    if (loading) return (
+        <div className="space-y-3">{[1, 2, 3].map(i => <div key={i}><Skeleton className="h-4 w-28 mb-1" /><Skeleton className="h-2 w-full" /></div>)}</div>
+    );
+    const sorted = [...(data || [])].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+    const maxVal = sorted[0]?.revenue || 1;
+    if (sorted.length === 0) return (
+        <div className="text-center py-10 text-stone-400">
+            <Package className="h-10 w-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No product data</p>
+        </div>
+    );
+    return (
+        <div className="space-y-3">
+            {sorted.map((p, i) => (
+                <div key={i}>
+                    <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-stone-700 truncate max-w-[200px]" title={p.name}>{p.name}</span>
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <span className="text-xs text-stone-400">{p.orders || p.count || 0}</span>
+                            <span className="text-xs font-bold text-stone-800">{formatCurrency(p.revenue, { compact: true })}</span>
+                        </div>
+                    </div>
+                    <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-stone-700 rounded-full transition-all duration-500"
+                            style={{ width: `${(p.revenue / maxVal) * 100}%` }} />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOP CUSTOMERS
+// ─────────────────────────────────────────────────────────────────────────────
+function TopCustomers({ data, loading }) {
+    if (loading) return (
+        <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="flex items-center justify-between"><Skeleton className="h-4 w-32" /><Skeleton className="h-4 w-16" /></div>)}</div>
+    );
+    if (!data || data.length === 0) return (
+        <div className="text-center py-10 text-stone-400">
+            <Building2 className="h-10 w-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No customers yet</p>
+        </div>
+    );
+    return (
+        <div className="space-y-1">
+            {data.slice(0, 5).map((c, i) => (
+                <div key={i} className="flex items-center justify-between py-2 hover:bg-stone-50 rounded-lg px-2 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded bg-stone-100 flex items-center justify-center text-xs font-bold text-stone-500">
+                            {(c.name || '?')[0].toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-stone-800 truncate max-w-[180px]">{c.name}</p>
+                            <p className="text-xs text-stone-400">{c.orders} order{c.orders !== 1 ? 's' : ''}</p>
+                        </div>
+                    </div>
+                    <span className="text-sm font-bold text-stone-800">{formatCurrency(c.revenue, { compact: true })}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FUNNEL
+// ─────────────────────────────────────────────────────────────────────────────
+function SalesFunnel({ data, loading }) {
+    if (loading) return <div className="space-y-3">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-8 w-full" />)}</div>;
+    if (!data || data.length === 0) return (
+        <div className="text-center py-10 text-stone-400">
+            <BarChart3 className="h-10 w-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No pipeline data</p>
+        </div>
+    );
+    const maxVal = Math.max(...data.map(d => d.value || 0), 1);
+    return (
+        <div className="space-y-3">
+            {data.map((s, i) => {
+                const w = (s.value / maxVal) * 100;
+                return (
+                    <div key={i}>
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm text-stone-600">{s.name}</span>
+                            <span className="text-sm font-bold text-stone-800">{s.value}</span>
+                        </div>
+                        <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full bg-stone-600 transition-all duration-500"
+                                style={{ width: `${Math.max(w, 4)}%` }} />
                         </div>
                     </div>
                 );
@@ -135,379 +279,91 @@ function SalesFunnel({ data, loading }) {
     );
 }
 
-// ============================================================================
-// PIPELINE STATUS — Donut-style visual  
-// ============================================================================
-function PipelineStatus({ data, loading }) {
-    if (loading) {
-        return (
-            <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="flex items-center justify-between">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-12" />
-                    </div>
-                ))}
-            </div>
-        );
-    }
-
-    if (!data || data.length === 0) {
-        return (
-            <div className="text-center py-8 text-neutral-400">
-                <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No documents yet</p>
-            </div>
-        );
-    }
-
-    const colors = [
-        { bg: 'bg-emerald-500', text: 'text-emerald-700', light: 'bg-emerald-100' },
-        { bg: 'bg-blue-500', text: 'text-blue-700', light: 'bg-blue-100' },
-        { bg: 'bg-amber-500', text: 'text-amber-700', light: 'bg-amber-100' },
-        { bg: 'bg-red-500', text: 'text-red-700', light: 'bg-red-100' },
-        { bg: 'bg-purple-500', text: 'text-purple-700', light: 'bg-purple-100' },
-    ];
-    const total = data.reduce((sum, item) => sum + item.value, 0);
-
-    return (
-        <div className="space-y-4">
-            {/* Stacked bar */}
-            <div className="h-4 rounded-full overflow-hidden flex bg-neutral-100">
-                {data.map((item, i) => (
-                    <div
-                        key={i}
-                        className={cn("h-full transition-all duration-500", colors[i % colors.length].bg)}
-                        style={{ width: total > 0 ? `${(item.value / total) * 100}%` : '0%' }}
-                    />
-                ))}
-            </div>
-            {/* Legend */}
-            <div className="space-y-2">
-                {data.map((item, i) => {
-                    const c = colors[i % colors.length];
-                    const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
-                    return (
-                        <div key={i} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className={cn("w-2.5 h-2.5 rounded-full", c.bg)} />
-                                <span className="text-sm text-neutral-600 capitalize">{item.name.replace('_', ' ')}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className={cn("text-xs font-bold px-1.5 py-0.5 rounded", c.light, c.text)}>
-                                    {item.value}
-                                </span>
-                                <span className="text-xs text-neutral-400 w-8 text-right">{pct}%</span>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
-
-// ============================================================================
-// TOP PRODUCTS — with horizontal bars  
-// ============================================================================
-function TopProductsCard({ data, loading }) {
-    if (loading) {
-        return (
-            <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="space-y-1">
-                        <Skeleton className="h-4 w-28" />
-                        <Skeleton className="h-2 w-full" />
-                    </div>
-                ))}
-            </div>
-        );
-    }
-
-    const sorted = [...(data || [])].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-    const maxVal = sorted[0]?.revenue || 1;
-
-    if (sorted.length === 0) {
-        return (
-            <div className="text-center py-8 text-neutral-400">
-                <Package className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No product data</p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-3.5">
-            {sorted.map((item, i) => (
-                <div key={i}>
-                    <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-neutral-800 truncate max-w-[200px]" title={item.name}>
-                            {item.name}
-                        </span>
-                        <div className="flex items-center gap-2 shrink-0 ml-2">
-                            <span className="text-xs text-neutral-400">{item.orders || item.count || 0} orders</span>
-                            <span className="text-xs font-bold text-neutral-900">
-                                {formatCurrency(item.revenue, { compact: true })}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="w-full bg-neutral-100 rounded-full h-2 overflow-hidden">
-                        <div
-                            className="h-full rounded-full transition-all duration-700 ease-out"
-                            style={{
-                                width: `${(item.revenue / maxVal) * 100}%`,
-                                background: `linear-gradient(90deg, #6366f1, #818cf8)`,
-                            }}
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-// ============================================================================
-// TOP PERFORMERS / LEADERBOARD
-// ============================================================================
-function TopPerformers({ data, loading }) {
-    if (loading) {
-        return (
-            <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="flex items-center gap-4">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="flex-1">
-                            <Skeleton className="h-4 w-32 mb-2" />
-                            <Skeleton className="h-3 w-20" />
-                        </div>
-                        <Skeleton className="h-4 w-24" />
-                    </div>
-                ))}
-            </div>
-        );
-    }
-
-    if (!data || data.length === 0) {
-        return (
-            <div className="text-center py-8 text-neutral-400">
-                <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No team performance data available</p>
-            </div>
-        );
-    }
-
-    const sorted = [...data].sort((a, b) => (b.revenue || 0) - (a.revenue || 0)).slice(0, 5);
-    const maxRevenue = sorted[0]?.revenue || 1;
-    const medals = ['🥇', '🥈', '🥉'];
-
-    return (
-        <div className="space-y-2">
-            {sorted.map((user, index) => (
-                <div key={user.uid || index} className="rounded-lg p-3 hover:bg-neutral-50 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                            <div className={cn(
-                                "flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold",
-                                index === 0 ? 'bg-amber-100 text-amber-700' :
-                                    index === 1 ? 'bg-neutral-200 text-neutral-700' :
-                                        index === 2 ? 'bg-orange-100 text-orange-700' : 'bg-neutral-50 text-neutral-500'
-                            )}>
-                                {index < 3 ? medals[index] : index + 1}
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold text-neutral-900">{user.name}</p>
-                                <div className="flex items-center gap-2 text-xs text-neutral-500">
-                                    <span>{user.orders || 0} orders</span>
-                                    <span>•</span>
-                                    <span className={user.conversion >= 30 ? 'text-emerald-600 font-medium' : ''}>
-                                        {user.conversion || 0}% conv
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <span className="text-sm font-bold text-neutral-900">
-                            {formatCurrency(user.revenue, { compact: true })}
-                        </span>
-                    </div>
-                    {/* Revenue bar */}
-                    <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden ml-12">
-                        <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                                width: `${(user.revenue / maxRevenue) * 100}%`,
-                                background: index === 0 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' :
-                                    index === 1 ? 'linear-gradient(90deg, #9ca3af, #d1d5db)' :
-                                        'linear-gradient(90deg, #6366f1, #a5b4fc)',
-                            }}
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-// ============================================================================
-// TOP CUSTOMERS
-// ============================================================================
-function TopCustomers({ data, loading }) {
-    if (loading) {
-        return (
-            <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="flex items-center justify-between">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-4 w-20" />
-                    </div>
-                ))}
-            </div>
-        );
-    }
-
-    if (!data || data.length === 0) {
-        return (
-            <div className="text-center py-8 text-neutral-400">
-                <Building2 className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No customer data</p>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-2">
-            {data.slice(0, 5).map((customer, i) => (
-                <div key={i} className="flex items-center justify-between p-2.5 hover:bg-neutral-50 rounded-lg transition-colors">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-xs font-bold text-neutral-500">
-                            {(customer.name || '?')[0].toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-sm font-medium text-neutral-800 truncate">{customer.name}</p>
-                            <p className="text-xs text-neutral-400">{customer.orders} orders</p>
-                        </div>
-                    </div>
-                    <p className="text-sm font-bold text-neutral-900 ml-4">
-                        {formatCurrency(customer.revenue, { compact: true })}
-                    </p>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-// ============================================================================
-// MAIN DASHBOARD PAGE
-// ============================================================================
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN DASHBOARD
+// ═════════════════════════════════════════════════════════════════════════════
 export default function DashboardPage() {
     const { user, profile } = useAuth();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [stats, setStats] = useState(null);
+    const [targets, setTargets] = useState([]);
+    const [targetsLoading, setTargetsLoading] = useState(true);
 
-    // Filter state
+    // Filters
     const [dateRange, setDateRange] = useState({
         from: subMonths(new Date(), 6),
         to: endOfMonth(new Date())
     });
     const [selectedUsers, setSelectedUsers] = useState([]);
 
-    // Fetch Analytics Data
+    // Fetch analytics
     const fetchAnalytics = useCallback(async () => {
         setLoading(true);
         setError(null);
-
         try {
-            const queryParams = new URLSearchParams({
+            const params = new URLSearchParams({
                 from: dateRange.from.toISOString(),
                 to: dateRange.to.toISOString(),
                 users: selectedUsers.join(',')
             });
-
-            const res = await fetch(`/api/dashboard/analytics?${queryParams}`);
-
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || 'Failed to fetch analytics');
-            }
-
-            const data = await res.json();
-            setStats(data);
+            const res = await fetch(`/api/dashboard/analytics?${params}`);
+            if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch');
+            setStats(await res.json());
         } catch (err) {
-            console.error('Dashboard fetch error:', err);
             setError(err.message);
         } finally {
             setLoading(false);
         }
     }, [dateRange, selectedUsers]);
 
-    useEffect(() => {
-        fetchAnalytics();
-    }, [fetchAnalytics]);
+    // Fetch targets
+    const fetchTargets = useCallback(async () => {
+        setTargetsLoading(true);
+        try {
+            const res = await fetch(`/api/targets?year=${new Date().getFullYear()}`);
+            if (res.ok) {
+                const data = await res.json();
+                setTargets(data.targets || []);
+            }
+        } catch (e) {
+            console.error('Targets fetch error:', e);
+        } finally {
+            setTargetsLoading(false);
+        }
+    }, []);
 
-    // Derived data
+    useEffect(() => { fetchAnalytics(); fetchTargets(); }, [fetchAnalytics, fetchTargets]);
+
+    // Derived
     const { isManager: authIsManager } = useAuth();
     const isManager = stats?.isManager ?? authIsManager;
-    const summary = stats?.summaryMetrics || {};
     const kpis = stats?.kpis || {};
+    const summary = stats?.summaryMetrics || {};
     const accessibleUsers = stats?.accessibleUsers || [];
 
-    // Leaderboard calculation from trend data
-    const leaderboardData = useMemo(() => {
-        if (!stats?.userMap || !stats?.revenueTrend) return [];
-
-        return Object.entries(stats.userMap).map(([uid, name]) => {
-            let revenue = 0, orders = 0, quotes = 0;
-
-            stats.revenueTrend.forEach(point => {
-                revenue += (point[`revenue_${uid}`] || 0);
-                orders += (point[`orders_${uid}`] || 0);
-                quotes += (point[`quotes_${uid}`] || 0);
-            });
-
-            return {
-                uid,
-                name,
-                revenue,
-                orders,
-                conversion: quotes > 0 ? Math.round((orders / quotes) * 100) : 0
-            };
-        });
-    }, [stats?.userMap, stats?.revenueTrend]);
-
-    // Error state
-    if (error && !loading) {
-        return (
-            <div className="p-8 max-w-[1800px] mx-auto">
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error Loading Dashboard</AlertTitle>
-                    <AlertDescription className="flex items-center justify-between">
-                        <span>{error}</span>
-                        <Button variant="outline" size="sm" onClick={fetchAnalytics}>
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Retry
-                        </Button>
-                    </AlertDescription>
-                </Alert>
-            </div>
-        );
-    }
+    // Error
+    if (error && !loading) return (
+        <div className="p-8 max-w-[1600px] mx-auto">
+            <Alert variant="destructive"><AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription className="flex items-center justify-between">
+                    <span>{error}</span>
+                    <Button variant="outline" size="sm" onClick={fetchAnalytics}><RefreshCw className="h-4 w-4 mr-2" />Retry</Button>
+                </AlertDescription>
+            </Alert>
+        </div>
+    );
 
     return (
-        <div className="space-y-6 p-6 max-w-[1800px] mx-auto min-h-screen">
-            {/* ============================================
-                HEADER WITH FILTERS
-            ============================================ */}
+        <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
+
+            {/* ── HEADER ── */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-                        Sales Dashboard
-                    </h1>
-                    <p className="text-sm text-neutral-500">
-                        {isManager
-                            ? `Team performance overview • ${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d, yyyy')}`
-                            : `Your performance • ${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d, yyyy')}`
-                        }
+                    <h1 className="text-2xl font-bold tracking-tight text-stone-900">Sales Dashboard</h1>
+                    <p className="text-sm text-stone-400">
+                        {isManager ? 'Team performance overview' : 'Your performance'} · {format(dateRange.from, 'MMM d')} – {format(dateRange.to, 'MMM d, yyyy')}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -518,190 +374,97 @@ export default function DashboardPage() {
                         dateRange={dateRange}
                         onDateChange={setDateRange}
                     />
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={fetchAnalytics}
-                        disabled={loading}
-                        className="shrink-0"
-                    >
+                    <Button variant="outline" size="icon" onClick={() => { fetchAnalytics(); fetchTargets(); }} disabled={loading} className="shrink-0">
                         <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
                     </Button>
                 </div>
             </div>
 
-            {/* ============================================
-                KPI SUMMARY CARDS (6 CARDS)
-            ============================================ */}
+            {/* ── KPI ROW ── */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <MetricCard
-                    title="Revenue"
-                    value={formatCurrency(summary.totalRevenue || 0, { compact: true })}
-                    subtext="From confirmed orders"
-                    trend={kpis.revenueChange || null}
-                    trendDirection={(kpis.revenueChange || 0) >= 0 ? 'up' : 'down'}
-                    icon={IndianRupee}
-                    loading={loading}
-                />
-                <MetricCard
-                    title="Quoted Value"
-                    value={formatCurrency(summary.totalQuotedValue || 0, { compact: true })}
-                    subtext={`${summary.totalQuotations || 0} quotations`}
-                    icon={FileText}
-                    loading={loading}
-                />
-                <MetricCard
-                    title="Orders"
-                    value={summary.totalOrders?.toLocaleString() || '0'}
-                    subtext="Confirmed orders"
-                    trend={kpis.ordersChange || null}
-                    trendDirection={(kpis.ordersChange || 0) >= 0 ? 'up' : 'down'}
-                    icon={ShoppingCart}
-                    loading={loading}
-                />
-                <MetricCard
-                    title="Conversion"
-                    value={`${summary.conversionRate || 0}%`}
-                    subtext="Quotes → Orders"
-                    icon={Percent}
-                    loading={loading}
-                />
-                <MetricCard
-                    title="Target"
-                    value={kpis.targetAchievement ? `${kpis.targetAchievement}%` : '--'}
-                    subtext={kpis.yearlyTarget ? `of ${formatCurrency(kpis.yearlyTarget, { compact: true })}` : 'Annual achievement'}
-                    trend={kpis.targetAchievement >= 100 ? 10 : kpis.targetAchievement >= 80 ? 5 : null}
-                    trendDirection={kpis.targetAchievement >= 80 ? 'up' : 'down'}
-                    icon={Target}
-                    loading={loading}
-                />
-                <MetricCard
-                    title="Avg. Order"
-                    value={formatCurrency(summary.avgOrderValue || 0, { compact: true })}
-                    subtext="Per sales order"
-                    icon={BarChart3}
-                    loading={loading}
-                />
+                <KpiCard label="Revenue" value={formatCurrency(summary.totalRevenue || 0, { compact: true })}
+                    sub="Confirmed orders" trend={kpis.revenueChange} icon={IndianRupee} loading={loading} />
+                <KpiCard label="Quoted Value" value={formatCurrency(summary.totalQuotedValue || 0, { compact: true })}
+                    sub={`${summary.totalQuotations || 0} quotations`} icon={FileText} loading={loading} />
+                <KpiCard label="Orders" value={String(summary.totalOrders || 0)}
+                    sub="Confirmed" trend={kpis.ordersChange} icon={ShoppingCart} loading={loading} />
+                <KpiCard label="Conversion" value={`${summary.conversionRate || 0}%`}
+                    sub="Quotes → Orders" icon={Percent} loading={loading} />
+                <KpiCard label="Target Ach." value={kpis.targetAchievement ? `${kpis.targetAchievement}%` : '–'}
+                    sub={kpis.yearlyTarget ? `of ${formatCurrency(kpis.yearlyTarget, { compact: true })}` : 'Annual'} icon={Target} loading={loading} />
+                <KpiCard label="Avg. Order" value={formatCurrency(summary.avgOrderValue || 0, { compact: true })}
+                    sub="Per order" icon={BarChart3} loading={loading} />
             </div>
 
-            {/* ============================================
-                HERO CHART (MAIN VISUALIZATION)
-            ============================================ */}
+            {/* ── REVENUE CHART ── */}
             {loading ? (
-                <Card>
-                    <CardContent className="p-6">
-                        <Skeleton className="h-[350px] w-full" />
-                    </CardContent>
-                </Card>
+                <Card><CardContent className="p-6"><Skeleton className="h-[320px] w-full" /></CardContent></Card>
             ) : (
-                <HeroChart
-                    data={stats?.revenueTrend || []}
-                    userMap={stats?.userMap}
-                    className="bg-white shadow-sm border-neutral-200/80"
-                />
+                <HeroChart data={stats?.revenueTrend || []} userMap={stats?.userMap} />
             )}
 
-            {/* ============================================
-                INSIGHTS ROW (3 COLUMN GRID)
-            ============================================ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Sales Funnel */}
-                <Card className="shadow-sm border-neutral-200/80">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <BarChart3 className="h-4 w-4 text-blue-600" />
-                            </div>
+            {/* ── TARGETS + REGIONAL (2-col) ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold">Sales Funnel</CardTitle>
-                                <CardDescription className="text-xs">Quote to order progression</CardDescription>
+                                <CardTitle className="text-base font-semibold">Target Achievement</CardTitle>
+                                <CardDescription className="text-xs">Annual target vs. achieved by region · {new Date().getFullYear()}</CardDescription>
                             </div>
+                            <a href="/targets" className="text-xs text-stone-400 hover:text-stone-600 flex items-center gap-1">
+                                Manage <ChevronRight className="h-3 w-3" />
+                            </a>
                         </div>
+                    </CardHeader>
+                    <CardContent>
+                        <RegionalTargets targets={targets} loading={targetsLoading} />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-semibold">Regional Performance</CardTitle>
+                        <CardDescription className="text-xs">Revenue and orders by sales region</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <RegionalPerformance data={stats?.regionalData} loading={loading} />
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* ── FUNNEL + PRODUCTS + CUSTOMERS (3-col) ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-semibold">Sales Funnel</CardTitle>
+                        <CardDescription className="text-xs">Quote → Order pipeline</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <SalesFunnel data={stats?.funnelData} loading={loading} />
                     </CardContent>
                 </Card>
 
-                {/* Top Products */}
-                <Card className="shadow-sm border-neutral-200/80">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                                <Package className="h-4 w-4 text-indigo-600" />
-                            </div>
-                            <div>
-                                <CardTitle className="text-base font-semibold">Top Products</CardTitle>
-                                <CardDescription className="text-xs">By revenue contribution</CardDescription>
-                            </div>
-                        </div>
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-semibold">Top Products</CardTitle>
+                        <CardDescription className="text-xs">By revenue</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <TopProductsCard data={stats?.topProducts} loading={loading} />
+                        <TopProducts data={stats?.topProducts} loading={loading} />
                     </CardContent>
                 </Card>
 
-                {/* Pipeline Status */}
-                <Card className="shadow-sm border-neutral-200/80">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-                                <FileText className="h-4 w-4 text-emerald-600" />
-                            </div>
-                            <div>
-                                <CardTitle className="text-base font-semibold">Pipeline Status</CardTitle>
-                                <CardDescription className="text-xs">Document distribution</CardDescription>
-                            </div>
-                        </div>
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-semibold">Top Customers</CardTitle>
+                        <CardDescription className="text-xs">By revenue</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <PipelineStatus data={stats?.pieData} loading={loading} />
+                        <TopCustomers data={stats?.topCustomers} loading={loading} />
                     </CardContent>
                 </Card>
             </div>
-
-            {/* ============================================
-                BOTTOM ROW: LEADERBOARD + CUSTOMERS (MANAGER ONLY)
-            ============================================ */}
-            {isManager && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Top Performers */}
-                    <Card className="shadow-sm border-neutral-200/80">
-                        <CardHeader>
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                                    <span className="text-base">🏆</span>
-                                </div>
-                                <div>
-                                    <CardTitle className="text-base font-semibold">Top Performers</CardTitle>
-                                    <CardDescription className="text-xs">Revenue and conversion by team member</CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <TopPerformers data={leaderboardData} loading={loading} />
-                        </CardContent>
-                    </Card>
-
-                    {/* Top Customers */}
-                    <Card className="shadow-sm border-neutral-200/80">
-                        <CardHeader>
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center">
-                                    <Building2 className="h-4 w-4 text-neutral-600" />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-base font-semibold">Top Customers</CardTitle>
-                                    <CardDescription className="text-xs">Highest revenue customers in period</CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <TopCustomers data={stats?.topCustomers} loading={loading} />
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
         </div>
     );
 }
