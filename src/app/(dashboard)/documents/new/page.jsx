@@ -332,12 +332,14 @@ export default function NewQuotationPage() {
     const [newProductData, setNewProductData] = useState({
         item_code: '', item_name: '', description: '', item_group_id: '', brand_id: '',
         stock_uom: 'PCS', standard_rate: 0, hsn_sac_code: '', gst_rate: 18,
-        length: '', width: '', height: '', dimension_uom: 'mm',
-        thickness_micron: '', gsm: '', ply_count: '', item_type: 'Goods',
+        length: '', width: '', height: '', dimension_uom: 'cm',
+        thickness_micron: '', gsm: '', ply_count: '', item_type: 'Product',
         buying_price: '', landed_cost: '', tags: '', internal_notes: '',
-        gross_weight: '', net_weight: '', tracking_method: 'none',
-        invoicing_policy: 'ordered', is_stock_item: true, is_sales_item: true,
+        gross_weight: '', net_weight: '', weight_uom: 'kg',
+        tracking_method: 'none', invoicing_policy: 'ordered',
+        is_stock_item: true, is_sales_item: true,
         is_purchase_item: true, maintain_stock: true,
+        price_inclusive_tax: false, initial_stock: '', reorder_point: '', overstock_point: '',
     });
     const [productSaving, setProductSaving] = useState(false);
 

@@ -141,7 +141,7 @@ export async function POST(request) {
             length: body.length || null,
             width: body.width || null,
             height: body.height || null,
-            dimension_uom: body.dimension_uom || 'mm',
+            dimension_uom: body.dimension_uom || 'cm',
             thickness_micron: body.thickness_micron || null,
             gsm: body.gsm || null,
             ply_count: body.ply_count || null,
@@ -151,15 +151,20 @@ export async function POST(request) {
             maintain_stock: body.maintain_stock ?? true,
             created_by: currentUser.id,
             // Expanded fields
-            item_type: body.item_type || 'Goods',
+            item_type: body.item_type || 'Product',
             buying_price: body.buying_price || null,
             landed_cost: body.landed_cost || null,
             gross_weight: body.gross_weight || null,
             net_weight: body.net_weight || null,
+            weight_uom: body.weight_uom || 'kg',
             tags: body.tags || null,
             internal_notes: body.internal_notes || null,
             tracking_method: body.tracking_method || 'none',
             invoicing_policy: body.invoicing_policy || 'ordered',
+            price_inclusive_tax: body.price_inclusive_tax ?? false,
+            initial_stock: body.initial_stock || null,
+            reorder_point: body.reorder_point || null,
+            overstock_point: body.overstock_point || null,
         };
 
         const { data, error } = await supabase
