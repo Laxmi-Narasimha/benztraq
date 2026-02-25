@@ -127,8 +127,8 @@ export async function POST(request) {
             );
         }
 
-        // Prepare product data — includes all expanded fields
-        const productData = {
+        // Core fields — always present in the DB schema
+        const coreData = {
             item_code: body.item_code,
             item_name: body.item_name,
             description: body.description || null,
@@ -150,7 +150,10 @@ export async function POST(request) {
             is_purchase_item: body.is_purchase_item ?? true,
             maintain_stock: body.maintain_stock ?? true,
             created_by: currentUser.id,
-            // Expanded fields
+        };
+
+        // Extended fields — these require the migration SQL to have been run
+        const extendedData = {
             item_type: body.item_type || 'Product',
             buying_price: body.buying_price || null,
             landed_cost: body.landed_cost || null,
@@ -167,19 +170,28 @@ export async function POST(request) {
             overstock_point: body.overstock_point || null,
         };
 
-        const { data, error } = await supabase
+        // Attempt 1: insert with all fields (requires migration SQL to have run)
+        let { data, error } = await supabase
             .from('products')
-            .insert(productData)
-            .select(`
-                *,
-                item_group:item_groups(id, name, path),
-                brand:brands(id, name)
-            `)
+            .insert({ ...coreData, ...extendedData })
+            .select(`*, item_group:item_groups(id, name, path), brand:brands(id, name)`)
             .single();
+
+        // If column-not-found error (migration not run yet), fall back to core fields only
+        if (error && (error.code === '42703' || error.message?.includes('column') || error.message?.includes('does not exist'))) {
+            console.warn('Extended columns not found, inserting with core fields only. Run add_product_columns.sql to enable all fields.');
+            const fallback = await supabase
+                .from('products')
+                .insert(coreData)
+                .select(`*, item_group:item_groups(id, name, path), brand:brands(id, name)`)
+                .single();
+            data = fallback.data;
+            error = fallback.error;
+        }
 
         if (error) {
             console.error('Error creating product:', error);
-            return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+            return NextResponse.json({ error: error.message || 'Failed to create product' }, { status: 500 });
         }
 
         return NextResponse.json({ product: data }, { status: 201 });
@@ -188,3 +200,4 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
