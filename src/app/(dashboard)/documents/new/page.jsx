@@ -370,7 +370,7 @@ export default function NewQuotationPage() {
 
     const loadCustomers = async () => {
         try {
-            const res = await fetch('/api/customers?limit=1000');
+            const res = await fetch('/api/customers?limit=5000');
             const data = await res.json();
             if (data.customers && Array.isArray(data.customers)) {
                 setCustomers(data.customers.map(c => ({
