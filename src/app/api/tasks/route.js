@@ -1,16 +1,39 @@
 /**
  * Tasks API Route
- * GET  /api/tasks — List tasks (admins: all, employees: own)
- * POST /api/tasks — Create task (admins only)
+ * GET  /api/tasks — List tasks
+ * POST /api/tasks — Create task
+ * 
+ * Access:
+ *   Master view (all tasks + tabs): Directors, Developer, Isha
+ *   Own tasks only: Dinesh, Pradeep, Preeti, Sandeep, Satender, Shikha, Bhandari
  */
 
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/utils/session';
 
-const ADMIN_ROLES = ['director', 'developer', 'head_of_sales', 'vp'];
+// People who get MASTER view (can see all tasks + assign)
+const MASTER_ACCESS = [
+    '08f0a4c7-2dda-4236-a657-383e6a785573', // Manan Chopra (Director)
+    '84ac5185-e461-4e77-8ea1-a1573bd2b394', // Chaitanya Chopra (Director)
+    'cbba91c1-7bd3-43d3-855c-cd350944608c', // Prashansa Madan (Director)
+    '092d9927-e3ed-4a69-9b23-a521d9a80af9', // Laxmi (Developer)
+    '480090cb-3fad-45ce-beae-b89576f4c722', // Isha Mahajan (CRM - assigns tasks)
+];
 
-export async function GET(request) {
+// The 8 task assignees shown as tabs
+const TASK_PEOPLE = [
+    { user_id: 'e2cd37b3-f92b-4378-95d3-8c46d469315b', name: 'Dinesh' },
+    { user_id: 'c6f5ea1a-110c-4165-9433-ef6b4c8c71fa', name: 'Pradeep' },
+    { user_id: 'c5c41c1e-c16d-4936-b51b-41ef9f6c9679', name: 'Shikha' },
+    { user_id: '1c5b8a5c-2af5-4c96-801b-b5fc562d3ac2', name: 'Preeti' },
+    { user_id: '480090cb-3fad-45ce-beae-b89576f4c722', name: 'Isha' },
+    { user_id: '78387321-8aad-4ec4-9eae-0f7e99eda5dc', name: 'Sandeep' },
+    { user_id: '2970b695-b623-48c1-b036-ba14919cb443', name: 'Satender' },
+    { user_id: '872fca38-39e1-468e-9901-daa0823cd36a', name: 'Bhandari' },
+];
+
+export async function GET() {
     try {
         const session = await getSession();
         if (!session) {
@@ -18,13 +41,7 @@ export async function GET(request) {
         }
 
         const supabase = createAdminClient();
-        const isAdmin = ADMIN_ROLES.includes(session.role);
-
-        // Get filter params
-        const { searchParams } = new URL(request.url);
-        const employeeFilter = searchParams.get('employee');
-        const statusFilter = searchParams.get('status');
-        const priorityFilter = searchParams.get('priority');
+        const hasMasterAccess = MASTER_ACCESS.includes(session.sub);
 
         let query = supabase
             .from('tasks')
@@ -35,18 +52,9 @@ export async function GET(request) {
             `)
             .order('created_at', { ascending: false });
 
-        // Employees can only see their own tasks
-        if (!isAdmin) {
+        // Non-master users only see own tasks
+        if (!hasMasterAccess) {
             query = query.eq('assigned_to', session.sub);
-        } else if (employeeFilter && employeeFilter !== 'all') {
-            query = query.eq('assigned_to', employeeFilter);
-        }
-
-        if (statusFilter) {
-            query = query.eq('status', statusFilter);
-        }
-        if (priorityFilter) {
-            query = query.eq('priority', priorityFilter);
         }
 
         const { data: tasks, error } = await query;
@@ -56,20 +64,10 @@ export async function GET(request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Also return employee list for admin tab filters
-        let employees = [];
-        if (isAdmin) {
-            const { data: empList } = await supabase
-                .from('profiles')
-                .select('user_id, full_name, email')
-                .order('full_name');
-            employees = empList || [];
-        }
-
         return NextResponse.json({
             tasks: tasks || [],
-            employees,
-            isAdmin
+            employees: hasMasterAccess ? TASK_PEOPLE : [],
+            isAdmin: hasMasterAccess,
         });
     } catch (error) {
         console.error('[Tasks] GET exception:', error);
@@ -84,16 +82,15 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const isAdmin = ADMIN_ROLES.includes(session.role);
-        if (!isAdmin) {
-            return NextResponse.json({ error: 'Only admins can create tasks' }, { status: 403 });
+        if (!MASTER_ACCESS.includes(session.sub)) {
+            return NextResponse.json({ error: 'You do not have permission to create tasks' }, { status: 403 });
         }
 
         const body = await request.json();
-        const { title, description, assigned_to, priority, deadline, status, tags } = body;
+        const { title, assigned_to, deadline } = body;
 
         if (!title || !assigned_to) {
-            return NextResponse.json({ error: 'Title and assigned employee are required' }, { status: 400 });
+            return NextResponse.json({ error: 'Task and assigned employee are required' }, { status: 400 });
         }
 
         const supabase = createAdminClient();
@@ -102,13 +99,11 @@ export async function POST(request) {
             .from('tasks')
             .insert({
                 title,
-                description: description || null,
                 assigned_to,
                 assigned_by: session.sub,
-                priority: priority || 'Normal',
                 deadline: deadline || null,
-                status: status || 'New',
-                tags: tags || null,
+                priority: 'Normal',
+                status: 'New',
             })
             .select(`
                 *,

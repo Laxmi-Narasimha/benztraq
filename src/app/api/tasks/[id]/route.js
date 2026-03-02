@@ -1,14 +1,23 @@
 /**
  * Single Task API Route
  * PUT    /api/tasks/[id] — Update task
- * DELETE /api/tasks/[id] — Delete task (admins only)
+ * DELETE /api/tasks/[id] — Delete task
+ * 
+ * Master users can update all fields + delete.
+ * CRMs/employees can only update employee_update on their own tasks.
  */
 
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/utils/session';
 
-const ADMIN_ROLES = ['director', 'developer', 'head_of_sales', 'vp'];
+const MASTER_ACCESS = [
+    '08f0a4c7-2dda-4236-a657-383e6a785573', // Manan
+    '84ac5185-e461-4e77-8ea1-a1573bd2b394', // Chaitanya
+    'cbba91c1-7bd3-43d3-855c-cd350944608c', // Prashansa
+    '092d9927-e3ed-4a69-9b23-a521d9a80af9', // Laxmi
+    '480090cb-3fad-45ce-beae-b89576f4c722', // Isha
+];
 
 export async function PUT(request, { params }) {
     try {
@@ -19,10 +28,10 @@ export async function PUT(request, { params }) {
 
         const { id } = await params;
         const body = await request.json();
-        const isAdmin = ADMIN_ROLES.includes(session.role);
+        const hasMaster = MASTER_ACCESS.includes(session.sub);
         const supabase = createAdminClient();
 
-        // Get existing task to check ownership
+        // Check task exists + ownership
         const { data: existing } = await supabase
             .from('tasks')
             .select('assigned_to')
@@ -35,32 +44,25 @@ export async function PUT(request, { params }) {
 
         let updateData = {};
 
-        if (isAdmin) {
-            // Admins can update all fields
-            const { title, description, assigned_to, priority, deadline, status, tags, employee_update } = body;
+        if (hasMaster) {
+            // Master users can update all fields
+            const { title, assigned_to, deadline, employee_update } = body;
             if (title !== undefined) updateData.title = title;
-            if (description !== undefined) updateData.description = description;
             if (assigned_to !== undefined) updateData.assigned_to = assigned_to;
-            if (priority !== undefined) updateData.priority = priority;
             if (deadline !== undefined) updateData.deadline = deadline;
-            if (status !== undefined) updateData.status = status;
-            if (tags !== undefined) updateData.tags = tags;
             if (employee_update !== undefined) {
                 updateData.employee_update = employee_update;
                 updateData.employee_updated_at = new Date().toISOString();
             }
         } else {
-            // Employees can only update: employee_update, status
+            // Employees can only update their own employee_update
             if (existing.assigned_to !== session.sub) {
                 return NextResponse.json({ error: 'Access denied' }, { status: 403 });
             }
-            const { employee_update, status } = body;
+            const { employee_update } = body;
             if (employee_update !== undefined) {
                 updateData.employee_update = employee_update;
                 updateData.employee_updated_at = new Date().toISOString();
-            }
-            if (status !== undefined) {
-                updateData.status = status;
             }
         }
 
@@ -94,9 +96,8 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const isAdmin = ADMIN_ROLES.includes(session.role);
-        if (!isAdmin) {
-            return NextResponse.json({ error: 'Only admins can delete tasks' }, { status: 403 });
+        if (!MASTER_ACCESS.includes(session.sub)) {
+            return NextResponse.json({ error: 'You do not have permission to delete tasks' }, { status: 403 });
         }
 
         const { id } = await params;
