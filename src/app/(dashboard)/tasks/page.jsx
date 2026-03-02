@@ -296,6 +296,8 @@ export default function TasksPage() {
     const [error, setError] = useState('');
     const [chatTask, setChatTask] = useState(null);
     const [pushPromptDismissed, setPushPromptDismissed] = useState(false);
+    const [pushDebug, setPushDebug] = useState(null); // debug modal data
+    const [pushTesting, setPushTesting] = useState(false);
 
     const fetchTasks = useCallback(async () => {
         try {
@@ -329,6 +331,29 @@ export default function TasksPage() {
             await subscribeToPush(profile.user_id);
         }
         setPushPromptDismissed(true);
+    };
+
+    // === Test Push (Debug) ===
+    const handleTestPush = async () => {
+        setPushTesting(true);
+        try {
+            // Step 1: Run diagnostics
+            const diagRes = await fetch('/api/notifications/test');
+            const diagData = await diagRes.json();
+
+            // Step 2: Send test push
+            const pushRes = await fetch('/api/notifications/test', { method: 'POST' });
+            const pushData = await pushRes.json();
+
+            setPushDebug({
+                diagnostics: diagData.diagnostics,
+                pushResults: pushData.results,
+                timestamp: new Date().toLocaleTimeString(),
+            });
+        } catch (err) {
+            setPushDebug({ error: err.message, timestamp: new Date().toLocaleTimeString() });
+        }
+        setPushTesting(false);
     };
 
     const visible = tasks.filter(t => {
@@ -417,6 +442,11 @@ export default function TasksPage() {
                                 <Plus className="w-3 h-3" /> Add
                             </button>
                         )}
+                        <button onClick={handleTestPush} disabled={pushTesting}
+                            className="flex items-center gap-1 px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-semibold rounded shadow-sm transition-colors disabled:opacity-50">
+                            {pushTesting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Bell className="w-3 h-3" />}
+                            {pushTesting ? 'Testing...' : 'Test Push'}
+                        </button>
                     </div>
                 </div>
 
@@ -518,6 +548,51 @@ export default function TasksPage() {
 
             {/* Chat slide-over */}
             {chatTask && <ChatPanel task={chatTask} profile={profile} isAdmin={isAdmin} onClose={() => setChatTask(null)} />}
+
+            {/* Push Debug Modal */}
+            {pushDebug && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setPushDebug(null)}>
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-4 py-3 bg-orange-500 text-white">
+                            <h3 className="text-sm font-bold">🔧 Push Notification Debug — {pushDebug.timestamp}</h3>
+                            <button onClick={() => setPushDebug(null)} className="p-1 hover:bg-white/20 rounded"><X className="w-4 h-4" /></button>
+                        </div>
+                        <div className="overflow-y-auto max-h-[65vh] p-4 text-xs font-mono space-y-3">
+                            {pushDebug.error && (
+                                <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700">
+                                    ❌ Error: {pushDebug.error}
+                                </div>
+                            )}
+                            {pushDebug.diagnostics && (
+                                <div>
+                                    <p className="text-[11px] font-bold text-neutral-600 mb-1">📋 DIAGNOSTICS</p>
+                                    {pushDebug.diagnostics.steps?.map((s, i) => (
+                                        <div key={i} className={`py-0.5 ${s.startsWith('❌') ? 'text-red-600 font-bold' : s.startsWith('✅') ? 'text-green-600' : 'text-neutral-700'}`}>{s}</div>
+                                    ))}
+                                    {pushDebug.diagnostics.errors?.length > 0 && (
+                                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                                            {pushDebug.diagnostics.errors.map((e, i) => <div key={i} className="text-red-600">{e}</div>)}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {pushDebug.pushResults && (
+                                <div>
+                                    <p className="text-[11px] font-bold text-neutral-600 mb-1 mt-3">📤 TEST PUSH RESULTS</p>
+                                    {pushDebug.pushResults.steps?.map((s, i) => (
+                                        <div key={i} className={`py-0.5 ${s.includes('❌') ? 'text-red-600 font-bold' : s.includes('✅') ? 'text-green-600' : 'text-neutral-700'}`}>{s}</div>
+                                    ))}
+                                    {pushDebug.pushResults.errors?.length > 0 && (
+                                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                                            {pushDebug.pushResults.errors.map((e, i) => <div key={i} className="text-red-600">{e}</div>)}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
