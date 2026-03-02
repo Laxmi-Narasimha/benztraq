@@ -19,6 +19,21 @@ const MASTER_ACCESS = [
     '480090cb-3fad-45ce-beae-b89576f4c722', // Isha
 ];
 
+// Server-side notification helper — stores in-app notification (no push from API)
+async function notifyMasters(supabase, title, message, excludeUserId) {
+    const recipients = MASTER_ACCESS.filter(id => id !== excludeUserId);
+    for (const uid of recipients) {
+        await supabase.from('notifications').insert({
+            user_id: uid, title, message, is_read: false,
+        });
+    }
+}
+async function notifyUser(supabase, userId, title, message) {
+    await supabase.from('notifications').insert({
+        user_id: userId, title, message, is_read: false,
+    });
+}
+
 export async function PUT(request, { params }) {
     try {
         const session = await getSession();
@@ -80,6 +95,23 @@ export async function PUT(request, { params }) {
         if (error) {
             console.error('[Tasks] PUT error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        // Server-side notifications (exactly 1 per recipient, no duplicates)
+        try {
+            const assigneeName = task.assignee?.full_name || 'Someone';
+            const taskTitle = task.title || 'Task';
+
+            if (updateData.employee_update && !hasMaster) {
+                // Employee submitted an update → notify all master users (except self)
+                await notifyMasters(supabase, `📝 ${assigneeName} updated a task`, taskTitle, session.sub);
+            }
+            if (updateData.assigned_to && updateData.assigned_to !== existing.assigned_to) {
+                // Task reassigned → notify new assignee
+                await notifyUser(supabase, updateData.assigned_to, '📋 New Task Assigned', taskTitle);
+            }
+        } catch (notifyErr) {
+            console.error('[Tasks] Notification error (non-fatal):', notifyErr);
         }
 
         return NextResponse.json({ task });

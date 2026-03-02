@@ -260,7 +260,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Documents',
-        excludeRoles: ['store_manager'],
+        roles: ['director', 'developer', 'vp', 'head_of_sales'],
         items: [
             { title: 'Document Center', href: '/documents', icon: 'FileText' },
         ],
@@ -272,12 +272,19 @@ export const NAVIGATION_ITEMS = Object.freeze([
         ],
     },
     {
+        title: 'CRM',
+        roles: ['director', 'developer', 'vp', 'head_of_sales'],
+        items: [
+            { title: 'Pipeline', href: '/crm/pipeline', icon: 'GitCompare' },
+            { title: 'Customers', href: '/customers', icon: 'Users' },
+        ],
+    },
+    {
         title: 'Analytics',
-        excludeRoles: ['store_manager'],
+        roles: ['director', 'developer', 'vp', 'head_of_sales'],
         items: [
             { title: 'Analytics Dashboard', href: '/analytics', icon: 'BarChart3' },
             { title: 'Quote Comparison', href: '/comparison', icon: 'GitCompare' },
-            { title: 'Customers', href: '/customers', icon: 'Users', roles: ['developer', 'director'] },
             { title: 'Products', href: '/products', icon: 'Package' },
             { title: 'Regions', href: '/regions', icon: 'MapPin' },
         ],
@@ -291,7 +298,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Management',
-        excludeRoles: ['store_manager'],
+        roles: ['director', 'developer', 'vp', 'head_of_sales'],
         items: [
             { title: 'Targets', href: '/targets', icon: 'Target' },
             { title: 'Reports', href: '/reports', icon: 'BarChart3' },
@@ -299,7 +306,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Admin',
-        excludeRoles: ['store_manager'],
+        roles: ['director', 'developer', 'vp'],
         items: [
             { title: 'Director Dashboard', href: '/admin/dashboard', icon: 'LayoutDashboard', roles: [USER_ROLES.VP, USER_ROLES.DIRECTOR] },
             { title: 'Admin Panel', href: '/admin', icon: 'Shield', roles: [USER_ROLES.VP] },

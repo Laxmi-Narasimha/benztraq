@@ -144,6 +144,18 @@ export async function POST(request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
+        // Server-side notification — notify the assignee
+        try {
+            await supabase.from('notifications').insert({
+                user_id: assigned_to,
+                title: '📋 New Task Assigned',
+                message: title,
+                is_read: false,
+            });
+        } catch (notifyErr) {
+            console.error('[Tasks] Notification error (non-fatal):', notifyErr);
+        }
+
         return NextResponse.json({ task }, { status: 201 });
     } catch (error) {
         console.error('[Tasks] POST exception:', error);

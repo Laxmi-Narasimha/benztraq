@@ -16,7 +16,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/providers/auth-provider';
 import { Plus, Trash2, X, Loader2, Search, AlertCircle, ListFilter, MessageSquare, Send, Bell } from 'lucide-react';
 import { isPushSupported, getNotificationPermission, requestNotificationPermission, subscribeToPush } from '@/lib/pushNotifications';
-import { notifyTaskAssigned, notifyEmployeeUpdate } from '@/lib/notificationTrigger';
 
 // Master user IDs (for notification targeting)
 const MASTER_IDS = [
@@ -356,9 +355,6 @@ export default function TasksPage() {
             if (res.ok) {
                 setTasks(prev => [data.task, ...prev]);
                 setAddingTask(false);
-                // Notify the assignee
-                const assigneeName = assignable.find(a => a.user_id === form.assigned_to)?.name || '';
-                notifyTaskAssigned(form.assigned_to, form.title, profile?.full_name || 'Admin');
             } else setError(data.error);
         } catch { setError('Failed to create task'); }
     };
@@ -370,11 +366,6 @@ export default function TasksPage() {
             const data = await res.json();
             if (res.ok) {
                 setTasks(prev => prev.map(t => t.id === id ? data.task : t));
-                // If employee update was changed, notify masters
-                if (patch.employee_update && !isAdmin) {
-                    const task = tasks.find(t => t.id === id);
-                    notifyEmployeeUpdate(MASTER_IDS, task?.title || '', profile?.full_name || 'Employee');
-                }
             } else setError(data.error);
         } catch { setError('Failed to update'); }
         finally { setSaving(s => ({ ...s, [id]: false })); }
