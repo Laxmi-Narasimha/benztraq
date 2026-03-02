@@ -328,9 +328,19 @@ export default function TasksPage() {
     const handleEnablePush = async () => {
         const permission = await requestNotificationPermission();
         if (permission === 'granted' && profile) {
-            await subscribeToPush(profile.user_id);
+            const result = await subscribeToPush(profile.user_id);
+            if (result.success) {
+                setPushPromptDismissed(true);
+                alert('✅ Push notifications enabled! You will now receive OS-level alerts.');
+            } else {
+                alert(`❌ Push subscription failed:\n${result.error}\n\nCheck browser console for details.`);
+            }
+        } else if (permission === 'denied') {
+            alert('❌ Notifications blocked. Please enable in browser settings:\nSettings → Privacy → Notifications → Allow for this site');
+            setPushPromptDismissed(true);
+        } else {
+            setPushPromptDismissed(true);
         }
-        setPushPromptDismissed(true);
     };
 
     // === Test Push (Debug) ===
