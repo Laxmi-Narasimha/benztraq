@@ -9,7 +9,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/utils/session';
 
 const VAPID_PUBLIC_KEY = 'BG7mB4EVdYq3PKoG0aXB4ukDNCeVzmE6kqjMLEQQWE0vTYSyxjTmqjLAmDXqT8qJcCT3ZTgobWPBWMB3WVzwE3o';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'NXNH5RX2kBEHSHzzPUMZSURuEjF0neuJj0KO-D7zhSi0';
+const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || 'NXNH5RX2kBEHSHzzPUMZSURuEjF0neuJj0KO-D7zhSi0').trim();
 
 let _webpush = null;
 function getWebPush() {
