@@ -10,6 +10,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/utils/session';
+import { sendPushNotification, sendPushToMany } from '@/lib/serverPush';
 
 const MASTER_ACCESS = [
     '08f0a4c7-2dda-4236-a657-383e6a785573', // Manan
@@ -18,21 +19,6 @@ const MASTER_ACCESS = [
     '092d9927-e3ed-4a69-9b23-a521d9a80af9', // Laxmi
     '480090cb-3fad-45ce-beae-b89576f4c722', // Isha
 ];
-
-// Server-side notification helper — stores in-app notification (no push from API)
-async function notifyMasters(supabase, title, message, excludeUserId) {
-    const recipients = MASTER_ACCESS.filter(id => id !== excludeUserId);
-    for (const uid of recipients) {
-        await supabase.from('notifications').insert({
-            user_id: uid, title, message, is_read: false,
-        });
-    }
-}
-async function notifyUser(supabase, userId, title, message) {
-    await supabase.from('notifications').insert({
-        user_id: userId, title, message, is_read: false,
-    });
-}
 
 export async function PUT(request, { params }) {
     try {
@@ -97,18 +83,30 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Server-side notifications (exactly 1 per recipient, no duplicates)
+        // Server-side notifications: in-app + OS-level web push (exactly 1 per recipient)
         try {
             const assigneeName = task.assignee?.full_name || 'Someone';
             const taskTitle = task.title || 'Task';
 
             if (updateData.employee_update && !hasMaster) {
-                // Employee submitted an update → notify all master users (except self)
-                await notifyMasters(supabase, `📝 ${assigneeName} updated a task`, taskTitle, session.sub);
+                // Employee update → push to all masters except self
+                const recipients = MASTER_ACCESS.filter(id => id !== session.sub);
+                await sendPushToMany(supabase, recipients, {
+                    title: `📝 ${assigneeName} updated a task`,
+                    body: taskTitle,
+                    url: '/tasks',
+                    tag: `task-update-${id}`,
+                });
             }
             if (updateData.assigned_to && updateData.assigned_to !== existing.assigned_to) {
-                // Task reassigned → notify new assignee
-                await notifyUser(supabase, updateData.assigned_to, '📋 New Task Assigned', taskTitle);
+                // Reassigned → push to new assignee
+                await sendPushNotification(supabase, {
+                    user_id: updateData.assigned_to,
+                    title: '📋 New Task Assigned',
+                    body: taskTitle,
+                    url: '/tasks',
+                    tag: `task-assigned-${id}`,
+                });
             }
         } catch (notifyErr) {
             console.error('[Tasks] Notification error (non-fatal):', notifyErr);

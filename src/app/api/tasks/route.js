@@ -144,13 +144,15 @@ export async function POST(request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Server-side notification — notify the assignee
+        // Server-side push notification — notify the assignee (in-app + OS push)
         try {
-            await supabase.from('notifications').insert({
+            const { sendPushNotification } = require('@/lib/serverPush');
+            await sendPushNotification(supabase, {
                 user_id: assigned_to,
                 title: '📋 New Task Assigned',
-                message: title,
-                is_read: false,
+                body: title,
+                url: '/tasks',
+                tag: `task-new-${task.id}`,
             });
         } catch (notifyErr) {
             console.error('[Tasks] Notification error (non-fatal):', notifyErr);

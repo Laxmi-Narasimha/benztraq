@@ -1,12 +1,13 @@
 /**
  * Task Comments API
  * GET  /api/tasks/[id]/comments — List comments for a task
- * POST /api/tasks/[id]/comments — Add comment + trigger notification
+ * POST /api/tasks/[id]/comments — Add comment + instant OS-level push notification
  */
 
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/utils/session';
+import { sendPushNotification, sendPushToMany } from '@/lib/serverPush';
 
 const MASTER_ACCESS = [
     '08f0a4c7-2dda-4236-a657-383e6a785573', // Manan
@@ -112,47 +113,37 @@ export async function POST(request, { params }) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // Trigger notification — determine who to notify
-        const senderName = comment.author?.full_name || 'Someone';
-        const preview = body.trim().length > 50 ? body.trim().substring(0, 50) + '...' : body.trim();
+        // Instant push notification (in-app + OS-level web-push)
+        try {
+            const senderName = comment.author?.full_name || 'Someone';
+            const preview = body.trim().length > 50 ? body.trim().substring(0, 50) + '...' : body.trim();
 
-        if (hasMaster) {
-            // Admin/Master sent message → notify the assignee
-            await sendPushInternal(supabase, {
-                user_id: task.assigned_to,
-                title: `💬 ${senderName}`,
-                body: `${preview}\nOn: ${task.title}`,
-                url: '/tasks',
-            });
-        } else {
-            // Employee sent message → notify all master users
-            for (const masterId of MASTER_ACCESS) {
-                await sendPushInternal(supabase, {
-                    user_id: masterId,
+            if (hasMaster) {
+                // Admin/Director sent message → push to the employee only
+                await sendPushNotification(supabase, {
+                    user_id: task.assigned_to,
+                    title: `💬 ${senderName}`,
+                    body: `${preview}\nOn: ${task.title}`,
+                    url: '/tasks',
+                    tag: `chat-${id}`,
+                });
+            } else {
+                // Employee sent message → push to all masters
+                const recipients = MASTER_ACCESS.filter(mid => mid !== session.sub);
+                await sendPushToMany(supabase, recipients, {
                     title: `💬 ${senderName} replied`,
                     body: `${preview}\nOn: ${task.title}`,
                     url: '/tasks',
+                    tag: `chat-${id}`,
                 });
             }
+        } catch (notifyErr) {
+            console.error('[Comments] Notification error (non-fatal):', notifyErr);
         }
 
         return NextResponse.json({ comment }, { status: 201 });
     } catch (error) {
         console.error('[Comments] POST exception:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-}
-
-// Internal push — store in-app notification (push delivery handled by /api/notifications/send on client)
-async function sendPushInternal(supabase, { user_id, title, body }) {
-    try {
-        await supabase.from('notifications').insert({
-            user_id,
-            title,
-            message: body || '',
-            is_read: false,
-        });
-    } catch (e) {
-        console.error('[Comments] Notification insert failed:', e);
     }
 }
