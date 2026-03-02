@@ -1,46 +1,25 @@
 /**
- * Task Manager Page — Google Sheets Replica
+ * Task Manager — Google Sheets Replica
  * 
- * Master sheet view for admins (all tasks + employee tab filters at bottom).
- * Employee view shows only their own tasks — no juggling.
+ * 6 columns only:
+ *   1. Task          — what needs to be done
+ *   2. Assigned To   — who does it
+ *   3. Created Date  — auto (when task was created)
+ *   4. Employee Update — filled by the employee
+ *   5. Deadline      — due date
+ *   6. Last Modified — auto (employee's last update timestamp)
  * 
- * Column structure matches the original Google Sheets:
- * Task ID | Task | Description | Assigned To | Assigned Date | Assigned By |
- * Priority | Deadline | Status | Employee Update | Last Modified
- * 
- * @module app/(dashboard)/tasks/page
+ * Admin/Isha: sees master sheet + employee tabs at bottom
+ * Employee: sees only their tasks, can fill Employee Update
  */
 
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/providers/auth-provider';
-import {
-    Plus, Trash2, X, Loader2, Search, ListFilter,
-    ChevronDown, AlertCircle
-} from 'lucide-react';
+import { Plus, Trash2, X, Loader2, Search, ChevronDown, AlertCircle, ListFilter } from 'lucide-react';
 
-// ─── Constants ─────────────────────────────────────────────────────────────────
-
-const PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'];
-const STATUSES = ['New', 'In Progress', 'Done', 'Cancelled'];
-const ADMIN_ROLES = ['director', 'developer', 'head_of_sales', 'vp'];
-
-const PRIORITY_CONFIG = {
-    Urgent: { bg: '#fef2f2', text: '#dc2626', dot: '#ef4444' },
-    High: { bg: '#fff7ed', text: '#ea580c', dot: '#f97316' },
-    Normal: { bg: '#eff6ff', text: '#2563eb', dot: '#3b82f6' },
-    Low: { bg: '#f9fafb', text: '#6b7280', dot: '#9ca3af' },
-};
-
-const STATUS_CONFIG = {
-    'New': { bg: '#eff6ff', text: '#1d4ed8', border: '#93c5fd' },
-    'In Progress': { bg: '#fffbeb', text: '#b45309', border: '#fcd34d' },
-    'Done': { bg: '#f0fdf4', text: '#15803d', border: '#86efac' },
-    'Cancelled': { bg: '#f9fafb', text: '#6b7280', border: '#d1d5db' },
-};
-
-// ─── Helpers ────────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────
 
 function fmtDate(d) {
     if (!d) return '';
@@ -49,59 +28,15 @@ function fmtDate(d) {
 
 function fmtDateTime(d) {
     if (!d) return '';
-    return new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+    return new Date(d).toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+    });
 }
 
-function taskId(num) {
-    return `T-${String(num).padStart(3, '0')}`;
-}
+// ─── Editable Text Cell ────────────────────────────────────────
 
-// ─── PriorityChip ───────────────────────────────────────────────────────────────
-
-function PriorityChip({ value }) {
-    const c = PRIORITY_CONFIG[value] || PRIORITY_CONFIG.Normal;
-    return (
-        <span style={{ background: c.bg, color: c.text }} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap">
-            <span style={{ background: c.dot }} className="w-1.5 h-1.5 rounded-full flex-shrink-0" />
-            {value}
-        </span>
-    );
-}
-
-// ─── StatusChip ─────────────────────────────────────────────────────────────────
-
-function StatusChip({ value }) {
-    const c = STATUS_CONFIG[value] || STATUS_CONFIG.New;
-    return (
-        <span style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }} className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium whitespace-nowrap">
-            {value}
-        </span>
-    );
-}
-
-// ─── InlineSelect ───────────────────────────────────────────────────────────────
-
-function InlineSelect({ value, onChange, options, disabled, renderValue }) {
-    if (disabled) {
-        return renderValue ? renderValue(value) : <span className="text-xs text-neutral-600 dark:text-neutral-300 px-1">{value || '—'}</span>;
-    }
-    return (
-        <div className="relative w-full">
-            <select
-                value={value || ''}
-                onChange={e => onChange(e.target.value)}
-                className="w-full appearance-none bg-transparent text-xs px-1 py-1 pr-4 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded cursor-pointer"
-            >
-                {options.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
-            <ChevronDown className="absolute right-0.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-400 pointer-events-none" />
-        </div>
-    );
-}
-
-// ─── EditableCell ────────────────────────────────────────────────────────────────
-
-function EditableCell({ value, onChange, disabled, placeholder, multiline, type }) {
+function EditableCell({ value, onChange, disabled, placeholder, highlight }) {
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(value || '');
     const ref = useRef(null);
@@ -111,135 +46,118 @@ function EditableCell({ value, onChange, disabled, placeholder, multiline, type 
 
     const commit = () => {
         setEditing(false);
-        if (draft !== value) onChange(draft);
+        if (draft !== (value || '')) onChange(draft);
     };
 
     if (disabled) {
-        return <span className="block text-xs text-neutral-700 dark:text-neutral-300 px-1 py-1 leading-snug min-h-[22px]">{value || <span className="text-neutral-300 dark:text-neutral-600">{placeholder}</span>}</span>;
-    }
-
-    if (type === 'date') {
         return (
-            <input
-                type="date"
-                value={value || ''}
-                onChange={e => onChange(e.target.value)}
-                className="w-full bg-transparent text-xs px-1 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded"
-            />
+            <div className="px-2 py-1.5 text-[13px] text-neutral-700 dark:text-neutral-300 min-h-[36px] flex items-center">
+                {value || <span className="text-neutral-300 dark:text-neutral-600">{placeholder || '—'}</span>}
+            </div>
         );
     }
 
     if (editing) {
-        if (multiline) {
-            return (
-                <textarea
-                    ref={ref}
-                    value={draft}
-                    onChange={e => setDraft(e.target.value)}
-                    onBlur={commit}
-                    rows={2}
-                    className="w-full bg-white dark:bg-neutral-800 border border-blue-400 rounded text-xs px-1 py-0.5 focus:outline-none resize-none"
-                    placeholder={placeholder}
-                />
-            );
-        }
         return (
-            <input
+            <textarea
                 ref={ref}
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
                 onBlur={commit}
-                onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { setEditing(false); setDraft(value || ''); } }}
-                className="w-full bg-white dark:bg-neutral-800 border border-blue-400 rounded text-xs px-1 py-0.5 focus:outline-none"
+                onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commit(); }
+                    if (e.key === 'Escape') { setEditing(false); setDraft(value || ''); }
+                }}
+                rows={2}
+                className="w-full bg-white dark:bg-neutral-900 border-2 border-blue-500 rounded text-[13px] px-2 py-1 focus:outline-none resize-none"
                 placeholder={placeholder}
             />
         );
     }
 
     return (
-        <span
+        <div
             onClick={() => setEditing(true)}
-            className="block text-xs text-neutral-700 dark:text-neutral-300 px-1 py-1 cursor-text rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 min-h-[22px] leading-snug"
+            className={`px-2 py-1.5 text-[13px] cursor-text min-h-[36px] flex items-center rounded-sm
+                ${highlight ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20' : 'hover:bg-blue-50 dark:hover:bg-blue-900/10'}
+                text-neutral-700 dark:text-neutral-300`}
         >
-            {value || <span className="text-neutral-300 dark:text-neutral-600 italic">{placeholder || 'Click to edit...'}</span>}
-        </span>
+            {value || <span className="text-neutral-400 dark:text-neutral-600 italic text-xs">{placeholder || 'Click to edit...'}</span>}
+        </div>
     );
 }
 
-// ─── NewTaskRow ──────────────────────────────────────────────────────────────────
+// ─── Add Task Row ──────────────────────────────────────────────
 
-function NewTaskRow({ employees, onSave, onCancel }) {
-    const [form, setForm] = useState({ title: '', description: '', assigned_to: '', priority: 'Normal', deadline: '', status: 'New' });
+function AddTaskRow({ employees, onSave, onCancel }) {
+    const [task, setTask] = useState('');
+    const [assignedTo, setAssignedTo] = useState('');
+    const [deadline, setDeadline] = useState('');
     const ref = useRef(null);
     useEffect(() => { if (ref.current) ref.current.focus(); }, []);
-    const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-    const valid = form.title && form.assigned_to;
+
+    const valid = task.trim() && assignedTo;
 
     return (
-        <tr style={{ background: '#fffde7' }}>
-            {/* Row # */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-400 text-center bg-neutral-50 dark:bg-neutral-900 font-mono">*</td>
-            {/* Task ID */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-400 italic">Auto</td>
-            {/* Title */}
-            <td className="border border-blue-400 px-1 py-0.5">
-                <input ref={ref} value={form.title} onChange={e => set('title', e.target.value)}
-                    className="w-full bg-transparent text-xs px-1 py-0.5 focus:outline-none"
-                    placeholder="Task title *"
-                    onKeyDown={e => { if (e.key === 'Enter') valid && onSave(form); if (e.key === 'Escape') onCancel(); }}
+        <tr className="border-b-2 border-blue-300 dark:border-blue-700" style={{ background: '#eef6ff' }}>
+            {/* # */}
+            <td className="border-r border-neutral-300 dark:border-neutral-700 px-2 py-2 text-center text-xs text-neutral-400 bg-[#e2e8f0] dark:bg-neutral-800 font-mono">
+                +
+            </td>
+            {/* Task */}
+            <td className="border-r border-neutral-300 dark:border-neutral-700 px-1 py-1">
+                <input
+                    ref={ref}
+                    value={task}
+                    onChange={e => setTask(e.target.value)}
+                    placeholder="Enter task..."
+                    className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1.5 text-[13px] focus:outline-none focus:border-blue-500"
+                    onKeyDown={e => { if (e.key === 'Enter' && valid) onSave({ title: task, assigned_to: assignedTo, deadline }); if (e.key === 'Escape') onCancel(); }}
                 />
             </td>
-            {/* Description */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-1 py-0.5">
-                <input value={form.description} onChange={e => set('description', e.target.value)}
-                    className="w-full bg-transparent text-xs px-1 py-0.5 focus:outline-none" placeholder="Description" />
-            </td>
             {/* Assigned To */}
-            <td className="border border-blue-400 px-1 py-0.5">
-                <select value={form.assigned_to} onChange={e => set('assigned_to', e.target.value)}
-                    className="w-full bg-transparent text-xs px-1 py-0.5 focus:outline-none">
-                    <option value="">Select *</option>
-                    {employees.map(e => <option key={e.user_id} value={e.user_id}>{e.full_name || e.email}</option>)}
+            <td className="border-r border-neutral-300 dark:border-neutral-700 px-1 py-1">
+                <select
+                    value={assignedTo}
+                    onChange={e => setAssignedTo(e.target.value)}
+                    className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1.5 text-[13px] focus:outline-none focus:border-blue-500"
+                >
+                    <option value="">Select employee...</option>
+                    {employees.map(e => (
+                        <option key={e.user_id} value={e.user_id}>{e.full_name || e.email}</option>
+                    ))}
                 </select>
             </td>
-            {/* Assigned Date — auto */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-400 italic">Auto</td>
-            {/* Assigned By — auto */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-400 italic">Auto</td>
-            {/* Priority */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-1 py-0.5">
-                <select value={form.priority} onChange={e => set('priority', e.target.value)}
-                    className="w-full bg-transparent text-xs px-1 py-0.5 focus:outline-none">
-                    {PRIORITIES.map(p => <option key={p}>{p}</option>)}
-                </select>
-            </td>
-            {/* Deadline */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-1 py-0.5">
-                <input type="date" value={form.deadline} onChange={e => set('deadline', e.target.value)}
-                    className="w-full bg-transparent text-xs px-1 py-0.5 focus:outline-none" />
-            </td>
-            {/* Status */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-1 py-0.5">
-                <select value={form.status} onChange={e => set('status', e.target.value)}
-                    className="w-full bg-transparent text-xs px-1 py-0.5 focus:outline-none">
-                    {STATUSES.map(s => <option key={s}>{s}</option>)}
-                </select>
-            </td>
+            {/* Created Date */}
+            <td className="border-r border-neutral-300 dark:border-neutral-700 px-2 py-2 text-xs text-neutral-400 italic">Today</td>
             {/* Employee Update */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-400">—</td>
+            <td className="border-r border-neutral-300 dark:border-neutral-700 px-2 py-2 text-xs text-neutral-400">—</td>
+            {/* Deadline */}
+            <td className="border-r border-neutral-300 dark:border-neutral-700 px-1 py-1">
+                <input
+                    type="date"
+                    value={deadline}
+                    onChange={e => setDeadline(e.target.value)}
+                    className="w-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1.5 text-[13px] focus:outline-none focus:border-blue-500"
+                />
+            </td>
             {/* Last Modified */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-400">—</td>
+            <td className="border-r border-neutral-300 dark:border-neutral-700 px-2 py-2 text-xs text-neutral-400">—</td>
             {/* Actions */}
-            <td className="border border-neutral-300 dark:border-neutral-700 px-2 py-1">
-                <div className="flex gap-1">
-                    <button onClick={() => valid && onSave(form)}
+            <td className="px-2 py-2 text-center">
+                <div className="flex items-center gap-1 justify-center">
+                    <button
+                        onClick={() => valid && onSave({ title: task, assigned_to: assignedTo, deadline })}
                         disabled={!valid}
-                        className="px-2 py-0.5 bg-green-600 text-white text-[10px] rounded disabled:opacity-40 hover:bg-green-700">
-                        Save
+                        className="px-2.5 py-1 bg-blue-600 text-white text-[11px] font-medium rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                        Add
                     </button>
-                    <button onClick={onCancel}
-                        className="px-2 py-0.5 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-[10px] rounded hover:bg-neutral-300">
-                        Cancel
+                    <button
+                        onClick={onCancel}
+                        className="p-1 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded transition-colors"
+                    >
+                        <X className="w-3.5 h-3.5" />
                     </button>
                 </div>
             </td>
@@ -247,48 +165,44 @@ function NewTaskRow({ employees, onSave, onCancel }) {
     );
 }
 
-// ─── Employee Tabs (Google Sheets style) ────────────────────────────────────────
+// ─── Employee Tabs (Google Sheets tab bar) ─────────────────────
 
 function SheetTabs({ employees, activeTab, onTabChange, taskCounts }) {
     return (
-        <div className="flex items-end border-t border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 overflow-x-auto flex-shrink-0">
-            {/* Master / All Tasks tab */}
+        <div className="flex items-end bg-[#e8ecf0] dark:bg-neutral-900 border-t border-neutral-300 dark:border-neutral-700 overflow-x-auto flex-shrink-0 select-none">
+            {/* Master Tasks tab */}
             <button
                 onClick={() => onTabChange('all')}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-[11px] font-medium border-r border-neutral-300 dark:border-neutral-700 transition-all
+                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-semibold border-r border-neutral-300 dark:border-neutral-700 transition-all
                     ${activeTab === 'all'
-                        ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border-t-2 border-t-blue-600 -mt-0.5 shadow-sm'
-                        : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
+                        ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border-t-[3px] border-t-blue-600 shadow-sm rounded-t'
+                        : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-white/50 dark:hover:bg-neutral-800/50'}`}
             >
-                <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14v12H1V2zm1 1v10h12V3H2zm1 1h4v2H3V4zm5 0h4v2H8V4zM3 8h4v2H3V8zm5 0h4v2H8V8z" /></svg>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14v12H1V2zm1 1v10h12V3H2zm1 1h4v2H3V4zm5 0h4v2H8V4zM3 8h4v2H3V8zm5 0h4v2H8V8z" /></svg>
                 MASTER TASKS
-                {taskCounts?.all > 0 && (
-                    <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-1.5 rounded-full text-[9px] font-medium">
-                        {taskCounts.all}
-                    </span>
-                )}
+                <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-1.5 rounded-full text-[10px]">
+                    {taskCounts?.all || 0}
+                </span>
             </button>
 
-            {/* Employee tabs */}
+            {/* Per-employee tabs */}
             {employees.map(emp => {
                 const name = (emp.full_name || emp.email).split(' ')[0];
                 const count = taskCounts?.[emp.user_id] || 0;
-                const isActive = activeTab === emp.user_id;
+                const active = activeTab === emp.user_id;
                 return (
                     <button
                         key={emp.user_id}
                         onClick={() => onTabChange(emp.user_id)}
                         title={emp.full_name || emp.email}
-                        className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 text-[11px] font-medium border-r border-neutral-300 dark:border-neutral-700 whitespace-nowrap transition-all
-                            ${isActive
-                                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border-t-2 border-t-emerald-500 -mt-0.5 shadow-sm'
-                                : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
+                        className={`flex-shrink-0 flex items-center gap-1 px-3 py-2.5 text-[12px] font-medium border-r border-neutral-300 dark:border-neutral-700 whitespace-nowrap transition-all
+                            ${active
+                                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white border-t-[3px] border-t-green-500 shadow-sm rounded-t'
+                                : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-white/50 dark:hover:bg-neutral-800/50'}`}
                     >
                         {name}
                         {count > 0 && (
-                            <span className="bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 px-1 rounded-full text-[9px]">
-                                {count}
-                            </span>
+                            <span className="text-[10px] text-neutral-400">({count})</span>
                         )}
                     </button>
                 );
@@ -297,7 +211,7 @@ function SheetTabs({ employees, activeTab, onTabChange, taskCounts }) {
     );
 }
 
-// ─── Main Page ──────────────────────────────────────────────────────────────────
+// ─── Main Page ──────────────────────────────────────────────────
 
 export default function TasksPage() {
     const { profile } = useAuth();
@@ -306,11 +220,12 @@ export default function TasksPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
-    const [showNewRow, setShowNewRow] = useState(false);
+    const [addingTask, setAddingTask] = useState(false);
     const [search, setSearch] = useState('');
     const [saving, setSaving] = useState({});
     const [error, setError] = useState('');
 
+    // Fetch tasks
     const fetchTasks = useCallback(async () => {
         try {
             const res = await fetch('/api/tasks');
@@ -331,14 +246,13 @@ export default function TasksPage() {
 
     useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
-    // Filter tasks
-    const visibleTasks = tasks.filter(t => {
+    // Filtered tasks
+    const visible = tasks.filter(t => {
         if (activeTab !== 'all' && t.assigned_to !== activeTab) return false;
         if (search) {
             const q = search.toLowerCase();
             return (
                 t.title?.toLowerCase().includes(q) ||
-                t.description?.toLowerCase().includes(q) ||
                 t.assignee?.full_name?.toLowerCase().includes(q) ||
                 t.employee_update?.toLowerCase().includes(q)
             );
@@ -346,26 +260,11 @@ export default function TasksPage() {
         return true;
     });
 
-    // Task counts for tabs
-    const taskCounts = { all: tasks.length };
-    tasks.forEach(t => { taskCounts[t.assigned_to] = (taskCounts[t.assigned_to] || 0) + 1; });
+    // Counts for tabs
+    const counts = { all: tasks.length };
+    tasks.forEach(t => { counts[t.assigned_to] = (counts[t.assigned_to] || 0) + 1; });
 
-    const update = async (taskId, patch) => {
-        setSaving(s => ({ ...s, [taskId]: true }));
-        try {
-            const res = await fetch(`/api/tasks/${taskId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(patch),
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setTasks(prev => prev.map(t => t.id === taskId ? data.task : t));
-            } else setError(data.error);
-        } catch { setError('Failed to save'); }
-        finally { setSaving(s => ({ ...s, [taskId]: false })); }
-    };
-
+    // API: Create
     const createTask = async (form) => {
         try {
             const res = await fetch('/api/tasks', {
@@ -374,85 +273,87 @@ export default function TasksPage() {
                 body: JSON.stringify(form),
             });
             const data = await res.json();
-            if (res.ok) { setTasks(prev => [data.task, ...prev]); setShowNewRow(false); }
+            if (res.ok) { setTasks(prev => [data.task, ...prev]); setAddingTask(false); }
             else setError(data.error);
         } catch { setError('Failed to create task'); }
     };
 
+    // API: Update
+    const updateTask = async (id, patch) => {
+        setSaving(s => ({ ...s, [id]: true }));
+        try {
+            const res = await fetch(`/api/tasks/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(patch),
+            });
+            const data = await res.json();
+            if (res.ok) setTasks(prev => prev.map(t => t.id === id ? data.task : t));
+            else setError(data.error);
+        } catch { setError('Failed to update'); }
+        finally { setSaving(s => ({ ...s, [id]: false })); }
+    };
+
+    // API: Delete
     const deleteTask = async (id) => {
-        if (!confirm('Delete this task? This cannot be undone.')) return;
+        if (!confirm('Delete this task permanently?')) return;
         try {
             await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
             setTasks(prev => prev.filter(t => t.id !== id));
         } catch { setError('Failed to delete'); }
     };
 
+    // Loading
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[70vh]">
-                <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-neutral-400 mx-auto mb-2" />
-                    <p className="text-xs text-neutral-400">Loading tasks...</p>
-                </div>
+                <Loader2 className="w-8 h-8 animate-spin text-neutral-300" />
             </div>
         );
     }
 
-    // Column widths matching the Google Sheets layout
-    const cols = [
-        { w: 40 },  // row number
-        { w: 70 },  // task id
-        { w: 200 },  // task title
-        { w: 180 },  // description
-        { w: 150 },  // assigned to
-        { w: 110 },  // assigned date
-        { w: 130 },  // assigned by
-        { w: 90 },  // priority
-        { w: 110 },  // deadline
-        { w: 110 },  // status
-        { w: 220 },  // employee update
-        { w: 150 },  // last modified
-        ...(isAdmin ? [{ w: 60 }] : []),  // actions
-    ];
-
     return (
         <div className="h-[calc(100vh-56px)] flex flex-col bg-white dark:bg-neutral-950">
 
-            {/* ── Toolbar (mimics Google Sheets toolbar) ── */}
-            <div className="flex items-center gap-3 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex-shrink-0">
-                <div className="flex-1">
-                    <h1 className="text-sm font-semibold text-neutral-800 dark:text-white leading-none">Task Manager</h1>
+            {/* ── Toolbar ── */}
+            <div className="flex items-center gap-3 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0">
+                <div className="flex-1 min-w-0">
+                    <h1 className="text-sm font-bold text-neutral-800 dark:text-white tracking-tight">
+                        {isAdmin ? '📋 Task Manager — Master Sheet' : '📋 My Tasks'}
+                    </h1>
                     <p className="text-[11px] text-neutral-400 mt-0.5">
                         {isAdmin
-                            ? `${visibleTasks.length} of ${tasks.length} tasks`
-                            : `${visibleTasks.length} tasks assigned to you`}
+                            ? `Showing ${visible.length} of ${tasks.length} total tasks`
+                            : `${visible.length} task${visible.length !== 1 ? 's' : ''} assigned to you`}
                     </p>
                 </div>
 
-                {/* Search */}
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
-                    <input
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search..."
-                        className="pl-8 pr-3 py-1.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded bg-neutral-50 dark:bg-neutral-900 w-44 focus:w-56 transition-all focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400"
-                    />
-                </div>
+                <div className="flex items-center gap-2">
+                    {/* Search */}
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+                        <input
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search..."
+                            className="pl-8 pr-3 py-1.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded bg-neutral-50 dark:bg-neutral-900 w-40 focus:w-52 transition-all focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        />
+                    </div>
 
-                {/* Add Task (admin only) */}
-                {isAdmin && (
-                    <button
-                        onClick={() => { setShowNewRow(true); setActiveTab('all'); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                        New Task
-                    </button>
-                )}
+                    {/* Add task */}
+                    {isAdmin && (
+                        <button
+                            onClick={() => { setAddingTask(true); setActiveTab('all'); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded shadow-sm transition-colors"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            New Task
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {/* Error banner */}
+            {/* Error */}
             {error && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 text-xs text-red-600 dark:text-red-400 flex-shrink-0">
                     <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
@@ -463,24 +364,28 @@ export default function TasksPage() {
 
             {/* ── Spreadsheet ── */}
             <div className="flex-1 overflow-auto">
-                <table className="border-collapse text-xs" style={{ minWidth: cols.reduce((s, c) => s + c.w, 0) }}>
-                    {/* Column width hints */}
+                <table className="w-full border-collapse" style={{ minWidth: 900 }}>
                     <colgroup>
-                        {cols.map((c, i) => <col key={i} style={{ width: c.w, minWidth: c.w }} />)}
+                        <col style={{ width: 40 }} />   {/* # */}
+                        <col style={{ width: '25%' }} /> {/* Task */}
+                        <col style={{ width: '15%' }} /> {/* Assigned To */}
+                        <col style={{ width: 110 }} />   {/* Created Date */}
+                        <col style={{ width: '25%' }} /> {/* Employee Update */}
+                        <col style={{ width: 110 }} />   {/* Deadline */}
+                        <col style={{ width: 140 }} />   {/* Last Modified */}
+                        <col style={{ width: 50 }} />    {/* Actions */}
                     </colgroup>
 
-                    {/* Frozen header row — Google Sheets style */}
+                    {/* Header */}
                     <thead className="sticky top-0 z-20">
-                        <tr style={{ background: '#f0f4ff' }}>
-                            {/* Row counter cell */}
-                            <th className="border border-neutral-300 dark:border-neutral-600 px-2 py-1.5 text-[10px] font-semibold text-neutral-500 text-center bg-neutral-200 dark:bg-neutral-800" style={{ background: '#e8edf5' }}></th>
-                            {[
-                                'TASK ID', 'TASK TITLE', 'DESCRIPTION', 'ASSIGNED TO',
-                                'ASSIGNED DATE', 'ASSIGNED BY', 'PRIORITY', 'DEADLINE',
-                                'STATUS', 'EMPLOYEE UPDATE', 'LAST MODIFIED',
-                                ...(isAdmin ? [''] : [])
-                            ].map(h => (
-                                <th key={h} className="border border-neutral-300 dark:border-neutral-600 px-2 py-1.5 text-[10px] font-semibold text-neutral-600 dark:text-neutral-300 text-left whitespace-nowrap uppercase tracking-wide" style={{ background: '#e8edf5' }}>
+                        <tr>
+                            <th className="border border-neutral-300 dark:border-neutral-600 py-2 text-center bg-[#e2e8f0] dark:bg-neutral-800" />
+                            {['TASK', 'ASSIGNED TO', 'CREATED DATE', 'EMPLOYEE UPDATE', 'DEADLINE', 'LAST MODIFIED', ''].map((h, i) => (
+                                <th
+                                    key={i}
+                                    className={`border border-neutral-300 dark:border-neutral-600 px-2 py-2 text-[11px] font-bold tracking-wider text-left whitespace-nowrap
+                                        ${i === 3 ? 'bg-[#fef9c3] dark:bg-yellow-900/30 text-amber-800 dark:text-yellow-300' : 'bg-[#e2e8f0] dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}
+                                >
                                     {h}
                                 </th>
                             ))}
@@ -488,155 +393,120 @@ export default function TasksPage() {
                     </thead>
 
                     <tbody>
-                        {/* New Task input row */}
-                        {showNewRow && isAdmin && (
-                            <NewTaskRow employees={employees} onSave={createTask} onCancel={() => setShowNewRow(false)} />
+                        {/* Add row */}
+                        {addingTask && isAdmin && (
+                            <AddTaskRow
+                                employees={employees}
+                                onSave={createTask}
+                                onCancel={() => setAddingTask(false)}
+                            />
                         )}
 
-                        {/* Empty state */}
-                        {visibleTasks.length === 0 && (
+                        {/* Empty */}
+                        {visible.length === 0 && (
                             <tr>
-                                <td colSpan={cols.length} className="py-16 text-center">
+                                <td colSpan={8} className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-2 text-neutral-400">
                                         <ListFilter className="w-8 h-8 opacity-30" />
-                                        <span className="text-sm">{search ? 'No tasks match your search' : isAdmin ? 'No tasks yet — click "New Task" to add one' : 'No tasks assigned to you yet'}</span>
+                                        <p className="text-sm">{search ? 'No tasks match your search' : isAdmin ? 'No tasks yet. Click "New Task" to add one.' : 'No tasks assigned to you yet.'}</p>
                                     </div>
                                 </td>
                             </tr>
                         )}
 
                         {/* Task rows */}
-                        {visibleTasks.map((task, idx) => {
+                        {visible.map((task, idx) => {
+                            const even = idx % 2 === 0;
                             const isSaving = saving[task.id];
-                            const rowBg = idx % 2 === 0 ? 'white' : '#fafafa';
 
                             return (
                                 <tr
                                     key={task.id}
-                                    style={{ background: rowBg, opacity: isSaving ? 0.6 : 1 }}
-                                    className="group hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors"
+                                    className="group transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                                    style={{ opacity: isSaving ? 0.5 : 1, background: even ? '#ffffff' : '#f8fafc' }}
                                 >
-                                    {/* Row number */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 text-center text-[11px] text-neutral-400 font-mono" style={{ background: '#e8edf5' }}>
+                                    {/* Row # */}
+                                    <td className="border border-neutral-200 dark:border-neutral-700 text-center text-[11px] font-mono text-neutral-400 bg-[#e2e8f0] dark:bg-neutral-800">
                                         {idx + 1}
                                     </td>
 
-                                    {/* Task ID */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-2 py-1 font-mono text-[11px] text-neutral-500 whitespace-nowrap">
-                                        {taskId(task.task_number || idx + 1)}
-                                    </td>
-
-                                    {/* Title */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">
+                                    {/* Task */}
+                                    <td className="border border-neutral-200 dark:border-neutral-700">
                                         <EditableCell
                                             value={task.title}
-                                            onChange={v => update(task.id, { title: v })}
+                                            onChange={v => updateTask(task.id, { title: v })}
                                             disabled={!isAdmin}
-                                            placeholder="Task title"
-                                        />
-                                    </td>
-
-                                    {/* Description */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">
-                                        <EditableCell
-                                            value={task.description}
-                                            onChange={v => update(task.id, { description: v })}
-                                            disabled={!isAdmin}
-                                            placeholder="Add description"
-                                            multiline
+                                            placeholder="Task description..."
                                         />
                                     </td>
 
                                     {/* Assigned To */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">
+                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1">
                                         {isAdmin ? (
                                             <select
                                                 value={task.assigned_to}
-                                                onChange={e => update(task.id, { assigned_to: e.target.value })}
-                                                className="w-full bg-transparent text-xs px-1 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded"
+                                                onChange={e => updateTask(task.id, { assigned_to: e.target.value })}
+                                                className="w-full bg-transparent text-[13px] px-1 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded cursor-pointer"
                                             >
                                                 {employees.map(e => (
                                                     <option key={e.user_id} value={e.user_id}>{e.full_name || e.email}</option>
                                                 ))}
                                             </select>
                                         ) : (
-                                            <span className="block px-1 py-1 text-xs text-neutral-700 dark:text-neutral-300">{task.assignee?.full_name || '—'}</span>
+                                            <div className="px-2 py-1.5 text-[13px] text-neutral-700 dark:text-neutral-300">
+                                                {task.assignee?.full_name || '—'}
+                                            </div>
                                         )}
                                     </td>
 
-                                    {/* Assigned Date */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
+                                    {/* Created Date */}
+                                    <td className="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-[12px] text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
                                         {fmtDate(task.created_at)}
                                     </td>
 
-                                    {/* Assigned By */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
-                                        {task.assigner?.full_name || '—'}
-                                    </td>
-
-                                    {/* Priority */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">
-                                        <InlineSelect
-                                            value={task.priority}
-                                            onChange={v => update(task.id, { priority: v })}
-                                            options={PRIORITIES}
-                                            disabled={!isAdmin}
-                                            renderValue={v => <PriorityChip value={v} />}
+                                    {/* Employee Update — yellow highlight, always editable */}
+                                    <td className="border border-neutral-200 dark:border-neutral-700" style={{ background: '#fffde7' }}>
+                                        <EditableCell
+                                            value={task.employee_update}
+                                            onChange={v => updateTask(task.id, { employee_update: v })}
+                                            placeholder="Write your update here..."
+                                            highlight
                                         />
                                     </td>
 
                                     {/* Deadline */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">
+                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1">
                                         {isAdmin ? (
-                                            <EditableCell
-                                                value={task.deadline}
-                                                onChange={v => update(task.id, { deadline: v })}
+                                            <input
                                                 type="date"
+                                                value={task.deadline || ''}
+                                                onChange={e => updateTask(task.id, { deadline: e.target.value })}
+                                                className="w-full bg-transparent text-[12px] px-1 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded"
                                             />
                                         ) : (
-                                            <span className="block px-1 py-1 text-[11px] text-neutral-700 dark:text-neutral-300">
-                                                {task.deadline ? fmtDate(task.deadline) : <span className="text-neutral-300">—</span>}
-                                            </span>
+                                            <div className="px-2 py-1.5 text-[12px] text-neutral-600 dark:text-neutral-400">
+                                                {task.deadline ? fmtDate(task.deadline) : '—'}
+                                            </div>
                                         )}
                                     </td>
 
-                                    {/* Status */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5">
-                                        <InlineSelect
-                                            value={task.status}
-                                            onChange={v => update(task.id, { status: v })}
-                                            options={STATUSES}
-                                            renderValue={v => <StatusChip value={v} />}
-                                        />
-                                    </td>
-
-                                    {/* Employee Update — highlighted yellow, always editable */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-1 py-0.5" style={{ background: '#fffde7' }}>
-                                        <EditableCell
-                                            value={task.employee_update}
-                                            onChange={v => update(task.id, { employee_update: v })}
-                                            placeholder="Write your update here..."
-                                            multiline
-                                        />
-                                    </td>
-
-                                    {/* Last Modified */}
-                                    <td className="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+                                    {/* Last Modified — auto from employee update time */}
+                                    <td className="border border-neutral-200 dark:border-neutral-700 px-2 py-1.5 text-[11px] text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
                                         {fmtDateTime(task.employee_updated_at || task.updated_at)}
                                     </td>
 
-                                    {/* Actions (admin) */}
-                                    {isAdmin && (
-                                        <td className="border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {/* Delete (admin only, show on hover) */}
+                                    <td className="border border-neutral-200 dark:border-neutral-700 text-center">
+                                        {isAdmin && (
                                             <button
                                                 onClick={() => deleteTask(task.id)}
-                                                className="p-1 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                                                title="Delete task"
+                                                className="p-1 text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded opacity-0 group-hover:opacity-100 transition-all"
+                                                title="Delete"
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
-                                        </td>
-                                    )}
+                                        )}
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -644,13 +514,13 @@ export default function TasksPage() {
                 </table>
             </div>
 
-            {/* ── Google Sheets-style tab bar ── */}
+            {/* ── Tab bar (admin only) ── */}
             {isAdmin && employees.length > 0 && (
                 <SheetTabs
                     employees={employees}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
-                    taskCounts={taskCounts}
+                    taskCounts={counts}
                 />
             )}
         </div>
