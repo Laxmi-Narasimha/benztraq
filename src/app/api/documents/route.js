@@ -376,7 +376,7 @@ export async function POST(request) {
             region_id: finalRegionId, // FIXED: Correctly resolved region ID
             created_by: currentUser.id,
             organization: currentUser.organization || 'benz_packaging',
-            status: docState === 'sale' ? 'open' : 'draft',
+            status: docState === 'sale' ? 'open' : (docState === 'sent' ? 'sent' : 'draft'),
         };
 
         // Insert document
@@ -665,6 +665,12 @@ export async function PATCH(request) {
             updatePayload.confirmed_by = currentUser.id;
             updatePayload.doc_type = 'sales_order';
             updatePayload.status = 'open';
+            // Generate SO number and keep original QT number as origin
+            const { data: soNum } = await supabase.rpc('generate_order_number', { prefix: 'SO' });
+            const newSONumber = soNum || `SO-${Date.now().toString().slice(-8)}`;
+            updatePayload.name = newSONumber;
+            updatePayload.doc_number = newSONumber;
+            updatePayload.origin = currentDoc.name || currentDoc.quotation_number; // Link back to quotation
         }
 
         if (body.state === 'cancel') {
@@ -679,12 +685,26 @@ export async function PATCH(request) {
         }
 
         // Update the document
-        const { data: updated, error: updateError } = await supabase
+        let updated, updateError;
+
+        // Try update — if confirmed_by FK fails, retry without it
+        ({ data: updated, error: updateError } = await supabase
             .from('documents')
             .update(updatePayload)
             .eq('id', id)
             .select()
-            .single();
+            .single());
+
+        if (updateError && updateError.message?.includes('confirmed_by')) {
+            console.warn('confirmed_by FK error, retrying without it:', updateError.message);
+            delete updatePayload.confirmed_by;
+            ({ data: updated, error: updateError } = await supabase
+                .from('documents')
+                .update(updatePayload)
+                .eq('id', id)
+                .select()
+                .single());
+        }
 
         if (updateError) {
             console.error('Update error:', updateError);

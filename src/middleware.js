@@ -24,12 +24,19 @@ const PROTECTED_ROUTES = [
     '/targets',
     '/admin',
     '/ergopack',
+    '/inventory',
+    '/tasks',
 ];
 
 // Routes that ASM cannot access
 const ASM_RESTRICTED_ROUTES = [
     '/comparison',
     '/admin',
+];
+
+// Routes that store_manager CAN access (all others redirect to /inventory)
+const STORE_MANAGER_ALLOWED = [
+    '/inventory',
 ];
 
 async function getSession(request) {
@@ -83,8 +90,19 @@ export async function middleware(request) {
     // Get user's organization from session
     const userOrganization = session.organization || 'benz_packaging';
 
-    // ASM restrictions (comparison, admin)
+    // Store manager restrictions - can ONLY access inventory
+    if (userRole === 'store_manager') {
+        const isAllowed = STORE_MANAGER_ALLOWED.some(route => pathname.startsWith(route));
+        if (!isAllowed) {
+            return NextResponse.redirect(new URL('/inventory', request.url));
+        }
+    }
+
+    // ASM restrictions (comparison, admin, AND inventory - completely hidden from ASMs)
     if (isASM) {
+        if (pathname.startsWith('/inventory')) {
+            return NextResponse.redirect(new URL('/dashboard?access=denied', request.url));
+        }
         const isASMRestricted = ASM_RESTRICTED_ROUTES.some(route => pathname.startsWith(route));
         if (isASMRestricted) {
             return NextResponse.redirect(new URL('/dashboard?access=denied', request.url));

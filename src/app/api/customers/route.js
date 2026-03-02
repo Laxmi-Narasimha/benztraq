@@ -51,7 +51,8 @@ export async function GET(request) {
 
         // Parse query parameters
         const page = parseInt(searchParams.get('page') || '1', 10);
-        const limit = parseInt(searchParams.get('limit') || '50', 10);
+        const rawLimit = parseInt(searchParams.get('limit') || '50', 10);
+        const limit = Math.min(rawLimit, 2000); // Cap at 2000 rows max
         const search = searchParams.get('search') || '';
         const status = searchParams.get('status');
         const industryId = searchParams.get('industry_id');
@@ -100,8 +101,7 @@ export async function GET(request) {
             query = query.eq('account_manager_id', accountManagerId);
         }
 
-        // By default, show only active customers
-        query = query.eq('disabled', false);
+        // Note: All customers are active. No need for active/disabled filter.
 
         // Apply sorting
         const ascending = sortOrder === 'asc';

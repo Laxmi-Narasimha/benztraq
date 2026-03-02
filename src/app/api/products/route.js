@@ -44,9 +44,13 @@ export async function GET(request) {
                 brand:brands(id, name)
             `, { count: 'exact' });
 
-        // Apply filters
+        // Apply search — split into words, each word must match (AND logic)
+        // e.g. "vci laminated" matches "VCI HD Laminated Bag"
         if (search) {
-            query = query.or(`item_code.ilike.%${search}%,item_name.ilike.%${search}%,description.ilike.%${search}%`);
+            const words = search.trim().split(/\s+/).filter(w => w.length > 0);
+            for (const word of words) {
+                query = query.or(`item_code.ilike.%${word}%,item_name.ilike.%${word}%,description.ilike.%${word}%,tags.ilike.%${word}%`);
+            }
         }
 
         if (itemGroupId) {
@@ -99,16 +103,23 @@ export async function POST(request) {
     try {
         const currentUser = await getCurrentUser();
         if (!currentUser) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized — please log in again' }, { status: 401 });
         }
 
         const supabase = createAdminClient();
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (parseErr) {
+            return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+        }
+
+        console.log('[Products POST] User:', currentUser.id, 'Body keys:', Object.keys(body).join(', '));
 
         // Validate required fields
         if (!body.item_code || !body.item_name) {
             return NextResponse.json(
-                { error: 'item_code and item_name are required' },
+                { error: 'Part Code and Item Name are required' },
                 { status: 400 }
             );
         }
@@ -122,67 +133,85 @@ export async function POST(request) {
 
         if (existing) {
             return NextResponse.json(
-                { error: 'Product with this item_code already exists' },
+                { error: `Product with code "${body.item_code}" already exists` },
                 { status: 409 }
             );
         }
 
-        // Core fields — always present in the DB schema
-        const coreData = {
-            item_code: body.item_code,
-            item_name: body.item_name,
-            description: body.description || null,
-            item_group_id: body.item_group_id || null,
-            brand_id: body.brand_id || null,
+        // Helper: convert empty string to null, invalid UUID to null
+        const toNull = (v) => (v === '' || v === undefined || v === null) ? null : v;
+        const toUUID = (v) => {
+            if (!v || v === '' || v === 'null' || v === 'undefined') return null;
+            // Quick UUID format check
+            if (typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(v)) return v;
+            return null;
+        };
+        const toNum = (v) => {
+            if (v === '' || v === null || v === undefined) return null;
+            const n = parseFloat(v);
+            return isNaN(n) ? null : n;
+        };
+
+        // Build product data — only include known columns
+        const productData = {
+            item_code: body.item_code.trim(),
+            item_name: body.item_name.trim(),
+            description: toNull(body.description),
+            item_group_id: toUUID(body.item_group_id),
+            brand_id: toUUID(body.brand_id),
             stock_uom: body.stock_uom || 'Nos',
-            standard_rate: body.standard_rate || 0,
-            hsn_sac_code: body.hsn_sac_code || null,
-            gst_rate: body.gst_rate || 18.00,
-            length: body.length || null,
-            width: body.width || null,
-            height: body.height || null,
+            standard_rate: toNum(body.standard_rate) ?? 0,
+            hsn_sac_code: toNull(body.hsn_sac_code),
+            gst_rate: toNum(body.gst_rate) ?? 18.00,
+            length: toNum(body.length),
+            width: toNum(body.width),
+            height: toNum(body.height),
             dimension_uom: body.dimension_uom || 'cm',
-            thickness_micron: body.thickness_micron || null,
-            gsm: body.gsm || null,
-            ply_count: body.ply_count || null,
+            thickness_micron: toNum(body.thickness_micron),
+            gsm: toNum(body.gsm),
+            ply_count: body.ply_count ? parseInt(body.ply_count) : null,
             is_stock_item: body.is_stock_item ?? true,
             is_sales_item: body.is_sales_item ?? true,
             is_purchase_item: body.is_purchase_item ?? true,
             maintain_stock: body.maintain_stock ?? true,
             created_by: currentUser.id,
-        };
-
-        // Extended fields — these require the migration SQL to have been run
-        const extendedData = {
+            // Extended fields
             item_type: body.item_type || 'Product',
-            buying_price: body.buying_price || null,
-            landed_cost: body.landed_cost || null,
-            gross_weight: body.gross_weight || null,
-            net_weight: body.net_weight || null,
+            buying_price: toNum(body.buying_price),
+            landed_cost: toNum(body.landed_cost),
+            gross_weight: toNum(body.gross_weight),
+            net_weight: toNum(body.net_weight),
             weight_uom: body.weight_uom || 'kg',
-            tags: body.tags || null,
-            internal_notes: body.internal_notes || null,
+            tags: toNull(body.tags),
+            internal_notes: toNull(body.internal_notes),
             tracking_method: body.tracking_method || 'none',
             invoicing_policy: body.invoicing_policy || 'ordered',
             price_inclusive_tax: body.price_inclusive_tax ?? false,
-            initial_stock: body.initial_stock || null,
-            reorder_point: body.reorder_point || null,
-            overstock_point: body.overstock_point || null,
+            initial_stock: toNum(body.initial_stock),
+            reorder_point: toNum(body.reorder_point),
+            overstock_point: toNum(body.overstock_point),
         };
 
-        // Attempt 1: insert with all fields (requires migration SQL to have run)
+        console.log('[Products POST] Inserting:', body.item_code, body.item_name);
+
+        // Attempt insert
         let { data, error } = await supabase
             .from('products')
-            .insert({ ...coreData, ...extendedData })
+            .insert(productData)
             .select(`*, item_group:item_groups(id, name, path), brand:brands(id, name)`)
             .single();
 
-        // If column-not-found error (migration not run yet), fall back to core fields only
+        // If column-not-found error, fall back to core fields only
         if (error && (error.code === '42703' || error.message?.includes('column') || error.message?.includes('does not exist'))) {
-            console.warn('Extended columns not found, inserting with core fields only. Run add_product_columns.sql to enable all fields.');
+            console.warn('[Products POST] Extended column missing, trying core-only insert');
+            // Remove extended fields
+            const { item_type, buying_price, landed_cost, gross_weight, net_weight, weight_uom,
+                tags, internal_notes, tracking_method, invoicing_policy, price_inclusive_tax,
+                initial_stock, reorder_point, overstock_point, ...coreOnly } = productData;
+
             const fallback = await supabase
                 .from('products')
-                .insert(coreData)
+                .insert(coreOnly)
                 .select(`*, item_group:item_groups(id, name, path), brand:brands(id, name)`)
                 .single();
             data = fallback.data;
@@ -190,14 +219,21 @@ export async function POST(request) {
         }
 
         if (error) {
-            console.error('Error creating product:', error);
-            return NextResponse.json({ error: error.message || 'Failed to create product' }, { status: 500 });
+            console.error('[Products POST] Insert error:', error.code, error.message, error.details, error.hint);
+            return NextResponse.json(
+                { error: `Failed to create product: ${error.message}` },
+                { status: 500 }
+            );
         }
 
+        console.log('[Products POST] Created:', data.id);
         return NextResponse.json({ product: data }, { status: 201 });
     } catch (error) {
-        console.error('Products POST error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.error('[Products POST] Unexpected error:', error.message, error.stack);
+        return NextResponse.json(
+            { error: `Server error: ${error.message}` },
+            { status: 500 }
+        );
     }
 }
 

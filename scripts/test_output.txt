@@ -1,0 +1,15 @@
+﻿Total documents: 6
+By doc_type: {"sales_order":3,"quotation":3}
+By state: {"sale":3,"draft":3}
+
+Sales orders to convert: 3
+  SO2601-1035 | sales_order | state=sale | status=open | mahindra | Γé╣2.36
+  SO2602-1039 | sales_order | state=sale | status=open | Valvoline Cummins Private Limited | Γé╣932.2
+  SO2602-1040 | sales_order | state=sale | status=open | ARGL LIMITED ( Rajasthan ) | Γé╣324.5
+
+Γ£à Converted 3 documents back to quotations:
+  SO2601-1035 ΓåÆ doc_type=quotation, state=sent, status=draft
+  SO2602-1039 ΓåÆ doc_type=quotation, state=sent, status=draft
+  SO2602-1040 ΓåÆ doc_type=quotation, state=sent, status=draft
+
+DONE

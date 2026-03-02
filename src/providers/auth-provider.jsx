@@ -170,6 +170,7 @@ export function AuthProvider({ children }) {
     const isHeadOfSales = roleLower === 'head_of_sales' || roleLower === 'head of sales';
     const isVP = roleLower === 'vp';
     const isASM = roleLower === 'asm';
+    const isStoreManager = roleLower === 'store_manager';
     const isManager = isDeveloper || isDirector || isHeadOfSales || isVP;
 
     // Create profile object for backwards compatibility with sidebar
@@ -203,6 +204,7 @@ export function AuthProvider({ children }) {
         isHeadOfSales,
         isVP,
         isASM,
+        isStoreManager,
         isManager,
     };
 

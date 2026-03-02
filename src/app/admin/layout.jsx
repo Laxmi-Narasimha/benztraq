@@ -60,7 +60,7 @@ export default function AdminLayout({ children }) {
                         <div className="flex items-center gap-4">
                             <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
                                 <Shield className="w-6 h-6 text-blue-500" />
-                                <span className="font-bold text-white">BENZTRAQ</span>
+                                <span className="font-bold text-white">BENZERP</span>
                             </Link>
                             <ChevronRight className="w-4 h-4 text-slate-600" />
                             <span className="text-slate-400">Admin Panel</span>

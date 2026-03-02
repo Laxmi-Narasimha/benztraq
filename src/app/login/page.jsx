@@ -1,8 +1,9 @@
 /**
- * Login Page - Clean Multi-Company Login
+ * Login Page - Credentials First, Then Auto-Navigate
  * 
- * Select company first, then enter credentials.
- * No dev hints or credential pre-filling.
+ * Enter email/password first.
+ * If single company → auto-redirect (no company selection).
+ * If multi-company → show company selector.
  * 
  * @module app/login/page
  */
@@ -15,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { AlertCircle, Loader2, ArrowLeft, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 /**
  * Company card component
@@ -45,141 +46,196 @@ function CompanyCard({ name, subtitle, selected, onClick }) {
 /**
  * Main Login Component
  */
-function LoginFlow({ skipToLogin }) {
+function LoginFlow() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get('redirectTo');
 
-    const [step, setStep] = useState('company');
+    // Step: 'credentials' or 'company'
+    const [step, setStep] = useState('credentials');
     const [selectedCompany, setSelectedCompany] = useState(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Dev button: skip to Benz login (no credentials pre-filled)
-    useEffect(() => {
-        if (skipToLogin && step === 'company') {
-            setSelectedCompany('benz');
-            setStep('login');
-        }
-    }, [skipToLogin, step]);
+    // Authenticated user data (after credentials validated)
+    const [authenticatedUser, setAuthenticatedUser] = useState(null);
 
-    const handleCompanySelect = (company) => {
-        setSelectedCompany(company);
-    };
-
-    const handleContinue = () => {
-        if (selectedCompany) {
-            setStep('login');
-        }
-    };
-
-    const handleBack = () => {
-        setStep('company');
-        setError('');
-        setEmail('');
-        setPassword('');
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
+    const finalizeLogin = async (company) => {
         setIsSubmitting(true);
+        setError('');
 
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email.trim(), password, selectedCompany }),
+                body: JSON.stringify({ email: email.trim(), password, selectedCompany: company }),
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Store user data
                 localStorage.setItem('benztraq_user', JSON.stringify(data.user));
-                localStorage.setItem('benztraq_company', selectedCompany);
+                localStorage.setItem('benztraq_company', company);
 
-                // Determine redirect path
                 let redirectPath = '/dashboard';
-
-                if (selectedCompany === 'ergopack') {
+                if (company === 'ergopack') {
                     redirectPath = '/ergopack';
+                } else if (data.user.role === 'store_manager') {
+                    redirectPath = '/inventory';
                 } else if (redirectTo) {
                     redirectPath = redirectTo;
                 } else if (data.user.role === 'developer') {
                     redirectPath = '/admin';
                 }
 
-                // Use window.location for hard navigation to ensure cookies are applied
                 window.location.href = redirectPath;
             } else {
-                setError(data.error || 'Invalid email or password');
+                setError(data.error || 'Login failed');
+                setIsSubmitting(false);
             }
         } catch (err) {
             console.error('Login error:', err);
             setError('Connection error. Please try again.');
-        } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Company Selection Step
+    const handleCredentialsSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsSubmitting(true);
+
+        try {
+            // Step 1: Validate credentials without company selection
+            const response = await fetch('/api/auth/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.trim(), password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                const userCompanies = data.user.companies || [];
+                setAuthenticatedUser(data.user);
+
+                if (userCompanies.length <= 1) {
+                    // Single company or no companies — auto-navigate
+                    const company = userCompanies[0] || 'benz';
+                    await finalizeLogin(company);
+                } else {
+                    // Multiple companies — show company picker
+                    setStep('company');
+                    setIsSubmitting(false);
+                }
+            } else {
+                setError(data.error || 'Invalid email or password');
+                setIsSubmitting(false);
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('Connection error. Please try again.');
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleCompanySelect = (company) => {
+        setSelectedCompany(company);
+    };
+
+    const handleCompanyContinue = async () => {
+        if (selectedCompany) {
+            await finalizeLogin(selectedCompany);
+        }
+    };
+
+    const handleBack = () => {
+        setStep('credentials');
+        setSelectedCompany(null);
+        setError('');
+    };
+
+    // Company Selection Step (only for multi-company users like directors)
     if (step === 'company') {
         return (
             <div className="space-y-8">
-                <div className="text-center">
+                <div>
+                    <button
+                        type="button"
+                        onClick={handleBack}
+                        className="text-zinc-500 hover:text-white text-sm flex items-center gap-1 mb-6 transition-colors"
+                    >
+                        <ArrowLeft className="w-3 h-3" />
+                        Back
+                    </button>
                     <h1 className="text-3xl font-extralight tracking-widest text-white mb-2">
                         SELECT COMPANY
                     </h1>
+                    <p className="text-zinc-500 text-sm">
+                        Welcome, {authenticatedUser?.fullName || email}
+                    </p>
                 </div>
 
+                {error && (
+                    <Alert className="border-red-900 bg-red-950/50">
+                        <AlertCircle className="h-4 w-4 text-red-400" />
+                        <AlertDescription className="text-red-400">{error}</AlertDescription>
+                    </Alert>
+                )}
+
                 <div className="space-y-4">
-                    <CompanyCard
-                        name="BENZ PACKAGING"
-                        subtitle="Sales Performance Tracker"
-                        selected={selectedCompany === 'benz'}
-                        onClick={() => handleCompanySelect('benz')}
-                    />
-                    <CompanyCard
-                        name="ERGOPACK INDIA"
-                        subtitle="Outreach CRM"
-                        selected={selectedCompany === 'ergopack'}
-                        onClick={() => handleCompanySelect('ergopack')}
-                    />
+                    {(authenticatedUser?.companies || []).includes('benz') && (
+                        <CompanyCard
+                            name="BENZ PACKAGING"
+                            subtitle="Sales Performance & ERP"
+                            selected={selectedCompany === 'benz'}
+                            onClick={() => handleCompanySelect('benz')}
+                        />
+                    )}
+                    {(authenticatedUser?.companies || []).includes('ergopack') && (
+                        <CompanyCard
+                            name="ERGOPACK INDIA"
+                            subtitle="Outreach CRM"
+                            selected={selectedCompany === 'ergopack'}
+                            onClick={() => handleCompanySelect('ergopack')}
+                        />
+                    )}
                 </div>
 
                 <Button
                     type="button"
-                    onClick={handleContinue}
-                    disabled={!selectedCompany}
+                    onClick={handleCompanyContinue}
+                    disabled={!selectedCompany || isSubmitting}
                     className="w-full h-12 bg-white text-black hover:bg-zinc-200 font-light tracking-wide disabled:opacity-30"
                 >
-                    Continue
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Signing in...
+                        </>
+                    ) : (
+                        <>
+                            Continue
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </>
+                    )}
                 </Button>
             </div>
         );
     }
 
-    // Login Step
+    // Credentials Step (default)
     return (
         <div className="space-y-8">
-            <div>
-                <button
-                    type="button"
-                    onClick={handleBack}
-                    className="text-zinc-500 hover:text-white text-sm flex items-center gap-1 mb-6 transition-colors"
-                >
-                    <ArrowLeft className="w-3 h-3" />
-                    Change company
-                </button>
-                <h1 className="text-3xl font-extralight tracking-widest text-white mb-1">
-                    {selectedCompany === 'ergopack' ? 'ERGOPACK INDIA' : 'BENZ PACKAGING'}
+            <div className="text-center">
+                <h1 className="text-3xl font-extralight tracking-widest text-white mb-2">
+                    BENZERP
                 </h1>
                 <p className="text-zinc-500 text-sm">
-                    Enter your credentials
+                    Sign in to continue
                 </p>
             </div>
 
@@ -190,7 +246,7 @@ function LoginFlow({ skipToLogin }) {
                 </Alert>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleCredentialsSubmit} className="space-y-6">
                 <div className="space-y-2">
                     <Label className="text-zinc-400 text-xs uppercase tracking-wider">Email</Label>
                     <Input
@@ -206,15 +262,25 @@ function LoginFlow({ skipToLogin }) {
 
                 <div className="space-y-2">
                     <Label className="text-zinc-400 text-xs uppercase tracking-wider">Password</Label>
-                    <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        autoComplete="current-password"
-                        placeholder="••••••••"
-                        className="h-12 bg-transparent border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white"
-                    />
+                    <div className="relative">
+                        <Input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            autoComplete="current-password"
+                            placeholder="••••••••"
+                            className="h-12 bg-transparent border-zinc-700 text-white placeholder:text-zinc-600 focus:border-white pr-12"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                            tabIndex={-1}
+                        >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                    </div>
                 </div>
 
                 <Button
@@ -249,20 +315,8 @@ function LoginFlow({ skipToLogin }) {
  * Login page wrapper
  */
 export default function LoginPage() {
-    const [skipToLogin, setSkipToLogin] = useState(false);
-
     return (
         <div className="min-h-screen bg-black flex flex-col">
-            {/* Dev Button - Top Right Corner - Skips to Benz login (no pre-fill) */}
-            <div className="absolute top-6 right-6 z-50">
-                <button
-                    onClick={() => setSkipToLogin(true)}
-                    className="text-zinc-700 hover:text-zinc-400 text-xs uppercase tracking-wider transition-colors cursor-pointer px-3 py-2"
-                >
-                    Dev
-                </button>
-            </div>
-
             {/* Main Content */}
             <div className="flex-1 flex items-center justify-center p-6">
                 <div className="w-full max-w-sm">
@@ -271,7 +325,7 @@ export default function LoginPage() {
                             <Loader2 className="w-6 h-6 animate-spin text-zinc-600" />
                         </div>
                     }>
-                        <LoginFlow skipToLogin={skipToLogin} />
+                        <LoginFlow />
                     </Suspense>
                 </div>
             </div>

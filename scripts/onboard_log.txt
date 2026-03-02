@@ -1,0 +1,158 @@
+﻿≡ƒÜÇ Starting user onboarding...
+
+≡ƒôï Step 1: Setting up roles...
+  Γ£à Roles ready (including new "manager" and "employee" roles)
+
+≡ƒôï Step 2: Setting up permissions for manager and employee roles...
+  Role map: developer, director, manager, head_of_sales, employee, asm, sales_executive
+  Γ£à Permissions ready
+
+≡ƒôï Step 3: Hashing passwords...
+  Γ£à Password "benz" hashed
+
+≡ƒôï Step 4: Fetching existing profiles...
+  Found 19 existing profiles
+
+≡ƒôï Step 5: Fetching existing auth users...
+  Found 61 existing auth users
+
+≡ƒôï Step 6: Processing users...
+
+node :   Γ¥î paulraj@benz-packaging.com: Profile error - duplicate key value violates unique 
+constraint "profiles_pkey"
+At line:1 char:1
++ node scripts/onboard_users.mjs 2>&1 | Out-File -FilePath scripts/onbo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  Γ¥î paulraj@b..."profiles_pkey":String) [], RemoteExcep 
+   tion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Γ¥î wh.jaipur@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î abhishek@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î accounts.chennai@benz-packaging.com: Profile error - duplicate key value violates unique 
+constraint "profiles_pkey"
+  Γ¥î accounts@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î ajay@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î dispatch1@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î anirudh@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î sales3@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î sales4@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î chaitanya@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î credit@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î deepak@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î dinesh@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î sales@ergopack-india.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î erp@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î gate@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î hr.support@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î hr@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î isha@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î chennai@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î karan@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î karthick@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î laxmi@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î lokesh@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î hr.manager@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î manan@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î marketing@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î warehouse@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î neeraj@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î neveta@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î supplychain@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î pavan.kr@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î qa@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î po@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î ccare2@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î prashansa@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î ccare6@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î pulak@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î quality.chennai@benz-packaging.com: Profile error - duplicate key value violates unique 
+constraint "profiles_pkey"
+  Γ¥î rahul@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î rekha@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î samish@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î sandeep@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î satender@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î satheeswaran@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î saurav@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î ccare@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î store@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î sales7@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î sales5@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î yamada@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î bhandari@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î it@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î bangalore@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î vikky@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+  Γ¥î warehouse.ap@benz-packaging.com: Profile error - duplicate key value violates unique constraint 
+"profiles_pkey"
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+≡ƒôè ONBOARDING SUMMARY
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  Total users processed: 57
+  Γ£à Created: 0
+  ≡ƒöä Updated: 0
+  Γ¥î Errors: 57
+
+  ≡ƒöÉ Password for all non-directors: "benz"
+  ≡ƒöÉ Directors keep their existing passwords
+
+  ≡ƒææ Directors: manan@benz-packaging.com, chaitanya@benz-packaging.com, prashansa@benz-packaging.com
+  ≡ƒôï Managers: isha@benz-packaging.com
+  ≡ƒÆ╗ Developers: laxmi@benz-packaging.com
+  ≡ƒæñ Employees: 52
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ

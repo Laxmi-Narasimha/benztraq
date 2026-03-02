@@ -370,17 +370,32 @@ export default function NewQuotationPage() {
 
     const loadCustomers = async () => {
         try {
-            const res = await fetch('/api/customers?limit=5000');
-            const data = await res.json();
-            if (data.customers && Array.isArray(data.customers)) {
-                setCustomers(data.customers.map(c => ({
-                    ...c,
-                    name: c.name || c.customer_name || 'Unknown',
-                    gstin: c.gstin || '',
-                    state_code: c.state_code || '',
-                    address: c.billing_address || c.address || '',
-                })));
+            // Supabase PostgREST caps at 1000 rows per query, so fetch in pages
+            const PAGE_SIZE = 1000;
+            let allCustomers = [];
+            let page = 1;
+            let hasMore = true;
+
+            while (hasMore) {
+                const res = await fetch(`/api/customers?limit=${PAGE_SIZE}&page=${page}&sort_by=name&sort_order=asc`);
+                const data = await res.json();
+                if (data.customers && Array.isArray(data.customers)) {
+                    allCustomers = allCustomers.concat(data.customers);
+                    const total = data.pagination?.total || data.customers.length;
+                    hasMore = allCustomers.length < total;
+                    page++;
+                } else {
+                    hasMore = false;
+                }
             }
+
+            setCustomers(allCustomers.map(c => ({
+                ...c,
+                name: c.name || c.customer_name || 'Unknown',
+                gstin: c.gstin || '',
+                state_code: c.state_code || '',
+                address: c.billing_address || c.address || '',
+            })));
         } catch (err) {
             console.error('Failed to load customers:', err);
             setError('Failed to load customers');
@@ -395,9 +410,9 @@ export default function NewQuotationPage() {
             setProducts(productList.map(p => ({
                 ...p,
                 name: p.item_name || p.name || 'Unknown',
-                hsn_code: p.hsn_code || '39232100',
-                selling_price: p.selling_price || 0,
-                default_gst_rate: p.default_gst_rate || 18,
+                hsn_code: p.hsn_sac_code || p.hsn_code || '39232100',
+                selling_price: p.standard_rate || p.selling_price || 0,
+                default_gst_rate: p.gst_rate || p.default_gst_rate || 18,
             })));
         } catch (err) {
             console.error('Failed to load products:', err);
@@ -441,7 +456,42 @@ export default function NewQuotationPage() {
                 setShowCreateProductModal(false);
                 setNewProductData(prev => ({ ...prev, item_code: '', item_name: '', description: '' }));
                 await loadProducts(); // Refresh products list
-                setSuccess(`Product "${data.product.item_name}" created!`);
+
+                // Auto-add product to line items with price pre-filled
+                const newProduct = data.product;
+                setLines(prev => {
+                    // Find the first empty line or add a new one
+                    const emptyIdx = prev.findIndex(l => !l.product_id);
+                    const lineData = {
+                        id: `temp_${Date.now()}`,
+                        product_id: newProduct.id,
+                        name: newProduct.item_name,
+                        hsn_code: newProduct.hsn_sac_code || '39232100',
+                        product_uom: newProduct.stock_uom || 'Units',
+                        product_uom_qty: 1,
+                        price_unit: newProduct.standard_rate || 0,
+                        discount: 0,
+                        gst_rate: newProduct.gst_rate || 18,
+                        price_subtotal: 0,
+                        price_tax: 0,
+                        price_total: 0,
+                        cgst_amount: 0,
+                        sgst_amount: 0,
+                        igst_amount: 0,
+                    };
+                    // Compute amounts
+                    Object.assign(lineData, computeLineAmounts(lineData, document.fiscal_position));
+
+                    if (emptyIdx >= 0) {
+                        const updated = [...prev];
+                        updated[emptyIdx] = lineData;
+                        return updated;
+                    } else {
+                        return [...prev, lineData];
+                    }
+                });
+
+                setSuccess(`Product "${data.product.item_name}" created and added!`);
                 setTimeout(() => setSuccess(''), 3000);
             } else {
                 setError(data.error || 'Failed to create product');
@@ -622,7 +672,7 @@ export default function NewQuotationPage() {
             const payload = {
                 ...document,
                 state: newState,
-                doc_type: newState === 'sale' ? 'sales_order' : 'quotation',
+                doc_type: 'quotation',  // ALWAYS quotation from this page — SO created via conversion
                 customer_name: document.partner_name,
                 customer_id: document.partner_id,
                 customer_gstin: document.partner_gstin,
@@ -685,14 +735,14 @@ export default function NewQuotationPage() {
                                 Save Draft
                             </button>
                             <button
-                                onClick={() => handleSave('sale')}
+                                onClick={() => handleSave('draft')}
                                 disabled={saving}
                                 className="px-5 py-2.5 bg-neutral-900 text-white rounded-xl 
                                     hover:bg-black disabled:opacity-50 flex items-center gap-2 
                                     text-sm font-medium shadow-sm transition-all active:scale-[0.98]"
                             >
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                Confirm Order
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                Save Quotation
                             </button>
                         </div>
                     </div>
@@ -906,7 +956,7 @@ export default function NewQuotationPage() {
                                         <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider min-w-[250px]">Product</th>
                                         <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-24">Qty</th>
                                         <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-28">Price</th>
-                                        <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-20">GST</th>
+                                        <th className="px-4 py-3 text-left font-semibold text-stone-500 uppercase text-xs tracking-wider w-28">GST</th>
                                         <th className="px-4 py-3 text-right font-semibold text-stone-500 uppercase text-xs tracking-wider w-32">Total</th>
                                         <th className="px-4 py-3 w-12"></th>
                                     </tr>
@@ -968,8 +1018,8 @@ export default function NewQuotationPage() {
                                                     <select
                                                         value={line.gst_rate}
                                                         onChange={(e) => updateLine(idx, 'gst_rate', parseFloat(e.target.value))}
-                                                        className="w-full px-2 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm
-                                                            focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white transition-all"
+                                                        className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm
+                                                            focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:bg-white transition-all appearance-none"
                                                     >
                                                         {GST_RATES.map(r => <option key={r.value} value={r.value}>{r.value}%</option>)}
                                                     </select>

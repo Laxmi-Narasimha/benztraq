@@ -27,6 +27,12 @@ export const USER_ROLES = Object.freeze({
 export const MANAGER_ROLES = [USER_ROLES.VP, USER_ROLES.DIRECTOR];
 
 /**
+ * Store roles that have write access to inventory.
+ * @type {string[]}
+ */
+export const STORE_WRITE_ROLES = ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'];
+
+/**
  * Document types enumeration.
  * 
  * @readonly
@@ -247,18 +253,27 @@ export const MONTHS_IN_YEAR = 12;
 export const NAVIGATION_ITEMS = Object.freeze([
     {
         title: 'Overview',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
         ],
     },
     {
         title: 'Documents',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Document Center', href: '/documents', icon: 'FileText' },
         ],
     },
     {
+        title: 'Tasks',
+        items: [
+            { title: 'Task Manager', href: '/tasks', icon: 'ClipboardList' },
+        ],
+    },
+    {
         title: 'Analytics',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Analytics Dashboard', href: '/analytics', icon: 'BarChart3' },
             { title: 'Quote Comparison', href: '/comparison', icon: 'GitCompare' },
@@ -268,7 +283,15 @@ export const NAVIGATION_ITEMS = Object.freeze([
         ],
     },
     {
+        title: 'Store',
+        roles: ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'],
+        items: [
+            { title: 'Inventory', href: '/inventory', icon: 'Warehouse' },
+        ],
+    },
+    {
         title: 'Management',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Targets', href: '/targets', icon: 'Target' },
             { title: 'Reports', href: '/reports', icon: 'BarChart3' },
@@ -276,6 +299,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Admin',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Director Dashboard', href: '/admin/dashboard', icon: 'LayoutDashboard', roles: [USER_ROLES.VP, USER_ROLES.DIRECTOR] },
             { title: 'Admin Panel', href: '/admin', icon: 'Shield', roles: [USER_ROLES.VP] },
@@ -285,6 +309,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Settings',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Settings', href: '/settings', icon: 'Settings', roles: MANAGER_ROLES },
         ],

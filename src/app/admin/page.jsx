@@ -137,7 +137,7 @@ export default function AdminPage() {
                             Initialize Users
                         </CardTitle>
                         <CardDescription className="text-slate-400">
-                            Seed the database with default users for BENZTRAQ
+                            Seed the database with default users for BENZERP
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">

@@ -85,6 +85,8 @@ function getStatusColor(status) {
     switch (status?.toLowerCase()) {
         case 'won':
         case 'confirmed':
+        case 'sale':
+        case 'open':
             return 'bg-green-100 text-green-800 border-green-200';
         case 'sent':
             return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -146,6 +148,7 @@ export default function DocumentDetailsPage() {
     const [error, setError] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [printing, setPrinting] = useState(false);
+    const [converting, setConverting] = useState(false);
 
     // Fetch document and line items
     const fetchDocument = useCallback(async () => {
@@ -197,15 +200,9 @@ export default function DocumentDetailsPage() {
         }
     };
 
-    // Print/Download PDF
-    const handlePrint = async () => {
-        setPrinting(true);
-        try {
-            // For now, use browser print
-            window.print();
-        } finally {
-            setPrinting(false);
-        }
+    // Print/Download PDF — navigate to dedicated print page
+    const handlePrint = () => {
+        window.open(`/documents/${id}/print`, '_blank');
     };
 
     // Loading state
@@ -485,7 +482,7 @@ export default function DocumentDetailsPage() {
             </div>
 
             {/* Convert to Sales Order Action */}
-            {isQuotation && document?.status !== 'won' && (
+            {isQuotation && document?.state !== 'sale' && (
                 <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 print:hidden">
                     <CardContent className="py-6">
                         <div className="flex items-center justify-between">
@@ -495,14 +492,40 @@ export default function DocumentDetailsPage() {
                                 </div>
                                 <div>
                                     <p className="font-semibold text-lg">Ready to convert?</p>
-                                    <p className="text-muted-foreground">Create a Sales Order from this quotation to confirm the deal</p>
+                                    <p className="text-muted-foreground">Convert this quotation to a Sales Order to confirm the deal and count it in revenue</p>
                                 </div>
                             </div>
-                            <Button size="lg" asChild className="shadow-lg">
-                                <Link href={`/documents/new?type=sales_order&convert=${id}`}>
+                            <Button
+                                size="lg"
+                                className="shadow-lg"
+                                disabled={converting}
+                                onClick={async () => {
+                                    if (!confirm('Convert this quotation to a Sales Order? This will generate a new SO number and mark it as confirmed revenue.')) return;
+                                    setConverting(true);
+                                    try {
+                                        const res = await fetch(`/api/documents?id=${id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ state: 'sale' }),
+                                        });
+                                        const data = await res.json();
+                                        if (!res.ok) throw new Error(data.error || 'Failed to convert');
+                                        // Refresh document data
+                                        await fetchDocument();
+                                        alert(`✅ Converted to Sales Order: ${data.document?.name || data.document?.doc_number}`);
+                                    } catch (err) {
+                                        alert('Error: ' + err.message);
+                                    } finally {
+                                        setConverting(false);
+                                    }
+                                }}
+                            >
+                                {converting ? (
+                                    <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                                ) : (
                                     <CheckCircle className="h-5 w-5 mr-2" />
-                                    Convert to Sales Order
-                                </Link>
+                                )}
+                                {converting ? 'Converting...' : 'Convert to Sales Order'}
                             </Button>
                         </div>
                     </CardContent>

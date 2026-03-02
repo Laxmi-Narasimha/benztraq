@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "BENZTRAQ | Sales Performance Dashboard",
+  title: "BENZERP | Sales Performance Dashboard",
   description: "Premium internal application for tracking sales performance, quotations, and sales orders.",
-  keywords: ["benztraq", "sales", "performance", "dashboard", "quotations", "sales orders"],
+  keywords: ["benzerp", "sales", "performance", "dashboard", "quotations", "sales orders"],
   icons: {
     icon: "/assets/blue-logo.png",
     shortcut: "/assets/blue-logo.png",

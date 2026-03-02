@@ -38,6 +38,8 @@ import {
     Plus,
     // Sparkles removed - using Benz logo image instead
     Search,
+    Warehouse,
+    ClipboardList,
 } from 'lucide-react';
 import { formatInitials } from '@/lib/utils/formatting';
 import { useState } from 'react';
@@ -58,6 +60,8 @@ const IconConfig = {
     BarChart3: { icon: BarChart3 },
     Settings: { icon: Settings },
     Shield: { icon: Shield },
+    Warehouse: { icon: Warehouse },
+    ClipboardList: { icon: ClipboardList },
 };
 
 /**
@@ -108,6 +112,14 @@ function NavItem({ item, collapsed, isActive }) {
  */
 function NavSection({ section, collapsed, pathname }) {
     const { profile } = useAuth();
+
+    // Section-level access control
+    if (section.roles && profile) {
+        if (!section.roles.includes(profile.role)) return null;
+    }
+    if (section.excludeRoles && profile) {
+        if (section.excludeRoles.includes(profile.role)) return null;
+    }
 
     const isItemVisible = (item) => {
         if (!item.roles) return true;
@@ -185,9 +197,9 @@ export function Sidebar({ collapsed = false, onToggle }) {
                         </div>
                         <div>
                             <h1 className="text-sm font-bold text-neutral-900 dark:text-white tracking-tight">
-                                BENZTRAQ
+                                BENZERP
                             </h1>
-                            <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">Sales Hub</p>
+                            <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">Enterprise Hub</p>
                         </div>
                     </div>
                 )}
@@ -229,8 +241,8 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 </button>
             </div>
 
-            {/* ========== Navigation ========== */}
-            <ScrollArea className="flex-1 py-2">
+            {/* ========== Navigation (Scrollable) ========== */}
+            <div className="flex-1 overflow-y-auto py-2">
                 <div className="space-y-4">
                     {NAVIGATION_ITEMS.map((section) => (
                         <NavSection
@@ -241,92 +253,98 @@ export function Sidebar({ collapsed = false, onToggle }) {
                         />
                     ))}
                 </div>
-            </ScrollArea>
-
-            {/* New Quote Button */}
-            <div className="px-3 py-2">
-                <Link
-                    href="/documents/new"
-                    className={cn(
-                        'flex items-center justify-center gap-2 w-full py-2 rounded-md font-medium text-sm transition-all duration-150',
-                        'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900',
-                        'hover:bg-neutral-800 dark:hover:bg-neutral-100',
-                        collapsed ? 'px-0' : 'px-4'
-                    )}
-                >
-                    <Plus className="w-4 h-4" />
-                    {!collapsed && <span>New Quote</span>}
-                </Link>
             </div>
 
-            {/* Ergopack Switch (Directors Only) */}
-            {profile && ['director', 'developer'].includes(profile.role) && !collapsed && (
-                <div className="px-3 pb-2">
-                    <Link
-                        href="/ergopack"
-                        className={cn(
-                            'flex items-center justify-center gap-2 w-full py-2 rounded-md font-medium text-sm transition-all duration-150',
-                            'border border-neutral-300 text-neutral-600',
-                            'hover:bg-neutral-100 hover:border-neutral-400',
-                            'dark:border-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800'
-                        )}
-                    >
-                        <Package className="w-4 h-4" />
-                        <span>Switch to Ergopack</span>
-                    </Link>
-                </div>
-            )}
-
-            {/* User Profile */}
-            <div className="border-t border-neutral-200 dark:border-neutral-800 p-3">
-                {profile && (
-                    <div className={cn(
-                        'flex items-center gap-2.5 p-2 rounded-md transition-all duration-150',
-                        'hover:bg-neutral-100 dark:hover:bg-neutral-800',
-                        collapsed && 'justify-center p-0'
-                    )}>
-                        {/* Avatar */}
-                        <div className="relative">
-                            <Avatar className={cn(
-                                'ring-2 ring-neutral-200 dark:ring-neutral-700',
-                                collapsed ? 'h-10 w-10' : 'h-8 w-8'
-                            )}>
-                                <AvatarFallback className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-semibold">
-                                    {formatInitials(profile.full_name)}
-                                </AvatarFallback>
-                            </Avatar>
-                        </div>
-
-                        {!collapsed && (
-                            <>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
-                                        {profile.full_name}
-                                    </p>
-                                    <p className="text-xs text-neutral-400 dark:text-neutral-500 capitalize">
-                                        {profile.role}
-                                    </p>
-                                </div>
-
-                                {/* Sign Out */}
-                                <button
-                                    onClick={handleSignOut}
-                                    disabled={isSigningOut}
-                                    className={cn(
-                                        'p-1.5 rounded transition-all duration-150',
-                                        'text-neutral-400 hover:text-red-600 hover:bg-red-50',
-                                        'dark:text-neutral-500 dark:hover:text-red-400 dark:hover:bg-red-900/20',
-                                        isSigningOut && 'opacity-50 cursor-not-allowed'
-                                    )}
-                                    aria-label="Sign out"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                </button>
-                            </>
-                        )}
+            {/* ========== Sticky Footer ========== */}
+            <div className="flex-shrink-0 border-t border-neutral-200 dark:border-neutral-800">
+                {/* New Quote Button (hidden for store_manager) */}
+                {profile && profile.role !== 'store_manager' && (
+                    <div className="px-3 pt-3 pb-1">
+                        <Link
+                            href="/documents/new"
+                            className={cn(
+                                'flex items-center justify-center gap-2 w-full py-2 rounded-md font-medium text-sm transition-all duration-150',
+                                'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900',
+                                'hover:bg-neutral-800 dark:hover:bg-neutral-100',
+                                collapsed ? 'px-0' : 'px-4'
+                            )}
+                        >
+                            <Plus className="w-4 h-4" />
+                            {!collapsed && <span>New Quote</span>}
+                        </Link>
                     </div>
                 )}
+
+                {/* Ergopack Switch (Directors Only) */}
+                {profile && ['director', 'developer'].includes(profile.role) && !collapsed && (
+                    <div className="px-3 pb-1 pt-1">
+                        <Link
+                            href="/ergopack"
+                            className={cn(
+                                'flex items-center justify-center gap-2 w-full py-2 rounded-md font-medium text-sm transition-all duration-150',
+                                'border border-neutral-300 text-neutral-600',
+                                'hover:bg-neutral-100 hover:border-neutral-400',
+                                'dark:border-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                            )}
+                        >
+                            <Package className="w-4 h-4" />
+                            <span>Switch to Ergopack</span>
+                        </Link>
+                    </div>
+                )}
+
+                {/* User Profile + Logout */}
+                <div className="p-3">
+                    {profile && (
+                        <div className={cn(
+                            'flex items-center gap-2.5 p-2 rounded-md transition-all duration-150',
+                            'hover:bg-neutral-100 dark:hover:bg-neutral-800',
+                            collapsed && 'justify-center p-0'
+                        )}>
+                            {/* Avatar */}
+                            <div className="relative">
+                                <Avatar className={cn(
+                                    'ring-2 ring-neutral-200 dark:ring-neutral-700',
+                                    collapsed ? 'h-10 w-10' : 'h-8 w-8'
+                                )}>
+                                    <AvatarFallback className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-semibold">
+                                        {formatInitials(profile.full_name)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </div>
+
+                            {!collapsed && (
+                                <>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
+                                            {profile.full_name}
+                                        </p>
+                                        <p className="text-xs text-neutral-400 dark:text-neutral-500 capitalize">
+                                            {profile.role === 'store_manager' ? 'Store Manager' : profile.role}
+                                        </p>
+                                    </div>
+
+                                    {/* Sign Out */}
+                                    <button
+                                        onClick={handleSignOut}
+                                        disabled={isSigningOut}
+                                        className={cn(
+                                            'p-1.5 rounded transition-all duration-150',
+                                            'text-neutral-400 hover:text-red-600 hover:bg-red-50',
+                                            'dark:text-neutral-500 dark:hover:text-red-400 dark:hover:bg-red-900/20',
+                                            isSigningOut && 'opacity-50 cursor-not-allowed'
+                                        )}
+                                        aria-label="Sign out"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </aside>
     );
 }
+

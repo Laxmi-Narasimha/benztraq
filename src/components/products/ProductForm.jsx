@@ -408,51 +408,52 @@ const ProductForm = memo(function ProductForm({
 
                     {/* ── SECTION 4: SETTINGS ── */}
                     {section.id === 4 && activeSection === 4 && (
-                        <div className="px-4 py-4 space-y-5 border border-stone-100 rounded-b-lg -mt-1">
-                            <div className="space-y-3">
-                                <Label className="text-sm font-medium">Product Flags</Label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {[
-                                        { key: "is_sales_item", label: "Sales Item", desc: "Can be sold to customers" },
-                                        { key: "is_purchase_item", label: "Purchase Item", desc: "Can be purchased from suppliers" },
-                                        { key: "is_stock_item", label: "Stock Item", desc: "Maintained in inventory" },
-                                        { key: "maintain_stock", label: "Track Inventory", desc: "Track stock levels" },
-                                    ].map(({ key, label, desc }) => (
-                                        <label key={key} className="flex items-start gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition-colors">
-                                            <input type="checkbox" checked={formData[key] ?? true}
-                                                onChange={(e) => onFieldChange(key, e.target.checked)}
-                                                className="mt-0.5 w-4 h-4 rounded border-stone-300 text-sky-600 focus:ring-sky-500" />
-                                            <div>
-                                                <p className="text-sm font-medium text-stone-800">{label}</p>
-                                                <p className="text-xs text-stone-400">{desc}</p>
-                                            </div>
-                                        </label>
-                                    ))}
+                        <div className="relative px-4 py-4 space-y-5 border border-stone-100 rounded-b-lg -mt-1">
+                            {/* Coming Soon Overlay */}
+                            <div className="absolute inset-0 bg-stone-50/80 backdrop-blur-[1px] z-10 rounded-b-lg flex flex-col items-center justify-center gap-2">
+                                <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                    Advanced settings coming soon
                                 </div>
+                                <p className="text-xs text-stone-500">Product flags, invoicing policies & advanced settings will be configurable shortly.</p>
                             </div>
+                            {/* Fields (greyed, behind overlay) */}
+                            <div className="opacity-40 pointer-events-none select-none space-y-5">
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-medium">Product Flags</Label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { key: "is_sales_item", label: "Sales Item", desc: "Can be sold to customers" },
+                                            { key: "is_purchase_item", label: "Purchase Item", desc: "Can be purchased from suppliers" },
+                                            { key: "is_stock_item", label: "Stock Item", desc: "Maintained in inventory" },
+                                            { key: "maintain_stock", label: "Track Inventory", desc: "Track stock levels" },
+                                        ].map(({ key, label, desc }) => (
+                                            <label key={key} className="flex items-start gap-3 p-3 border border-stone-200 rounded-lg">
+                                                <input type="checkbox" checked={true} readOnly disabled
+                                                    className="mt-0.5 w-4 h-4 rounded border-stone-300 text-sky-600" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-stone-800">{label}</p>
+                                                    <p className="text-xs text-stone-400">{desc}</p>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
 
-                            <div className="space-y-1.5">
-                                <Label>Invoicing Policy</Label>
-                                <Select value={formData.invoicing_policy || "ordered"} onValueChange={(v) => onFieldChange("invoicing_policy", v)}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="ordered">Ordered Quantities</SelectItem>
-                                        <SelectItem value="delivered">Delivered Quantities</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <p className="text-xs text-stone-400">
-                                    {formData.invoicing_policy === "delivered"
-                                        ? "Invoice only after delivery."
-                                        : "You can invoice before delivery."}
-                                </p>
-                            </div>
+                                <div className="space-y-1.5">
+                                    <Label>Invoicing Policy</Label>
+                                    <Select value="ordered" disabled>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ordered">Ordered Quantities</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                            {/* Internal Notes */}
-                            <div className="space-y-1.5">
-                                <Label htmlFor="internal_notes">Internal Notes</Label>
-                                <Textarea id="internal_notes" value={formData.internal_notes || ""}
-                                    onChange={(e) => onFieldChange("internal_notes", e.target.value)}
-                                    placeholder="Internal notes (not visible to customers)" rows={2} />
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="internal_notes">Internal Notes</Label>
+                                    <Textarea id="internal_notes" value="" placeholder="Internal notes (not visible to customers)" rows={2} disabled />
+                                </div>
                             </div>
                         </div>
                     )}

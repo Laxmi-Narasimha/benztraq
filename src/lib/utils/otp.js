@@ -63,7 +63,7 @@ export const EMAIL_CONFIG = {
     provider: process.env.EMAIL_PROVIDER || 'resend', // 'resend' | 'sendgrid' | 'mailgun'
     apiKey: process.env.EMAIL_API_KEY || '',
     fromEmail: process.env.EMAIL_FROM || 'noreply@benztraq.com',
-    fromName: process.env.EMAIL_FROM_NAME || 'BenzTraq',
+    fromName: process.env.EMAIL_FROM_NAME || 'BenzERP',
 };
 
 /**
@@ -111,7 +111,7 @@ export async function sendOTPEmail(toEmail, otp, userName = 'User') {
                             <!-- Header -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%); padding: 30px; text-align: center;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">BenzTraq</h1>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">BenzERP</h1>
                                     <p style="color: #999999; margin: 8px 0 0 0; font-size: 14px;">Password Reset Request</p>
                                 </td>
                             </tr>
@@ -184,7 +184,7 @@ async function sendViaResend(toEmail, htmlContent) {
         body: JSON.stringify({
             from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.fromEmail}>`,
             to: [toEmail],
-            subject: 'Your Password Reset Code - BenzTraq',
+            subject: 'Your Password Reset Code - BenzERP',
             html: htmlContent,
         }),
     });
@@ -216,7 +216,7 @@ async function sendViaSendGrid(toEmail, htmlContent) {
         body: JSON.stringify({
             personalizations: [{ to: [{ email: toEmail }] }],
             from: { email: EMAIL_CONFIG.fromEmail, name: EMAIL_CONFIG.fromName },
-            subject: 'Your Password Reset Code - BenzTraq',
+            subject: 'Your Password Reset Code - BenzERP',
             content: [{ type: 'text/html', value: htmlContent }],
         }),
     });
