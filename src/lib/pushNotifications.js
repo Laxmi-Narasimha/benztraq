@@ -7,7 +7,7 @@
 'use client';
 
 // VAPID Public Key — safe to expose client-side
-const VAPID_PUBLIC_KEY = 'BG7mB4EVdYq3PKoG0aXB4ukDNCeVzmE6kqjMLEQQWE0vTYSyxjTmqjLAmDXqT8qJcCT3ZTgobWPBWMB3WVzwE3o';
+const VAPID_PUBLIC_KEY = 'BHl3YORFfOmNjRvHCWGFEdG1ov3i2T_DP0-lBedQZ8-ezxUx2MXvZTpdWjxvAXsb50fOj8qj5Q0OsyuAu1F3SY8';
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

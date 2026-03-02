@@ -9,8 +9,8 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/utils/session';
 
-const VAPID_PUBLIC_KEY = 'BG7mB4EVdYq3PKoG0aXB4ukDNCeVzmE6kqjMLEQQWE0vTYSyxjTmqjLAmDXqT8qJcCT3ZTgobWPBWMB3WVzwE3o';
-const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || 'NXNH5RX2kBEHSHzzPUMZSURuEjF0neuJj0KO-D7zhSi0').trim();
+const VAPID_PUBLIC_KEY = 'BHl3YORFfOmNjRvHCWGFEdG1ov3i2T_DP0-lBedQZ8-ezxUx2MXvZTpdWjxvAXsb50fOj8qj5Q0OsyuAu1F3SY8';
+const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || 'x0owlkJsbdQaaAJpdvbSnB5BZXckv717ipCUCQrEMHg').trim();
 
 let _webpush = null;
 function getWebPush() {
