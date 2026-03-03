@@ -258,8 +258,8 @@ export function Sidebar({ collapsed = false, onToggle }) {
 
             {/* ========== Sticky Footer ========== */}
             <div className="flex-shrink-0 border-t border-neutral-200 dark:border-neutral-800">
-                {/* New Quote Button (hidden for store_manager) */}
-                {profile && profile.role !== 'store_manager' && (
+                {/* New Quote Button (hidden for store_manager and asm/CRM users) */}
+                {profile && !['store_manager', 'asm'].includes(profile.role) && (
                     <div className="px-3 pt-3 pb-1">
                         <Link
                             href="/documents/new"
@@ -277,7 +277,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 )}
 
                 {/* Ergopack Switch (Directors Only) */}
-                {profile && (['director', 'developer'].includes(profile.role) || profile.id === '480090cb-3fad-45ce-beae-b89576f4c722') && !collapsed && (
+                {profile && (['director', 'developer'].includes(profile.role) || profile.user_id === '480090cb-3fad-45ce-beae-b89576f4c722') && !collapsed && (
                     <div className="px-3 pb-1 pt-1">
                         <Link
                             href="/ergopack"
@@ -353,7 +353,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
                                         <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{profile.full_name}</p>
                                         <p className="text-xs text-neutral-400 capitalize">{profile.role === 'store_manager' ? 'Store Manager' : profile.role}</p>
                                     </div>
-                                    {(['director', 'developer'].includes(profile.role) || profile.id === '480090cb-3fad-45ce-beae-b89576f4c722') && (
+                                    {(['director', 'developer'].includes(profile.role) || profile.user_id === '480090cb-3fad-45ce-beae-b89576f4c722') && (
                                         <Link href="/ergopack" className="flex items-center gap-2 px-3 py-2 text-xs text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800">
                                             <Package className="w-3.5 h-3.5" /> Switch to Ergopack
                                         </Link>

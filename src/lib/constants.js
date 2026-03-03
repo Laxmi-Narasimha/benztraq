@@ -253,7 +253,7 @@ export const MONTHS_IN_YEAR = 12;
 export const NAVIGATION_ITEMS = Object.freeze([
     {
         title: 'Overview',
-        excludeRoles: ['store_manager'],
+        excludeRoles: ['store_manager', 'asm'],
         items: [
             { title: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
         ],
