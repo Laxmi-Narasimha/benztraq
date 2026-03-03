@@ -71,7 +71,7 @@ export async function POST(request) {
             body: body || '',
             url: url || '/tasks',
             tag: tag || 'benztraq',
-            icon: '/favicon.ico',
+            icon: '/notification-icon.png',
         });
 
         let sent = 0, failed = 0;

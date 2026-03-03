@@ -126,7 +126,7 @@ export async function POST(request) {
             body: `Test at ${new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}. If you see this, push works!`,
             url: '/tasks',
             tag: 'test-push',
-            icon: '/favicon.ico',
+            icon: '/notification-icon.png',
         });
 
         results.steps.push(`📤 Sending with VAPID private key (${VAPID_PRIVATE_KEY?.length || 0} chars)...`);

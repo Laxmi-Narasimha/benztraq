@@ -169,6 +169,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
     const pathname = usePathname();
     const { profile, signOut } = useAuth();
     const [isSigningOut, setIsSigningOut] = useState(false);
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
     const handleSignOut = async () => {
         setIsSigningOut(true);
@@ -296,49 +297,75 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 {/* User Profile + Logout */}
                 <div className="p-3">
                     {profile && (
-                        <div className={cn(
-                            'flex items-center gap-2.5 p-2 rounded-md transition-all duration-150',
-                            'hover:bg-neutral-100 dark:hover:bg-neutral-800',
-                            collapsed && 'justify-center p-0'
-                        )}>
-                            {/* Avatar */}
-                            <div className="relative">
-                                <Avatar className={cn(
-                                    'ring-2 ring-neutral-200 dark:ring-neutral-700',
-                                    collapsed ? 'h-10 w-10' : 'h-8 w-8'
-                                )}>
-                                    <AvatarFallback className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-semibold">
-                                        {formatInitials(profile.full_name)}
-                                    </AvatarFallback>
-                                </Avatar>
+                        <div className="relative">
+                            <div className={cn(
+                                'flex items-center gap-2.5 p-2 rounded-md transition-all duration-150 cursor-pointer',
+                                'hover:bg-neutral-100 dark:hover:bg-neutral-800',
+                                collapsed && 'justify-center p-0'
+                            )}
+                                onClick={() => collapsed && setProfileMenuOpen(!profileMenuOpen)}
+                            >
+                                {/* Avatar */}
+                                <div className="relative">
+                                    <Avatar className={cn(
+                                        'ring-2 ring-neutral-200 dark:ring-neutral-700',
+                                        collapsed ? 'h-10 w-10' : 'h-8 w-8'
+                                    )}>
+                                        <AvatarFallback className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-semibold">
+                                            {formatInitials(profile.full_name)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </div>
+
+                                {!collapsed && (
+                                    <>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
+                                                {profile.full_name}
+                                            </p>
+                                            <p className="text-xs text-neutral-400 dark:text-neutral-500 capitalize">
+                                                {profile.role === 'store_manager' ? 'Store Manager' : profile.role}
+                                            </p>
+                                        </div>
+
+                                        {/* Sign Out */}
+                                        <button
+                                            onClick={handleSignOut}
+                                            disabled={isSigningOut}
+                                            className={cn(
+                                                'p-1.5 rounded transition-all duration-150',
+                                                'text-neutral-400 hover:text-red-600 hover:bg-red-50',
+                                                'dark:text-neutral-500 dark:hover:text-red-400 dark:hover:bg-red-900/20',
+                                                isSigningOut && 'opacity-50 cursor-not-allowed'
+                                            )}
+                                            aria-label="Sign out"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
 
-                            {!collapsed && (
-                                <>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
-                                            {profile.full_name}
-                                        </p>
-                                        <p className="text-xs text-neutral-400 dark:text-neutral-500 capitalize">
-                                            {profile.role === 'store_manager' ? 'Store Manager' : profile.role}
-                                        </p>
+                            {/* Collapsed profile popover */}
+                            {collapsed && profileMenuOpen && (
+                                <div className="absolute bottom-full left-0 mb-2 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-2xl py-2 z-50">
+                                    <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
+                                        <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{profile.full_name}</p>
+                                        <p className="text-xs text-neutral-400 capitalize">{profile.role === 'store_manager' ? 'Store Manager' : profile.role}</p>
                                     </div>
-
-                                    {/* Sign Out */}
+                                    {['director', 'developer'].includes(profile.role) && (
+                                        <Link href="/ergopack" className="flex items-center gap-2 px-3 py-2 text-xs text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800">
+                                            <Package className="w-3.5 h-3.5" /> Switch to Ergopack
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={handleSignOut}
                                         disabled={isSigningOut}
-                                        className={cn(
-                                            'p-1.5 rounded transition-all duration-150',
-                                            'text-neutral-400 hover:text-red-600 hover:bg-red-50',
-                                            'dark:text-neutral-500 dark:hover:text-red-400 dark:hover:bg-red-900/20',
-                                            isSigningOut && 'opacity-50 cursor-not-allowed'
-                                        )}
-                                        aria-label="Sign out"
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                                     >
-                                        <LogOut className="w-4 h-4" />
+                                        <LogOut className="w-3.5 h-3.5" /> Sign Out
                                     </button>
-                                </>
+                                </div>
                             )}
                         </div>
                     )}
@@ -347,4 +374,5 @@ export function Sidebar({ collapsed = false, onToggle }) {
         </aside>
     );
 }
+
 

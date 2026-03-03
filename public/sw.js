@@ -1,9 +1,9 @@
 // ============================================================================
 // BenzTraq Service Worker
-// Handles: Push Notifications
+// Handles: Push Notifications with Benz branding
 // ============================================================================
 
-const CACHE_NAME = 'benztraq-v1';
+const CACHE_NAME = 'benztraq-v2';
 
 // Install — skip waiting
 self.addEventListener('install', (event) => {
@@ -15,12 +15,12 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
 });
 
-// Push — show notification
+// Push — show notification with Benz logo
 self.addEventListener('push', (event) => {
     let data = {
         title: 'BenzTraq',
         body: 'You have a new notification',
-        icon: '/favicon.ico',
+        icon: '/notification-icon.png',
         url: '/tasks',
     };
 
@@ -35,8 +35,8 @@ self.addEventListener('push', (event) => {
 
     const options = {
         body: data.body,
-        icon: data.icon || '/favicon.ico',
-        badge: '/favicon.ico',
+        icon: '/notification-icon.png',
+        badge: '/badge-icon.png',
         vibrate: [200, 100, 200],
         data: { url: data.url || '/tasks' },
         tag: data.tag || 'benztraq-notification',

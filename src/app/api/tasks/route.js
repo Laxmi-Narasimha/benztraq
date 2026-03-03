@@ -41,6 +41,7 @@ const TASK_TABS = [
 const TAB_IDS = TASK_TABS.filter(t => t.user_id !== 'OTHER').map(t => t.user_id);
 
 // All assignable people (for the assign dropdown)
+// Only employees who currently have tasks — directors commented out
 const ASSIGNABLE = [
     { user_id: 'e2cd37b3-f92b-4378-95d3-8c46d469315b', name: 'Dinesh' },
     { user_id: 'c6f5ea1a-110c-4165-9433-ef6b4c8c71fa', name: 'Pradeep' },
@@ -53,10 +54,10 @@ const ASSIGNABLE = [
     { user_id: '2ee61597-d5e1-4d1e-aad8-2b157adb599c', name: 'Tarun' },
     { user_id: '51deaf59-c580-418d-a78c-7acfa973a53d', name: 'Jayshree' },
     { user_id: '0edd417c-95f9-4ffa-b76f-4a51673015f0', name: 'Udit' },
-    { user_id: '08f0a4c7-2dda-4236-a657-383e6a785573', name: 'Manan' },
-    { user_id: '84ac5185-e461-4e77-8ea1-a1573bd2b394', name: 'Chaitanya' },
-    { user_id: 'cbba91c1-7bd3-43d3-855c-cd350944608c', name: 'Prashansa' },
-    { user_id: '092d9927-e3ed-4a69-9b23-a521d9a80af9', name: 'Laxmi' },
+    // { user_id: '08f0a4c7-2dda-4236-a657-383e6a785573', name: 'Manan' },
+    // { user_id: '84ac5185-e461-4e77-8ea1-a1573bd2b394', name: 'Chaitanya' },
+    // { user_id: 'cbba91c1-7bd3-43d3-855c-cd350944608c', name: 'Prashansa' },
+    // { user_id: '092d9927-e3ed-4a69-9b23-a521d9a80af9', name: 'Laxmi' },
 ];
 
 export async function GET() {

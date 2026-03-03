@@ -14,7 +14,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/providers/auth-provider';
-import { Plus, Trash2, X, Loader2, Search, AlertCircle, ListFilter, MessageSquare, Send, Bell } from 'lucide-react';
+import { Plus, Trash2, X, Loader2, Search, AlertCircle, ListFilter, MessageSquare, Send, Bell, ArrowUpDown, Clock, AlertTriangle } from 'lucide-react';
 import { isPushSupported, getNotificationPermission, requestNotificationPermission, subscribeToPush } from '@/lib/pushNotifications';
 
 // Master user IDs (for notification targeting)
@@ -298,6 +298,8 @@ export default function TasksPage() {
     const [pushPromptDismissed, setPushPromptDismissed] = useState(false);
     const [pushDebug, setPushDebug] = useState(null); // debug modal data
     const [pushTesting, setPushTesting] = useState(false);
+    const [sortBy, setSortBy] = useState('newest'); // newest, deadline, last_modified, stale
+    const [showSortMenu, setShowSortMenu] = useState(false);
 
     const fetchTasks = useCallback(async () => {
         try {
@@ -366,6 +368,12 @@ export default function TasksPage() {
         setPushTesting(false);
     };
 
+    const NOW = Date.now();
+    const daysSinceUpdate = (t) => {
+        const d = t.employee_updated_at || t.updated_at || t.created_at;
+        return d ? Math.floor((NOW - new Date(d).getTime()) / 86400000) : 999;
+    };
+
     const visible = tasks.filter(t => {
         if (activeTab === 'all') { /* all */ }
         else if (activeTab === 'OTHER') { if (tabIds.includes(t.assigned_to)) return false; }
@@ -375,7 +383,22 @@ export default function TasksPage() {
             return t.title?.toLowerCase().includes(q) || t.assignee?.full_name?.toLowerCase().includes(q) || t.employee_update?.toLowerCase().includes(q);
         }
         return true;
+    }).sort((a, b) => {
+        switch (sortBy) {
+            case 'deadline':
+                if (!a.deadline && !b.deadline) return 0;
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return new Date(a.deadline) - new Date(b.deadline);
+            case 'last_modified':
+                return new Date(b.employee_updated_at || b.updated_at || 0) - new Date(a.employee_updated_at || a.updated_at || 0);
+            case 'stale':
+                return daysSinceUpdate(b) - daysSinceUpdate(a); // most stale first
+            default: // newest
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        }
     });
+    const staleCount = tasks.filter(t => daysSinceUpdate(t) >= 3).length;
 
     const counts = { all: tasks.length, OTHER: 0 };
     tasks.forEach(t => {
@@ -446,6 +469,30 @@ export default function TasksPage() {
                             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
                                 className="pl-7 pr-2 py-1 text-xs border border-neutral-300 rounded bg-neutral-50 w-28 sm:w-36 focus:w-44 transition-all focus:outline-none focus:ring-1 focus:ring-blue-400" />
                         </div>
+                        {/* Sort dropdown — admin only */}
+                        {isAdmin && (
+                            <div className="relative">
+                                <button onClick={() => setShowSortMenu(!showSortMenu)}
+                                    className="flex items-center gap-1 px-2 py-1 text-[11px] border border-neutral-300 rounded bg-white hover:bg-neutral-50 text-neutral-600">
+                                    <ArrowUpDown className="w-3 h-3" />
+                                    {sortBy === 'newest' ? 'Newest' : sortBy === 'deadline' ? 'Deadline' : sortBy === 'last_modified' ? 'Modified' : 'Stale'}
+                                </button>
+                                {showSortMenu && (
+                                    <div className="absolute right-0 top-8 z-30 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 w-44" onClick={() => setShowSortMenu(false)}>
+                                        {[{ key: 'newest', label: '🕐 Newest First', icon: Clock },
+                                        { key: 'last_modified', label: '📝 Last Modified', icon: Clock },
+                                        { key: 'deadline', label: '⏰ By Deadline', icon: AlertCircle },
+                                        { key: 'stale', label: `🔴 Stale (${staleCount})`, icon: AlertTriangle },
+                                        ].map(o => (
+                                            <button key={o.key} onClick={() => setSortBy(o.key)}
+                                                className={`w-full text-left px-3 py-1.5 text-xs hover:bg-neutral-100 flex items-center gap-2 ${sortBy === o.key ? 'font-bold text-blue-600 bg-blue-50' : 'text-neutral-700'}`}>
+                                                {o.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         {isAdmin && (
                             <button onClick={() => { setAddingTask(true); setActiveTab('all'); }}
                                 className="flex items-center gap-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold rounded shadow-sm transition-colors">
@@ -507,50 +554,53 @@ export default function TasksPage() {
                                     </div>
                                 </td></tr>
                             )}
-                            {visible.map((task, idx) => (
-                                <tr key={task.id} className="group transition-colors hover:bg-blue-50/50"
-                                    style={{ opacity: saving[task.id] ? 0.5 : 1, background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                                    <td className="border border-neutral-200 text-center text-[10px] font-mono text-blue-600 bg-[#e8edf3] font-semibold px-1">{getTaskId(task)}</td>
-                                    <td className="border border-neutral-200">
-                                        <EditableCell value={task.title} onChange={v => updateTask(task.id, { title: v })} disabled={!isAdmin} placeholder="Task..." />
-                                    </td>
-                                    <td className="border border-neutral-200 px-1">
-                                        {isAdmin ? (
-                                            <select value={task.assigned_to} onChange={e => updateTask(task.id, { assigned_to: e.target.value })}
-                                                className="w-full bg-transparent text-[12px] px-1 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded cursor-pointer">
-                                                {assignable.map(e => <option key={e.user_id} value={e.user_id}>{e.name}</option>)}
-                                            </select>
-                                        ) : (
-                                            <div className="px-2 py-1.5 text-[12px] text-neutral-700">{task.assignee?.full_name || '—'}</div>
-                                        )}
-                                    </td>
-                                    <td className="border border-neutral-200 px-2 py-1.5 text-[11px] text-neutral-500 whitespace-nowrap">{fmtDate(task.created_at)}</td>
-                                    <td className="border border-neutral-200" style={{ background: '#fffde7' }}>
-                                        <EditableCell value={task.employee_update} onChange={v => updateTask(task.id, { employee_update: v })} placeholder="Add update..." highlight />
-                                    </td>
-                                    <td className="border border-neutral-200 px-1">
-                                        {isAdmin ? (
-                                            <input type="date" value={task.deadline || ''} onChange={e => updateTask(task.id, { deadline: e.target.value })}
-                                                className="w-full bg-transparent text-[11px] px-1 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded" />
-                                        ) : (
-                                            <div className="px-2 py-1.5 text-[11px] text-neutral-600">{task.deadline ? fmtDate(task.deadline) : '—'}</div>
-                                        )}
-                                    </td>
-                                    <td className="border border-neutral-200 px-2 py-1.5 text-[10px] text-neutral-500 whitespace-nowrap">{fmtDateTime(task.employee_updated_at || task.updated_at)}</td>
-                                    <td className="border border-neutral-200 text-center">
-                                        <button onClick={() => setChatTask(task)} className="p-1 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all" title="Chat">
-                                            <MessageSquare className="w-3.5 h-3.5" />
-                                        </button>
-                                    </td>
-                                    {isAdmin && (
+                            {visible.map((task, idx) => {
+                                const stale = daysSinceUpdate(task) >= 3;
+                                return (
+                                    <tr key={task.id} className={`group transition-colors hover:bg-blue-50/50 ${stale ? 'bg-red-50/60' : ''}`}
+                                        style={{ opacity: saving[task.id] ? 0.5 : 1, background: stale ? undefined : (idx % 2 === 0 ? '#fff' : '#f8fafc') }}>
+                                        <td className="border border-neutral-200 text-center text-[10px] font-mono text-blue-600 bg-[#e8edf3] font-semibold px-1">{getTaskId(task)}</td>
+                                        <td className="border border-neutral-200">
+                                            <EditableCell value={task.title} onChange={v => updateTask(task.id, { title: v })} disabled={!isAdmin} placeholder="Task..." />
+                                        </td>
+                                        <td className="border border-neutral-200 px-1">
+                                            {isAdmin ? (
+                                                <select value={task.assigned_to} onChange={e => updateTask(task.id, { assigned_to: e.target.value })}
+                                                    className="w-full bg-transparent text-[12px] px-1 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded cursor-pointer">
+                                                    {assignable.map(e => <option key={e.user_id} value={e.user_id}>{e.name}</option>)}
+                                                </select>
+                                            ) : (
+                                                <div className="px-2 py-1.5 text-[12px] text-neutral-700">{task.assignee?.full_name || '—'}</div>
+                                            )}
+                                        </td>
+                                        <td className="border border-neutral-200 px-2 py-1.5 text-[11px] text-neutral-500 whitespace-nowrap">{fmtDate(task.created_at)}</td>
+                                        <td className="border border-neutral-200" style={{ background: '#fffde7' }}>
+                                            <EditableCell value={task.employee_update} onChange={v => updateTask(task.id, { employee_update: v })} placeholder="Add update..." highlight />
+                                        </td>
+                                        <td className="border border-neutral-200 px-1">
+                                            {isAdmin ? (
+                                                <input type="date" value={task.deadline || ''} onChange={e => updateTask(task.id, { deadline: e.target.value })}
+                                                    className="w-full bg-transparent text-[11px] px-1 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 rounded" />
+                                            ) : (
+                                                <div className="px-2 py-1.5 text-[11px] text-neutral-600">{task.deadline ? fmtDate(task.deadline) : '—'}</div>
+                                            )}
+                                        </td>
+                                        <td className="border border-neutral-200 px-2 py-1.5 text-[10px] text-neutral-500 whitespace-nowrap">{fmtDateTime(task.employee_updated_at || task.updated_at)}</td>
                                         <td className="border border-neutral-200 text-center">
-                                            <button onClick={() => deleteTask(task.id)} className="p-1 text-neutral-300 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-all" title="Delete">
-                                                <Trash2 className="w-3 h-3" />
+                                            <button onClick={() => setChatTask(task)} className="p-1 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all" title="Chat">
+                                                <MessageSquare className="w-3.5 h-3.5" />
                                             </button>
                                         </td>
-                                    )}
-                                </tr>
-                            ))}
+                                        {isAdmin && (
+                                            <td className="border border-neutral-200 text-center">
+                                                <button onClick={() => deleteTask(task.id)} className="p-1 text-neutral-300 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-all" title="Delete">
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </td>
+                                        )}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

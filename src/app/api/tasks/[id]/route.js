@@ -90,10 +90,11 @@ export async function PUT(request, { params }) {
 
             if (updateData.employee_update && !hasMaster) {
                 // Employee update → push to all masters except self
+                const updateText = updateData.employee_update.length > 100 ? updateData.employee_update.substring(0, 100) + '...' : updateData.employee_update;
                 const recipients = MASTER_ACCESS.filter(id => id !== session.sub);
                 await sendPushToMany(supabase, recipients, {
-                    title: `📝 ${assigneeName} updated a task`,
-                    body: taskTitle,
+                    title: `📝 ${assigneeName} — ${taskTitle}`,
+                    body: updateText,
                     url: '/tasks',
                     tag: `task-update-${id}`,
                 });
