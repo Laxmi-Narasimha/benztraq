@@ -86,6 +86,7 @@ function LoginFlow() {
                     'c6f5ea1a-110c-4165-9433-ef6b4c8c71fa', // Pradeep
                     'c5c41c1e-c16d-4936-b51b-41ef9f6c9679', // Shikha
                     '1c5b8a5c-2af5-4c96-801b-b5fc562d3ac2', // Preeti
+                    '480090cb-3fad-45ce-beae-b89576f4c722', // Isha
                     '78387321-8aad-4ec4-9eae-0f7e99eda5dc', // Sandeep
                     '2970b695-b623-48c1-b036-ba14919cb443', // Satender
                     '872fca38-39e1-468e-9901-daa0823cd36a', // Bhandari
@@ -95,10 +96,10 @@ function LoginFlow() {
                 ];
 
                 let redirectPath = '/dashboard';
-                if (TASK_ONLY_USERS.includes(data.user.id)) {
-                    redirectPath = '/tasks';
-                } else if (company === 'ergopack') {
+                if (company === 'ergopack') {
                     redirectPath = '/ergopack';
+                } else if (TASK_ONLY_USERS.includes(data.user.id)) {
+                    redirectPath = '/tasks';
                 } else if (data.user.role === 'store_manager') {
                     redirectPath = '/inventory';
                 } else if (redirectTo) {
