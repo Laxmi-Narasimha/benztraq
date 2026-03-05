@@ -284,6 +284,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Tasks',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Task Manager', href: '/tasks', icon: 'ClipboardList' },
         ],
@@ -308,6 +309,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Performance',
+        excludeRoles: ['store_manager'],
         items: [
             { title: 'Sales Performance', href: '/performance', icon: 'Trophy' },
         ],
