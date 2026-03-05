@@ -290,6 +290,12 @@ export const NAVIGATION_ITEMS = Object.freeze([
         ],
     },
     {
+        title: 'Performance',
+        items: [
+            { title: 'Sales Performance', href: '/performance', icon: 'Trophy' },
+        ],
+    },
+    {
         title: 'Store',
         roles: ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'],
         items: [

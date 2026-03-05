@@ -2,8 +2,10 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Suspense, useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
+import DirectorAppGrid from '@/components/dashboard/DirectorAppGrid';
 import { DashboardFilters } from '@/components/dashboard/dashboard-filters';
 import { HeroChart } from '@/components/dashboard/hero-chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -282,8 +284,15 @@ function SalesFunnel({ data, loading }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN DASHBOARD
 // ═════════════════════════════════════════════════════════════════════════════
-export default function DashboardPage() {
+function DashboardContent() {
     const { user, profile } = useAuth();
+    const searchParams = useSearchParams();
+    const viewMode = searchParams.get('view');
+
+    // Directors see the app grid launcher unless they explicitly navigate to ?view=analytics
+    const isDirector = profile?.role === 'director';
+    const showAppGrid = isDirector && viewMode !== 'analytics';
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [stats, setStats] = useState(null);
@@ -354,6 +363,11 @@ export default function DashboardPage() {
             </Alert>
         </div>
     );
+
+    // Directors: show app grid launcher
+    if (showAppGrid) {
+        return <DirectorAppGrid />;
+    }
 
     return (
         <div className="space-y-6 p-6 max-w-[1600px] mx-auto">
@@ -466,5 +480,17 @@ export default function DashboardPage() {
                 </Card>
             </div>
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="animate-pulse text-muted-foreground">Loading...</div>
+            </div>
+        }>
+            <DashboardContent />
+        </Suspense>
     );
 }

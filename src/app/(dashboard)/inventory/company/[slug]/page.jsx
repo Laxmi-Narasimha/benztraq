@@ -30,6 +30,7 @@ export default function CompanyInventoryPage() {
     const [sortDir, setSortDir] = useState('asc');
     const [refreshing, setRefreshing] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [recentTxns, setRecentTxns] = useState([]);
 
     // Active transaction row
     const [activeTxn, setActiveTxn] = useState(null); // { itemId, type }
@@ -44,9 +45,14 @@ export default function CompanyInventoryPage() {
     const fetchItems = useCallback(async (showRefresh = false) => {
         if (showRefresh) setRefreshing(true);
         try {
-            const res = await fetch(`/api/inventory?customer=${encodeURIComponent(companySlug)}&limit=1000&showZero=true&allWarehouses=true`);
-            const data = await res.json();
-            setItems(data.items || []);
+            const [itemsRes, txnRes] = await Promise.all([
+                fetch(`/api/inventory?customer=${encodeURIComponent(companySlug)}&limit=1000&showZero=true&allWarehouses=true`),
+                fetch(`/api/inventory/transactions?customer=${encodeURIComponent(companySlug)}&limit=10`),
+            ]);
+            const itemsData = await itemsRes.json();
+            const txnData = await txnRes.json();
+            setItems(itemsData.items || []);
+            setRecentTxns(txnData.transactions || []);
         } catch (err) {
             console.error('Failed to fetch:', err);
         } finally {
@@ -292,6 +298,52 @@ export default function CompanyInventoryPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Last 10 Transactions */}
+                {recentTxns.length > 0 && (
+                    <div className="mt-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-neutral-400" />
+                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Last 10 Transactions</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-200 dark:border-neutral-700">
+                                        <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500 w-16">Type</th>
+                                        <th className="px-3 py-2 text-right text-[11px] font-semibold uppercase tracking-wider text-neutral-500 w-24">Qty</th>
+                                        <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Product</th>
+                                        <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Reference</th>
+                                        <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">By</th>
+                                        <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500 w-40">When</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                                    {recentTxns.map(txn => (
+                                        <tr key={txn.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/30">
+                                            <td className="px-3 py-2">
+                                                <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${txn.type === 'inward' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                    {txn.type === 'inward' ? 'INWARD' : 'OUTWARD'}
+                                                </span>
+                                            </td>
+                                            <td className={`px-3 py-2 text-right font-mono font-bold ${txn.type === 'inward' ? 'text-emerald-600' : 'text-orange-600'}`}>
+                                                {txn.type === 'inward' ? '+' : '−'}{parseFloat(txn.quantity).toLocaleString()}
+                                            </td>
+                                            <td className="px-3 py-2 text-neutral-700 dark:text-neutral-300">
+                                                {txn.material_type || '—'}{txn.part_size ? ` • ${txn.part_size}` : ''}
+                                            </td>
+                                            <td className="px-3 py-2 text-xs text-neutral-500">{txn.reference_note || '—'}</td>
+                                            <td className="px-3 py-2 text-xs text-neutral-500">{txn.created_by_name || '—'}</td>
+                                            <td className="px-3 py-2 text-xs text-neutral-400 whitespace-nowrap">
+                                                {new Date(txn.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <AddProductModal

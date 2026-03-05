@@ -11,7 +11,7 @@ import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
 import {
     Search, Package, ArrowDownCircle, ArrowUpCircle,
-    Clock, ChevronRight, BarChart3, AlertTriangle, Boxes, Plus
+    Clock, ChevronRight, BarChart3, AlertTriangle, Boxes, Plus, Table2
 } from 'lucide-react';
 import AddProductModal from '@/components/inventory/AddProductModal';
 
@@ -59,13 +59,20 @@ export default function InventoryDashboard() {
                         <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Inventory</h1>
                         <p className="text-sm text-neutral-500 mt-0.5">FG Stock — {customers.length} companies, {stats?.totalItems || 0} items</p>
                     </div>
-                    {/* Add Button */}
-                    {['store_manager', 'director', 'head_of_sales', 'vp', 'developer'].includes(profile?.role) && (
-                        <button onClick={() => setShowAddModal(true)}
-                            className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap self-start sm:self-auto shadow-sm">
-                            <Plus className="w-4 h-4" /> Add Product / Company
-                        </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {/* Sheet View toggle */}
+                        <Link href="/inventory/sheet"
+                            className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 px-3 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap border border-neutral-200 dark:border-neutral-700">
+                            <Table2 className="w-4 h-4" /> Sheet View
+                        </Link>
+                        {/* Add Button */}
+                        {['store_manager', 'director', 'head_of_sales', 'vp', 'developer'].includes(profile?.role) && (
+                            <button onClick={() => setShowAddModal(true)}
+                                className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap shadow-sm">
+                                <Plus className="w-4 h-4" /> Add Product / Company
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Stats Row */}

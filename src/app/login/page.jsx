@@ -143,6 +143,9 @@ function LoginFlow() {
                     // Single company or no companies — auto-navigate
                     const company = userCompanies[0] || 'benz';
                     await finalizeLogin(company);
+                } else if (data.user.role === 'director') {
+                    // Directors skip company selection — they see app grid with Ergopack tile
+                    await finalizeLogin('benz');
                 } else {
                     // Multiple companies — show company picker
                     setStep('company');

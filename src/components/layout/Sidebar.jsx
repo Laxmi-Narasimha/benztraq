@@ -40,6 +40,7 @@ import {
     Search,
     Warehouse,
     ClipboardList,
+    Trophy,
 } from 'lucide-react';
 import { formatInitials } from '@/lib/utils/formatting';
 import { useState } from 'react';
@@ -62,6 +63,7 @@ const IconConfig = {
     Shield: { icon: Shield },
     Warehouse: { icon: Warehouse },
     ClipboardList: { icon: ClipboardList },
+    Trophy: { icon: Trophy },
 };
 
 /**

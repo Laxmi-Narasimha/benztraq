@@ -3,6 +3,7 @@
  * 
  * User management interface inspired by Odoo.
  * Allows viewing, creating, editing, and managing users.
+ * Includes dedicated password management with one-click reset.
  * 
  * @module app/admin/users/page
  */
@@ -15,19 +16,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import {
-    Users, UserPlus, Edit, Trash2, Search, RefreshCw,
-    CheckCircle, XCircle, Mail, Phone, Shield, MapPin,
-    AlertCircle, Loader2
+    Users, UserPlus, Edit, Search, RefreshCw,
+    CheckCircle, XCircle, Mail, Shield, MapPin,
+    AlertCircle, Loader2, KeyRound, Eye, EyeOff,
+    RotateCcw, Lock, Unlock, Copy, Check
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AdminUsersPage() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
-    const [regions, setRegions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRole, setSelectedRole] = useState('all');
@@ -35,6 +37,14 @@ export default function AdminUsersPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+
+    // Password reset dialog state
+    const [passwordResetUser, setPasswordResetUser] = useState(null);
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+    const [customPassword, setCustomPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     // Form state for new/edit user
     const [formData, setFormData] = useState({
@@ -51,19 +61,24 @@ export default function AdminUsersPage() {
         fetchData();
     }, []);
 
+    // Clear alerts after 4 seconds
+    useEffect(() => {
+        if (success || error) {
+            const t = setTimeout(() => { setSuccess(null); setError(null); }, 4000);
+            return () => clearTimeout(t);
+        }
+    }, [success, error]);
+
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            // Fetch users
             const usersRes = await fetch('/api/admin/users');
             const usersData = await usersRes.json();
             if (usersData.users) setUsers(usersData.users);
 
-            // Fetch roles
             const rolesRes = await fetch('/api/admin/roles');
             const rolesData = await rolesRes.json();
             if (rolesData.roles) setRoles(rolesData.roles);
-
         } catch (error) {
             console.error('Error fetching data:', error);
             setError('Failed to load data');
@@ -77,7 +92,7 @@ export default function AdminUsersPage() {
         setFormData({
             email: '',
             fullName: '',
-            roleId: roles[2]?.id || '', // Default to ASM
+            roleId: roles[2]?.id || '',
             regionId: '',
             designation: '',
             phone: '',
@@ -106,7 +121,6 @@ export default function AdminUsersPage() {
 
         try {
             if (editingUser) {
-                // Update existing user
                 const res = await fetch('/api/admin/users', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -124,13 +138,13 @@ export default function AdminUsersPage() {
                 const data = await res.json();
                 if (data.success) {
                     setSuccess('User updated successfully');
+                    toast.success('User updated successfully');
                     fetchData();
                     setIsDialogOpen(false);
                 } else {
                     setError(data.error || 'Failed to update user');
                 }
             } else {
-                // Create new user
                 const res = await fetch('/api/admin/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -148,6 +162,7 @@ export default function AdminUsersPage() {
                 const data = await res.json();
                 if (data.success) {
                     setSuccess('User created successfully');
+                    toast.success('User created successfully');
                     fetchData();
                     setIsDialogOpen(false);
                 } else {
@@ -172,14 +187,87 @@ export default function AdminUsersPage() {
 
             if (res.ok) {
                 fetchData();
-                setSuccess(`User ${user.is_active ? 'deactivated' : 'activated'} successfully`);
+                toast.success(`User ${user.is_active ? 'deactivated' : 'activated'} successfully`);
             }
         } catch (err) {
             setError('Failed to update user status');
         }
     };
 
-    // Filter users based on search and role
+    // ============ PASSWORD RESET HANDLERS ============
+
+    const handleOpenPasswordReset = (user) => {
+        setPasswordResetUser(user);
+        setCustomPassword('');
+        setShowPassword(false);
+        setCopied(false);
+        setIsPasswordDialogOpen(true);
+    };
+
+    const handleResetToDefault = async () => {
+        if (!passwordResetUser) return;
+        setIsResetting(true);
+        try {
+            const res = await fetch('/api/admin/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: passwordResetUser.user_id })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                toast.success(`Password reset to default for ${passwordResetUser.full_name}`);
+                setIsPasswordDialogOpen(false);
+                fetchData();
+            } else {
+                toast.error(data.error || 'Failed to reset password');
+            }
+        } catch (err) {
+            toast.error('Failed to reset password');
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
+    const handleSetCustomPassword = async () => {
+        if (!passwordResetUser || !customPassword) return;
+        if (customPassword.length < 6) {
+            toast.error('Password must be at least 6 characters');
+            return;
+        }
+        setIsResetting(true);
+        try {
+            const res = await fetch('/api/admin/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: passwordResetUser.user_id,
+                    newPassword: customPassword
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                toast.success(`Custom password set for ${passwordResetUser.full_name}`);
+                setIsPasswordDialogOpen(false);
+                fetchData();
+            } else {
+                toast.error(data.error || 'Failed to set password');
+            }
+        } catch (err) {
+            toast.error('Failed to set password');
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
+    const handleCopyPassword = () => {
+        navigator.clipboard.writeText(customPassword || 'Benz@2024');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    // Filter users
     const filteredUsers = users.filter(user => {
         const matchesSearch =
             user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -191,6 +279,7 @@ export default function AdminUsersPage() {
     const getRoleBadgeColor = (roleName) => {
         switch (roleName) {
             case 'developer': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+            case 'director': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
             case 'head_of_sales': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
             case 'asm': return 'bg-green-500/20 text-green-400 border-green-500/30';
             default: return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
@@ -206,7 +295,7 @@ export default function AdminUsersPage() {
                         <Users className="w-7 h-7 text-blue-400" />
                         User Management
                     </h1>
-                    <p className="text-slate-400 mt-1">Manage system users and their access</p>
+                    <p className="text-slate-400 mt-1">Manage users, passwords, and access</p>
                 </div>
                 <Button onClick={handleCreateUser} className="bg-blue-600 hover:bg-blue-700">
                     <UserPlus className="w-4 h-4 mr-2" />
@@ -248,6 +337,7 @@ export default function AdminUsersPage() {
                             <SelectContent className="bg-slate-700 border-slate-600">
                                 <SelectItem value="all">All Roles</SelectItem>
                                 <SelectItem value="developer">Developers</SelectItem>
+                                <SelectItem value="director">Directors</SelectItem>
                                 <SelectItem value="head_of_sales">Head of Sales</SelectItem>
                                 <SelectItem value="asm">ASM</SelectItem>
                             </SelectContent>
@@ -274,6 +364,7 @@ export default function AdminUsersPage() {
                                         <th className="text-left p-4 text-sm font-medium text-slate-300">User</th>
                                         <th className="text-left p-4 text-sm font-medium text-slate-300">Role</th>
                                         <th className="text-left p-4 text-sm font-medium text-slate-300">Region</th>
+                                        <th className="text-left p-4 text-sm font-medium text-slate-300">Password</th>
                                         <th className="text-left p-4 text-sm font-medium text-slate-300">Status</th>
                                         <th className="text-left p-4 text-sm font-medium text-slate-300">Last Login</th>
                                         <th className="text-right p-4 text-sm font-medium text-slate-300">Actions</th>
@@ -311,6 +402,19 @@ export default function AdminUsersPage() {
                                                 )}
                                             </td>
                                             <td className="p-4">
+                                                {user.has_password ? (
+                                                    <span className="flex items-center gap-1.5 text-green-400 text-sm">
+                                                        <Lock className="w-3.5 h-3.5" />
+                                                        Set
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1.5 text-amber-400 text-sm">
+                                                        <Unlock className="w-3.5 h-3.5" />
+                                                        Not Set
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="p-4">
                                                 <button
                                                     onClick={() => handleToggleActive(user)}
                                                     className="flex items-center gap-2"
@@ -332,20 +436,32 @@ export default function AdminUsersPage() {
                                                 {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
                                             </td>
                                             <td className="p-4 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEditUser(user)}
-                                                    className="text-slate-400 hover:text-white hover:bg-slate-700"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleOpenPasswordReset(user)}
+                                                        className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                                                        title="Reset Password"
+                                                    >
+                                                        <KeyRound className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleEditUser(user)}
+                                                        className="text-slate-400 hover:text-white hover:bg-slate-700"
+                                                        title="Edit User"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
                                     {filteredUsers.length === 0 && (
                                         <tr>
-                                            <td colSpan={6} className="p-8 text-center text-slate-400">
+                                            <td colSpan={7} className="p-8 text-center text-slate-400">
                                                 No users found. Click "Add User" to create one.
                                             </td>
                                         </tr>
@@ -357,7 +473,104 @@ export default function AdminUsersPage() {
                 </CardContent>
             </Card>
 
-            {/* Create/Edit User Dialog */}
+            {/* ============ PASSWORD RESET DIALOG ============ */}
+            <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <KeyRound className="w-5 h-5 text-amber-400" />
+                            Reset Password
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400">
+                            Change password for <span className="text-white font-medium">{passwordResetUser?.full_name}</span>
+                            <br />
+                            <span className="text-slate-500">{passwordResetUser?.email}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-5 mt-4">
+                        {/* Option 1: Reset to Default */}
+                        <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+                            <div className="flex items-center justify-between mb-2">
+                                <div>
+                                    <p className="text-sm font-medium text-white">Reset to Default</p>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Sets password to <code className="bg-slate-600 px-1.5 py-0.5 rounded text-amber-300">Benz@2024</code>
+                                    </p>
+                                </div>
+                            </div>
+                            <Button
+                                onClick={handleResetToDefault}
+                                disabled={isResetting}
+                                className="w-full bg-amber-600 hover:bg-amber-700 text-white mt-2"
+                            >
+                                {isResetting ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                    <RotateCcw className="w-4 h-4 mr-2" />
+                                )}
+                                Reset to Benz@2024
+                            </Button>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 h-px bg-slate-600" />
+                            <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
+                            <div className="flex-1 h-px bg-slate-600" />
+                        </div>
+
+                        {/* Option 2: Custom Password */}
+                        <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+                            <p className="text-sm font-medium text-white mb-2">Set Custom Password</p>
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={customPassword}
+                                        onChange={(e) => setCustomPassword(e.target.value)}
+                                        placeholder="Enter new password..."
+                                        className="bg-slate-600 border-slate-500 text-white pr-20"
+                                    />
+                                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-500 transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleCopyPassword}
+                                            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-500 transition-colors"
+                                        >
+                                            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {customPassword && customPassword.length < 6 && (
+                                <p className="text-xs text-red-400 mt-1.5">Password must be at least 6 characters</p>
+                            )}
+                            <Button
+                                onClick={handleSetCustomPassword}
+                                disabled={isResetting || !customPassword || customPassword.length < 6}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-3"
+                            >
+                                {isResetting ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Lock className="w-4 h-4 mr-2" />
+                                )}
+                                Set Custom Password
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* ============ CREATE/EDIT USER DIALOG ============ */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
                     <DialogHeader>

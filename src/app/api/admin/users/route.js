@@ -53,6 +53,7 @@ export async function GET() {
         login_count,
         created_at,
         updated_at,
+        password_hash,
         roles (
           id,
           name,
@@ -74,6 +75,12 @@ export async function GET() {
             console.error('Error fetching users:', error);
             return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
         }
+
+        // Strip password_hash but add has_password boolean
+        users?.forEach(u => {
+            u.has_password = !!u.password_hash;
+            delete u.password_hash;
+        });
 
         // Get user count by role
         const { data: roleCounts } = await supabase
