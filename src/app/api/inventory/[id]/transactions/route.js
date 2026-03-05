@@ -53,10 +53,10 @@ export async function POST(request, { params }) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Check role
-        const allowedRoles = ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'];
+        // Only store_manager can record transactions
+        const allowedRoles = ['store_manager'];
         if (!allowedRoles.includes(session.role)) {
-            return NextResponse.json({ error: 'Insufficient permissions. Only store managers can record transactions.' }, { status: 403 });
+            return NextResponse.json({ error: 'Access denied. Only the store manager can record inward/outward transactions.' }, { status: 403 });
         }
 
         const { id } = await params;

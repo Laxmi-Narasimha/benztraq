@@ -116,7 +116,10 @@ function NavSection({ section, collapsed, pathname }) {
     const { profile } = useAuth();
 
     // Section-level access control
-    if (section.roles && profile) {
+    if (section.emails && profile) {
+        // Email-gated section: only show if user's email is in the list
+        if (!section.emails.includes(profile.email)) return null;
+    } else if (section.roles && profile) {
         if (!section.roles.includes(profile.role)) return null;
     }
     if (section.excludeRoles && profile) {

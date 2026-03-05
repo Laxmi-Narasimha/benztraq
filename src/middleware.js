@@ -16,6 +16,17 @@ const SECRET_KEY = new TextEncoder().encode(
 
 const SESSION_COOKIE_NAME = 'benztraq_session';
 
+// Specific emails allowed to access the inventory module
+const INVENTORY_ACCESS_EMAILS = [
+    'store@benz-packaging.com',
+    'laxmi@benz-packaging.com',
+    'chaitanya@benz-packaging.com',
+    'warehouse@benz-packaging.com',
+    'bhandari@benz-packaging.com',
+    'it@benz-packaging.com',
+    'manan@benz-packaging.com',
+];
+
 // Routes that require authentication
 const PROTECTED_ROUTES = [
     '/dashboard',
@@ -105,6 +116,15 @@ export async function middleware(request) {
         }
         const isASMRestricted = ASM_RESTRICTED_ROUTES.some(route => pathname.startsWith(route));
         if (isASMRestricted) {
+            return NextResponse.redirect(new URL('/dashboard?access=denied', request.url));
+        }
+    }
+
+    // Inventory access — only allowed for specific emails
+    if (pathname.startsWith('/inventory')) {
+        const userEmail = (session.email || '').toLowerCase();
+        const hasInventoryAccess = INVENTORY_ACCESS_EMAILS.includes(userEmail) || isDeveloper;
+        if (!hasInventoryAccess) {
             return NextResponse.redirect(new URL('/dashboard?access=denied', request.url));
         }
     }

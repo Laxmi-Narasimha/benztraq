@@ -183,7 +183,8 @@ export default function InventorySheetPage() {
     const [refreshing, setRefreshing] = useState(false);
     const [txnSuccess, setTxnSuccess] = useState(null);
 
-    const canWrite = profile && ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'].includes(profile.role);
+    // Only store_manager can do inward/outward — all others are view-only
+    const canWrite = profile?.role === 'store_manager';
 
     const fetchAll = useCallback(async (showRefresh = false) => {
         if (showRefresh) setRefreshing(true);

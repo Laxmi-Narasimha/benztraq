@@ -30,7 +30,24 @@ export const MANAGER_ROLES = [USER_ROLES.VP, USER_ROLES.DIRECTOR];
  * Store roles that have write access to inventory.
  * @type {string[]}
  */
-export const STORE_WRITE_ROLES = ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'];
+export const STORE_WRITE_ROLES = ['store_manager'];
+
+/**
+ * Specific email addresses that have access to the inventory module.
+ * Only these 7 users will see the Inventory button in their navigation.
+ * store@benz-packaging.com is the only one with write (inward/outward) access.
+ * All others are view-only.
+ * @type {string[]}
+ */
+export const INVENTORY_ACCESS_EMAILS = Object.freeze([
+    'store@benz-packaging.com',
+    'laxmi@benz-packaging.com',
+    'chaitanya@benz-packaging.com',
+    'warehouse@benz-packaging.com',
+    'bhandari@benz-packaging.com',
+    'it@benz-packaging.com',
+    'manan@benz-packaging.com',
+]);
 
 /**
  * Document types enumeration.
@@ -297,7 +314,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Store',
-        roles: ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'],
+        emails: INVENTORY_ACCESS_EMAILS,
         items: [
             { title: 'Inventory', href: '/inventory', icon: 'Warehouse' },
         ],

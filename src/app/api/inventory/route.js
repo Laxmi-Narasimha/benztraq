@@ -96,10 +96,10 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Check role - only store_manager, director, vp, developer
-        const allowedRoles = ['store_manager', 'director', 'head_of_sales', 'vp', 'developer'];
+        // Check role - only store_manager
+        const allowedRoles = ['store_manager'];
         if (!allowedRoles.includes(session.role)) {
-            return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+            return NextResponse.json({ error: 'Access denied. Only the store manager can add inventory items.' }, { status: 403 });
         }
 
         const body = await request.json();

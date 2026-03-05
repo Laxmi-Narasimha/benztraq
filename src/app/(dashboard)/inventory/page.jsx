@@ -65,8 +65,8 @@ export default function InventoryDashboard() {
                             className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 px-3 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap border border-neutral-200 dark:border-neutral-700">
                             <Table2 className="w-4 h-4" /> Sheet View
                         </Link>
-                        {/* Add Button */}
-                        {['store_manager', 'director', 'head_of_sales', 'vp', 'developer'].includes(profile?.role) && (
+                        {/* Add Button — store_manager only */}
+                        {profile?.role === 'store_manager' && (
                             <button onClick={() => setShowAddModal(true)}
                                 className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap shadow-sm">
                                 <Plus className="w-4 h-4" /> Add Product / Company
