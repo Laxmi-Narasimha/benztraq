@@ -17,7 +17,7 @@ import {
 import AddProductModal from '@/components/inventory/AddProductModal';
 
 // ============================================================
-// Exploded Pie Chart — slices pulled outward from center
+// Exploded Pie Chart — slices pulled apart with hover tooltip
 // ============================================================
 const PIE_COLORS = [
     '#8b5cf6', '#ec4899', '#6366f1', '#a855f7', '#f43f5e',
@@ -25,6 +25,10 @@ const PIE_COLORS = [
 ];
 
 function PieChart({ data }) {
+    const [hoveredIdx, setHoveredIdx] = useState(null);
+    const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+    const svgRef = useState(null);
+
     if (!data || data.length === 0) return <div className="text-sm text-neutral-400 text-center py-12">No data</div>;
 
     const total = data.reduce((sum, d) => sum + d.weight, 0);
@@ -39,15 +43,15 @@ function PieChart({ data }) {
         return { ...d, pct, startAngle, endAngle, color: PIE_COLORS[i % PIE_COLORS.length] };
     });
 
-    const cx = 150, cy = 150, r = 120;
-    const explodeDistance = 8;
+    const cx = 160, cy = 160, r = 110;
+    const baseExplode = 14;      // default gap between slices
+    const hoverExplode = 28;     // extra pull-out on hover
     const toRad = (deg) => (deg - 90) * Math.PI / 180;
 
-    const getSlicePath = (start, end) => {
-        // Calculate midpoint angle for explosion direction
+    const getSlicePath = (start, end, explodeDist) => {
         const midAngle = (start + end) / 2;
-        const dx = explodeDistance * Math.cos(toRad(midAngle));
-        const dy = explodeDistance * Math.sin(toRad(midAngle));
+        const dx = explodeDist * Math.cos(toRad(midAngle));
+        const dy = explodeDist * Math.sin(toRad(midAngle));
         const scx = cx + dx;
         const scy = cy + dy;
 
@@ -62,23 +66,66 @@ function PieChart({ data }) {
         return `M ${scx} ${scy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
     };
 
+    const handleMouseMove = (e, idx) => {
+        const rect = e.currentTarget.closest('svg')?.getBoundingClientRect();
+        if (rect) {
+            setTooltipPos({
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top - 10
+            });
+        }
+        setHoveredIdx(idx);
+    };
+
     return (
         <div className="flex flex-col items-center">
-            <svg viewBox="0 0 300 300" className="w-60 h-60 mb-5" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }}>
-                {slices.map((s, i) => (
-                    <path key={i} d={getSlicePath(s.startAngle, s.endAngle)} fill={s.color}
-                        className="transition-all duration-200 cursor-pointer"
-                        style={{ filter: 'brightness(1)' }}
-                        onMouseEnter={e => e.target.style.filter = 'brightness(0.85)'}
-                        onMouseLeave={e => e.target.style.filter = 'brightness(1)'}
-                    />
-                ))}
-            </svg>
+            <div className="relative">
+                <svg viewBox="0 0 320 320" className="w-64 h-64 mb-5"
+                    style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.12))' }}
+                    onMouseLeave={() => setHoveredIdx(null)}>
+                    {slices.map((s, i) => {
+                        const isHovered = hoveredIdx === i;
+                        const dist = isHovered ? hoverExplode : baseExplode;
+                        return (
+                            <path key={i}
+                                d={getSlicePath(s.startAngle, s.endAngle, dist)}
+                                fill={s.color}
+                                style={{
+                                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    filter: isHovered ? 'brightness(0.9) drop-shadow(0 4px 8px rgba(0,0,0,0.2))' : 'brightness(1)',
+                                    cursor: 'pointer',
+                                }}
+                                onMouseMove={(e) => handleMouseMove(e, i)}
+                                onMouseEnter={() => setHoveredIdx(i)}
+                            />
+                        );
+                    })}
+                </svg>
+
+                {/* Floating tooltip */}
+                {hoveredIdx !== null && slices[hoveredIdx] && (
+                    <div className="absolute pointer-events-none z-50 bg-neutral-900 text-white px-3 py-2 rounded-lg text-xs shadow-xl whitespace-nowrap"
+                        style={{
+                            left: tooltipPos.x,
+                            top: tooltipPos.y,
+                            transform: 'translate(-50%, -100%)',
+                        }}>
+                        <p className="font-bold text-[13px]">{slices[hoveredIdx].name}</p>
+                        <p className="text-neutral-300">
+                            {(slices[hoveredIdx].pct * 100).toFixed(1)}% — {(slices[hoveredIdx].weight / 1000).toFixed(1)}T
+                        </p>
+                    </div>
+                )}
+            </div>
+
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
                 {slices.map((s, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                    <div key={i} className="flex items-center gap-1.5 text-[11px]"
+                        onMouseEnter={() => setHoveredIdx(i)}
+                        onMouseLeave={() => setHoveredIdx(null)}
+                        style={{ opacity: hoveredIdx !== null && hoveredIdx !== i ? 0.4 : 1, transition: 'opacity 0.2s', cursor: 'pointer' }}>
                         <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: s.color }} />
-                        <span className="text-neutral-600">{s.name}</span>
+                        <span className="text-neutral-600 font-medium">{s.name}</span>
                     </div>
                 ))}
             </div>
