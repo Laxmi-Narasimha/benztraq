@@ -91,31 +91,22 @@ function parseCsv(text) {
         if (customerName === 'CUSTOMER NAME') continue;
 
         /**
-         * KEY FIX: Correct the phantom weight caused by bad CSV data.
-         *
-         * Root cause: Many PCS items in the CSV have kg_per_piece = 1 (a data entry error)
-         * which makes stock_in_kg = balance_qty (e.g. 24000 PCS × 1 kg = 24000 kg for tiny bags).
-         * The Google Sheet has since corrected these. We detect this by checking if stockKg == balanceQty.
-         *
-         * Rules:
-         * - KGS items: kg_per_piece = 1 always (weight IS the quantity)
-         * - PCS items where stockKg < balanceQty and stockKg > 0: derive kg_per_piece = stockKg/balanceQty ✓
-         * - PCS items where stockKg = balanceQty (phantom 1kg-per-piece error): set kg_per_piece = 0
-         * - PCS items where balance = 0 but rawKgPerPiece is reasonable (< 0.5): use rawKgPerPiece
+         * kg_per_piece: derive from STOCK IN KG ÷ BALANCE QTY when both > 0.
+         * This ensures DB's generated stock_in_kg = balance_qty × kg_per_piece
+         * exactly matches the sheet's STOCK IN KG column.
+         * - KGS items: always 1
+         * - PCS items with balance & stockKg: stockKg / balanceQty
+         * - Zero-balance PCS: use raw CSV kg_per_piece (for future transactions)
          */
-        let computedKgPerPiece = 0;
+        let computedKgPerPiece;
         if (uom === 'KGS') {
-            // KGS items: weight IS the quantity
             computedKgPerPiece = 1;
-        } else if (balanceQty > 0 && stockKg > 0 && Math.abs(stockKg - balanceQty) > 0.001) {
-            // PCS items: stockKg ≠ balanceQty → valid computed weight, derive kg_per_piece
+        } else if (balanceQty > 0 && stockKg > 0) {
             computedKgPerPiece = stockKg / balanceQty;
-        } else if (balanceQty > 0 && stockKg > 0 && Math.abs(stockKg - balanceQty) <= 0.001) {
-            // PCS items: stockKg = balanceQty → kg_per_piece=1 error in CSV → treat as 0
-            computedKgPerPiece = 0;
-        } else if (balanceQty === 0 && kgPerPiece > 0 && kgPerPiece < 0.5 && uom !== 'KGS') {
-            // Zero-balance PCS items: use raw column only if it's a realistic fractional weight
+        } else if (kgPerPiece > 0) {
             computedKgPerPiece = kgPerPiece;
+        } else {
+            computedKgPerPiece = 0;
         }
 
         rows.push({

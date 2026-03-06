@@ -36,14 +36,21 @@ export async function GET() {
             .eq('is_active', true)
             .lte('balance_qty', 0);
 
-        // Total stock weight - use RPC or calculate
+        // Total stock weight - exclude PCS items with unrealistic kg_per_piece (≥ 0.5)
+        // No single PCS bag/pouch/sheet weighs 0.5+ kg; these are data entry errors
         const { data: stockData } = await supabase
             .from('inventory_items')
-            .select('stock_in_kg')
+            .select('stock_in_kg, uom, kg_per_piece')
             .eq('is_active', true)
             .gt('balance_qty', 0);
 
-        const totalStockKg = (stockData || []).reduce((sum, item) => sum + (parseFloat(item.stock_in_kg) || 0), 0);
+        const totalStockKg = (stockData || []).reduce((sum, item) => {
+            const stockKg = parseFloat(item.stock_in_kg) || 0;
+            const kgPerPiece = parseFloat(item.kg_per_piece) || 0;
+            // Skip PCS items with unrealistic weight-per-piece (data entry errors)
+            if (item.uom !== 'KGS' && kgPerPiece >= 0.5) return sum;
+            return sum + stockKg;
+        }, 0);
 
         // Unique customers
         const { data: customerData } = await supabase
