@@ -54,17 +54,54 @@ export async function GET() {
 
         const uniqueCustomers = new Set((customerData || []).map(d => d.customer_name)).size;
 
-        // Top companies by stock weight (for pie chart)
-        const companyWeights = {};
+        // Top companies by stock weight (for pie chart) + per-company top product
+        const companyMap = {};
         (customerData || []).forEach(item => {
             const name = item.customer_name;
             const kg = parseFloat(item.stock_in_kg) || 0;
-            companyWeights[name] = (companyWeights[name] || 0) + kg;
+            const bal = parseFloat(item.balance_qty) || 0;
+            if (!companyMap[name]) companyMap[name] = { weight: 0, itemCount: 0, topProduct: null, topBalance: 0 };
+            companyMap[name].weight += kg;
+            companyMap[name].itemCount++;
+            if (bal > companyMap[name].topBalance) {
+                companyMap[name].topBalance = bal;
+                companyMap[name].topProduct = `${item.material_type || ''} ${item.part_size || ''}`.trim() || 'N/A';
+            }
         });
-        const topCompanies = Object.entries(companyWeights)
-            .map(([name, weight]) => ({ name, weight: Math.round(weight * 100) / 100 }))
+        const topCompanies = Object.entries(companyMap)
+            .map(([name, d]) => ({
+                name,
+                weight: Math.round(d.weight * 100) / 100,
+                itemCount: d.itemCount,
+                topProduct: d.topProduct || 'N/A',
+                topBalance: d.topBalance,
+            }))
             .sort((a, b) => b.weight - a.weight)
             .slice(0, 10);
+
+        // Overall top product by balance
+        let overallTopProduct = '—';
+        let overallTopBalance = 0;
+        (customerData || []).forEach(item => {
+            const bal = parseFloat(item.balance_qty) || 0;
+            if (bal > overallTopBalance) {
+                overallTopBalance = bal;
+                overallTopProduct = `${item.customer_name} — ${item.material_type || ''} ${item.part_size || ''}`.trim();
+            }
+        });
+
+        // Most dispatched product (highest total_dispatched)
+        const { data: topDispatchedItems } = await supabase
+            .from('inventory_items')
+            .select('customer_name, material_type, part_size, total_dispatched')
+            .eq('is_active', true)
+            .gt('total_dispatched', 0)
+            .order('total_dispatched', { ascending: false })
+            .limit(1);
+        const mostDispatched = topDispatchedItems?.[0]
+            ? `${topDispatchedItems[0].customer_name} — ${topDispatchedItems[0].material_type || ''} ${topDispatchedItems[0].part_size || ''}`.trim()
+            : '—';
+        const mostDispatchedQty = topDispatchedItems?.[0]?.total_dispatched || 0;
 
         // Material type breakdown (for bar chart)
         const materialMap = {};
@@ -171,6 +208,10 @@ export async function GET() {
             recentActivity,
             todayTransactions: todayTxnCount || 0,
             todayActivity,
+            overallTopProduct,
+            overallTopBalance,
+            mostDispatched,
+            mostDispatchedQty,
         });
     } catch (error) {
         console.error('[Inventory] Stats error:', error);
