@@ -25,12 +25,8 @@ export default function ExplodedPieChart({ data, stats }: ExplodedPieChartProps)
         const seriesData = data.map((d, i) => ({
             name: d.name,
             value: d.weight,
-            selected: true, // Exploded by default
             itemStyle: {
-                color: PIE_COLORS[i % PIE_COLORS.length],
-                // Add a very subtle border same as color to prevent antialiasing sub-pixel gaps if any
-                borderColor: PIE_COLORS[i % PIE_COLORS.length],
-                borderWidth: 1
+                color: PIE_COLORS[i % PIE_COLORS.length]
             }
         }));
 
@@ -41,22 +37,21 @@ export default function ExplodedPieChart({ data, stats }: ExplodedPieChartProps)
             series: [
                 {
                     type: 'pie',
-                    radius: '70%',
+                    radius: ['0%', '85%'],
                     center: ['50%', '50%'],
-                    selectedMode: 'multiple', // Keep them in selected state
-                    selectedOffset: 12, // Visible outward pull for all slices
+                    roseType: 'radius',
                     label: {
                         show: false
                     },
                     data: seriesData,
                     emphasis: {
                         scale: true,
-                        scaleSize: 8, // Extra pull-out on hover
+                        scaleSize: 12, // Distinct pull-out exactly on hover
                         itemStyle: {
-                            shadowBlur: 15,
-                            shadowColor: 'rgba(0, 0, 0, 0.2)',
+                            shadowBlur: 20,
+                            shadowColor: 'rgba(0, 0, 0, 0.3)',
                             shadowOffsetX: 0,
-                            shadowOffsetY: 8
+                            shadowOffsetY: 10
                         }
                     }
                 }
@@ -73,18 +68,7 @@ export default function ExplodedPieChart({ data, stats }: ExplodedPieChartProps)
         mouseout: () => {
             setHoveredIdx(null);
         },
-        // Prevent click from toggling selection off
-        pieselectchanged: (params: any) => {
-            const chart = chartRef.current?.getEchartsInstance();
-            if (chart) {
-                // Force all to remain selected
-                chart.dispatchAction({
-                    type: 'pieSelect',
-                    seriesIndex: 0,
-                    dataIndex: data.map((_, i) => i)
-                });
-            }
-        }
+
     };
 
     if (!data || data.length === 0) {
