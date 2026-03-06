@@ -2,32 +2,32 @@
 
 /**
  * Inventory Dashboard — Pyle-Inspired
- * Features: Stat cards, pie chart, bar chart, stock alerts, company grid, activity feed
+ * Features: Stat cards, solid pie chart, today's transactions, stock alerts with toggle
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
 import {
-    Search, Package, ArrowDownCircle, ArrowUpCircle,
-    Clock, ChevronRight, BarChart3, AlertTriangle, Boxes, Plus, Table2,
-    TrendingUp, Users, Weight
+    Search, Package, Clock, ChevronRight, BarChart3, AlertTriangle,
+    Boxes, Plus, Table2, TrendingUp, Users, Weight, ArrowDownCircle,
+    ArrowUpCircle, Ban
 } from 'lucide-react';
 import AddProductModal from '@/components/inventory/AddProductModal';
 
 // ============================================================
-// SVG Pie Chart — Top companies by weight
+// Pyle-Style Solid Pie Chart — filled slices, no donut hole
 // ============================================================
-const CHART_COLORS = [
-    '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
-    '#f43f5e', '#f97316', '#eab308', '#22c55e', '#06b6d4'
+const PIE_COLORS = [
+    '#8b5cf6', '#ec4899', '#6366f1', '#a855f7', '#f43f5e',
+    '#d946ef', '#f97316', '#22c55e', '#06b6d4', '#eab308'
 ];
 
 function PieChart({ data }) {
-    if (!data || data.length === 0) return <div className="text-sm text-neutral-400 text-center py-8">No data</div>;
+    if (!data || data.length === 0) return <div className="text-sm text-neutral-400 text-center py-12">No data</div>;
 
     const total = data.reduce((sum, d) => sum + d.weight, 0);
-    if (total === 0) return <div className="text-sm text-neutral-400 text-center py-8">No weight data</div>;
+    if (total === 0) return <div className="text-sm text-neutral-400 text-center py-12">No weight data</div>;
 
     let cumAngle = 0;
     const slices = data.map((d, i) => {
@@ -35,11 +35,12 @@ function PieChart({ data }) {
         const startAngle = cumAngle;
         cumAngle += pct * 360;
         const endAngle = cumAngle;
-        return { ...d, pct, startAngle, endAngle, color: CHART_COLORS[i % CHART_COLORS.length] };
+        return { ...d, pct, startAngle, endAngle, color: PIE_COLORS[i % PIE_COLORS.length] };
     });
 
-    const cx = 100, cy = 100, r = 80;
+    const cx = 130, cy = 130, r = 115;
     const toRad = (deg) => (deg - 90) * Math.PI / 180;
+
     const arcPath = (start, end) => {
         if (end - start >= 359.99) {
             return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.001} ${cy - r} A ${r} ${r} 0 1 1 ${cx} ${cy - r}`;
@@ -53,25 +54,19 @@ function PieChart({ data }) {
     };
 
     return (
-        <div className="flex items-start gap-4">
-            <svg viewBox="0 0 200 200" className="w-36 h-36 flex-shrink-0">
+        <div className="flex flex-col items-center">
+            <svg viewBox="0 0 260 260" className="w-56 h-56 mb-5 drop-shadow-md">
                 {slices.map((s, i) => (
                     <path key={i} d={arcPath(s.startAngle, s.endAngle)} fill={s.color}
                         className="hover:opacity-80 transition-opacity cursor-pointer"
-                        strokeWidth="1" stroke="white" />
+                        strokeWidth="2" stroke="white" />
                 ))}
-                <circle cx={cx} cy={cy} r={35} fill="white" />
-                <text x={cx} y={cy - 4} textAnchor="middle" className="text-[10px] fill-neutral-400 font-medium">Total</text>
-                <text x={cx} y={cy + 10} textAnchor="middle" className="text-[11px] fill-neutral-800 font-bold">
-                    {(total / 1000).toFixed(1)}T
-                </text>
             </svg>
-            <div className="flex-1 space-y-1 min-w-0 pt-1">
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
                 {slices.map((s, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                        <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: s.color }} />
-                        <span className="truncate text-neutral-700 flex-1">{s.name}</span>
-                        <span className="font-mono text-neutral-500 tabular-nums">{(s.pct * 100).toFixed(0)}%</span>
+                    <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                        <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: s.color }} />
+                        <span className="text-neutral-600">{s.name}</span>
                     </div>
                 ))}
             </div>
@@ -80,82 +75,158 @@ function PieChart({ data }) {
 }
 
 // ============================================================
-// Horizontal Bar Chart — Material type distribution
+// Today's Transactions Panel
 // ============================================================
-function BarChart({ data }) {
-    if (!data || data.length === 0) return <div className="text-sm text-neutral-400 text-center py-8">No data</div>;
-
-    const maxCount = Math.max(...data.map(d => d.count));
-
-    return (
-        <div className="space-y-2">
-            {data.slice(0, 8).map((d, i) => {
-                const pct = maxCount > 0 ? (d.count / maxCount) * 100 : 0;
-                return (
-                    <div key={i} className="flex items-center gap-2">
-                        <span className="text-[11px] text-neutral-600 w-28 truncate flex-shrink-0">{d.name || 'Other'}</span>
-                        <div className="flex-1 bg-neutral-100 rounded-full h-5 relative overflow-hidden">
-                            <div
-                                className="h-full rounded-full transition-all duration-700 ease-out"
-                                style={{
-                                    width: `${Math.max(pct, 2)}%`,
-                                    background: `linear-gradient(90deg, ${CHART_COLORS[i % CHART_COLORS.length]}cc, ${CHART_COLORS[i % CHART_COLORS.length]})`
-                                }}
-                            />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-500">
-                                {d.count}
-                            </span>
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
-
-// ============================================================
-// Stock Alerts Table
-// ============================================================
-function StockAlerts({ alerts }) {
-    if (!alerts || alerts.length === 0) {
+function TodayTransactions({ transactions, count }) {
+    if (!transactions || transactions.length === 0) {
         return (
-            <div className="text-center py-6 text-neutral-400 text-sm">
-                <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                All items have healthy stock levels
+            <div className="flex flex-col items-center justify-center py-12 text-neutral-400">
+                <Clock className="w-10 h-10 mb-3 opacity-30" />
+                <p className="text-sm font-medium">No transactions today</p>
+                <p className="text-xs mt-1">Transactions will appear here as they happen</p>
             </div>
         );
     }
 
+    const inwardCount = transactions.filter(t => t.type === 'inward').length;
+    const outwardCount = transactions.filter(t => t.type === 'outward').length;
+    const inwardQty = transactions.filter(t => t.type === 'inward').reduce((s, t) => s + (parseFloat(t.quantity) || 0), 0);
+    const outwardQty = transactions.filter(t => t.type === 'outward').reduce((s, t) => s + (parseFloat(t.quantity) || 0), 0);
+
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="border-b border-neutral-200">
-                        <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Customer</th>
-                        <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Material</th>
-                        <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Part Size</th>
-                        <th className="text-center py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">UOM</th>
-                        <th className="text-right py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Balance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {alerts.map((item, i) => {
-                        const bal = parseFloat(item.balance_qty) || 0;
-                        const isCritical = bal <= 10;
-                        return (
-                            <tr key={item.id || i} className={`border-b border-neutral-100 ${isCritical ? 'bg-red-50' : 'bg-amber-50/40'}`}>
-                                <td className="py-2 px-3 font-medium text-neutral-800 text-[13px]">{item.customer_name}</td>
-                                <td className="py-2 px-3 text-neutral-600 text-[13px]">{item.material_type || '—'}</td>
-                                <td className="py-2 px-3 text-neutral-500 text-[13px]">{item.part_size || '—'}</td>
-                                <td className="py-2 px-3 text-center text-neutral-500 text-[12px]">{item.uom}</td>
-                                <td className={`py-2 px-3 text-right font-bold font-mono text-[13px] ${isCritical ? 'text-red-600' : 'text-amber-600'}`}>
-                                    {bal.toLocaleString()}
-                                </td>
+        <div>
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <ArrowDownCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-[11px] font-semibold text-emerald-700 uppercase">Inward</span>
+                    </div>
+                    <p className="text-lg font-bold text-emerald-800">{inwardCount}<span className="text-xs font-normal text-emerald-600 ml-1">({inwardQty.toLocaleString()} qty)</span></p>
+                </div>
+                <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <ArrowUpCircle className="w-3.5 h-3.5 text-orange-600" />
+                        <span className="text-[11px] font-semibold text-orange-700 uppercase">Outward</span>
+                    </div>
+                    <p className="text-lg font-bold text-orange-800">{outwardCount}<span className="text-xs font-normal text-orange-600 ml-1">({outwardQty.toLocaleString()} qty)</span></p>
+                </div>
+            </div>
+
+            {/* Transaction list */}
+            <div className="max-h-[240px] overflow-y-auto divide-y divide-neutral-100">
+                {transactions.map((t, i) => (
+                    <div key={t.id || i} className="flex items-center gap-3 py-2 px-1">
+                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold
+                            ${t.type === 'inward' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                            {t.type === 'inward' ? '▼' : '▲'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-semibold text-neutral-800 truncate">{t.customer_name}</p>
+                            <p className="text-[10px] text-neutral-400 truncate">{t.material_type}{t.part_size ? ` • ${t.part_size}` : ''}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                            <p className={`text-sm font-bold font-mono ${t.type === 'inward' ? 'text-emerald-700' : 'text-orange-700'}`}>
+                                {t.type === 'inward' ? '+' : '−'}{parseFloat(t.quantity).toLocaleString()}
+                            </p>
+                            <p className="text-[9px] text-neutral-400">
+                                {new Date(t.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// Stock Alerts Table (with toggle for Low Stock / Zero Stock)
+// ============================================================
+function StockAlertsPanel({ lowStockAlerts, zeroStockList }) {
+    const [tab, setTab] = useState('low');
+
+    const alerts = tab === 'low' ? lowStockAlerts : zeroStockList;
+
+    return (
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+            {/* Header with toggle */}
+            <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Stock Alerts</h3>
+
+                {/* Toggle buttons */}
+                <div className="ml-auto flex items-center bg-neutral-100 rounded-lg p-0.5 gap-0.5">
+                    <button onClick={() => setTab('low')}
+                        className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${tab === 'low'
+                                ? 'bg-amber-500 text-white shadow-sm'
+                                : 'text-neutral-500 hover:text-neutral-700'
+                            }`}>
+                        ⚠️ Low Stock
+                        <span className="ml-1 text-[10px]">({(lowStockAlerts || []).length})</span>
+                    </button>
+                    <button onClick={() => setTab('zero')}
+                        className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${tab === 'zero'
+                                ? 'bg-red-500 text-white shadow-sm'
+                                : 'text-neutral-500 hover:text-neutral-700'
+                            }`}>
+                        🚫 Zero Stock
+                        <span className="ml-1 text-[10px]">({(zeroStockList || []).length})</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Table */}
+            {(!alerts || alerts.length === 0) ? (
+                <div className="text-center py-8 text-neutral-400 text-sm">
+                    <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                    {tab === 'low' ? 'All items have healthy stock levels' : 'No zero stock items'}
+                </div>
+            ) : (
+                <div className="overflow-x-auto max-h-[350px] overflow-y-auto">
+                    <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-white dark:bg-neutral-900">
+                            <tr className="border-b border-neutral-200">
+                                <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Customer</th>
+                                <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Material</th>
+                                <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Part Size</th>
+                                <th className="text-center py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">UOM</th>
+                                <th className="text-right py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">
+                                    {tab === 'low' ? 'Balance' : 'Last Received'}
+                                </th>
                             </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            {alerts.map((item, i) => {
+                                const bal = parseFloat(item.balance_qty) || 0;
+                                const isLow = tab === 'low';
+                                const isCritical = isLow && bal <= 10;
+                                const rowBg = isLow
+                                    ? (isCritical ? 'bg-red-50' : 'bg-amber-50/40')
+                                    : (i % 2 === 0 ? 'bg-red-50/30' : 'bg-white');
+
+                                return (
+                                    <tr key={item.id || i} className={`border-b border-neutral-100 ${rowBg}`}>
+                                        <td className="py-2 px-3 font-medium text-neutral-800 text-[13px]">{item.customer_name}</td>
+                                        <td className="py-2 px-3 text-neutral-600 text-[13px]">{item.material_type || '—'}</td>
+                                        <td className="py-2 px-3 text-neutral-500 text-[13px]">{item.part_size || '—'}</td>
+                                        <td className="py-2 px-3 text-center text-neutral-500 text-[12px]">{item.uom}</td>
+                                        <td className={`py-2 px-3 text-right font-bold font-mono text-[13px] ${isLow
+                                                ? (isCritical ? 'text-red-600' : 'text-amber-600')
+                                                : 'text-red-500'
+                                            }`}>
+                                            {isLow
+                                                ? bal.toLocaleString()
+                                                : (item.total_dispatched || 0).toLocaleString()
+                                            }
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 }
@@ -208,12 +279,10 @@ export default function InventoryDashboard() {
                         <p className="text-sm text-neutral-500 mt-0.5">FG Stock — {customers.length} companies, {stats?.totalItems || 0} items</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* Sheet View toggle */}
                         <Link href="/inventory/sheet"
                             className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 px-3 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap border border-neutral-200 dark:border-neutral-700">
                             <Table2 className="w-4 h-4" /> Sheet View
                         </Link>
-                        {/* Add Button — store_manager only */}
                         {profile?.role === 'store_manager' && (
                             <button onClick={() => setShowAddModal(true)}
                                 className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap shadow-sm">
@@ -234,7 +303,7 @@ export default function InventoryDashboard() {
             </div>
 
             <div className="p-6">
-                {/* Charts Row */}
+                {/* Charts Row: Pie + Today's Transactions */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     {/* Pie Chart */}
                     <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5">
@@ -245,34 +314,35 @@ export default function InventoryDashboard() {
                         <PieChart data={stats?.topCompanies || []} />
                     </div>
 
-                    {/* Bar Chart */}
+                    {/* Today's Transactions */}
                     <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5">
                         <div className="flex items-center gap-2 mb-4">
-                            <BarChart3 className="w-4 h-4 text-purple-500" />
-                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Items by Material Type</h3>
+                            <Clock className="w-4 h-4 text-blue-500" />
+                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Today's Transactions</h3>
+                            {(stats?.todayTransactions || 0) > 0 && (
+                                <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                                    {stats.todayTransactions} total
+                                </span>
+                            )}
                         </div>
-                        <BarChart data={stats?.materialBreakdown || []} />
+                        <TodayTransactions
+                            transactions={stats?.todayActivity || []}
+                            count={stats?.todayTransactions || 0}
+                        />
                     </div>
                 </div>
 
-                {/* Stock Alerts */}
-                {(stats?.stockAlerts?.length > 0) && (
-                    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden mb-6">
-                        <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4 text-amber-500" />
-                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Low Stock Alerts</h3>
-                            <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                                {stats.stockAlerts.length} items
-                            </span>
-                        </div>
-                        <StockAlerts alerts={stats.stockAlerts} />
-                    </div>
-                )}
+                {/* Stock Alerts (Low + Zero toggle) */}
+                <div className="mb-6">
+                    <StockAlertsPanel
+                        lowStockAlerts={stats?.stockAlerts || []}
+                        zeroStockList={stats?.zeroStockList || []}
+                    />
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Left: Company Grid */}
                     <div className="lg:col-span-3">
-                        {/* Search */}
                         <div className="mb-4">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
@@ -286,7 +356,6 @@ export default function InventoryDashboard() {
                             </div>
                         </div>
 
-                        {/* Company Cards Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                             {filtered.map(company => (
                                 <CompanyCard key={company.customer_name} company={company} />
@@ -314,7 +383,7 @@ export default function InventoryDashboard() {
                                 ) : activity.map((a, i) => (
                                     <div key={i} className="px-4 py-3">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${a.type === 'inward' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400'}`}>
+                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${a.type === 'inward' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
                                                 {a.type === 'inward' ? 'IN' : 'OUT'}
                                             </span>
                                             <span className="text-sm font-semibold text-neutral-900 dark:text-white">
@@ -337,9 +406,7 @@ export default function InventoryDashboard() {
             <AddProductModal
                 open={showAddModal}
                 onOpenChange={setShowAddModal}
-                onSuccess={(newItem) => {
-                    window.location.reload();
-                }}
+                onSuccess={() => window.location.reload()}
             />
         </div>
     );

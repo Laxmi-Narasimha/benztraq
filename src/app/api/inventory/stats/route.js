@@ -115,12 +115,39 @@ export async function GET() {
             .order('created_at', { ascending: false })
             .limit(20);
 
-        // Today's transactions count
+        // Today's transactions count + details
         const today = new Date().toISOString().split('T')[0];
         const { count: todayTxnCount } = await supabase
             .from('inventory_transactions')
             .select('id', { count: 'exact', head: true })
             .gte('created_at', today);
+
+        const { data: todayTxns } = await supabase
+            .from('inventory_transactions')
+            .select(`
+                id, type, quantity, created_by_name, created_at,
+                inventory_items!inner(customer_name, material_type, part_size)
+            `)
+            .gte('created_at', today)
+            .order('created_at', { ascending: false })
+            .limit(30);
+
+        const todayActivity = (todayTxns || []).map(txn => ({
+            ...txn,
+            customer_name: txn.inventory_items?.customer_name || 'Unknown',
+            material_type: txn.inventory_items?.material_type || '',
+            part_size: txn.inventory_items?.part_size || '',
+        }));
+
+        // Zero stock items (for zero stock alert table)
+        const { data: zeroItems } = await supabase
+            .from('inventory_items')
+            .select('id, customer_name, material_type, part_size, uom, balance_qty, total_received, total_dispatched')
+            .eq('is_active', true)
+            .lte('balance_qty', 0)
+            .gt('total_received', 0)
+            .order('customer_name', { ascending: true })
+            .limit(50);
 
         // Flatten recent transactions for activity feed
         const recentActivity = (recentTxns || []).map(txn => ({
@@ -139,9 +166,11 @@ export async function GET() {
             topCompanies,
             materialBreakdown,
             stockAlerts: alertItems || [],
+            zeroStockList: zeroItems || [],
             warehouseBreakdown,
             recentActivity,
             todayTransactions: todayTxnCount || 0,
+            todayActivity,
         });
     } catch (error) {
         console.error('[Inventory] Stats error:', error);
