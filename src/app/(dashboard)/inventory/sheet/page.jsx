@@ -14,7 +14,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Search, RefreshCw, X, Check, Plus, LayoutGrid, Loader2,
-    Download, FileSpreadsheet, Filter, Printer
+    Download, FileSpreadsheet, Filter, Printer, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // ============================================================
@@ -146,28 +146,57 @@ function EditableQtyCell({ value, type, onCommit, disabled, balance }) {
 // ============================================================
 function CompanyTabs({ companies, activeCompany, onTabChange, itemCounts }) {
     const scrollRef = useRef(null);
+
+    const scroll = (direction) => {
+        if (scrollRef.current) {
+            const scrollAmount = Math.max(300, scrollRef.current.clientWidth / 2);
+            scrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+        }
+    };
+
     return (
-        <div ref={scrollRef}
-            className="w-full max-w-full min-w-0 flex items-stretch bg-[#e8ecf1] border-b border-neutral-300 overflow-x-auto flex-shrink-0 select-none scrollbar-hide"
-            style={{ minHeight: 36, WebkitOverflowScrolling: 'touch' }}>
-            <button onClick={() => onTabChange('ALL')}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 text-[11px] font-bold tracking-wide border-r border-neutral-300 whitespace-nowrap transition-all
-                    ${activeCompany === 'ALL' ? 'bg-white text-neutral-900 border-b-2 border-b-blue-600 shadow-sm' : 'text-neutral-500 hover:text-neutral-800 hover:bg-white/60'}`}>
-                FG STOCK
-                <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-[9px] font-semibold">{itemCounts?.ALL || 0}</span>
+        <div className="flex items-stretch bg-[#e8ecf1] border-b border-neutral-300 w-full min-w-0 h-[36px]">
+            {/* Left Scroll Button */}
+            <button
+                onClick={() => scroll('left')}
+                className="flex items-center justify-center bg-white/50 hover:bg-white text-neutral-500 px-1 border-r border-neutral-300 z-10 shrink-0 transition-colors"
+                title="Scroll Left"
+            >
+                <ChevronLeft className="w-4 h-4" />
             </button>
-            {companies.map(c => {
-                const active = activeCompany === c;
-                const count = itemCounts?.[c] || 0;
-                return (
-                    <button key={c} onClick={() => onTabChange(c)}
-                        className={`flex-shrink-0 flex items-center gap-1 px-3 text-[11px] font-semibold border-r border-neutral-300 whitespace-nowrap transition-all
-                            ${active ? 'bg-white text-neutral-900 border-b-2 border-b-green-500 shadow-sm' : 'text-neutral-500 hover:text-neutral-800 hover:bg-white/60'}`}>
-                        {c}
-                        <span className={`text-[9px] font-medium px-1 py-0.5 rounded-full ${active ? 'bg-green-100 text-green-700' : 'bg-neutral-200 text-neutral-500'}`}>{count}</span>
-                    </button>
-                );
-            })}
+
+            {/* Scrollable Container */}
+            <div ref={scrollRef}
+                className="flex-1 flex items-stretch overflow-x-auto flex-shrink-0 select-none scrollbar-hide scroll-smooth"
+                style={{ WebkitOverflowScrolling: 'touch' }}>
+                <button onClick={() => onTabChange('ALL')}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 text-[11px] font-bold tracking-wide border-r border-neutral-300 whitespace-nowrap transition-all
+                        ${activeCompany === 'ALL' ? 'bg-white text-neutral-900 border-b-2 border-b-blue-600 shadow-sm' : 'text-neutral-500 hover:text-neutral-800 hover:bg-white/60'}`}>
+                    FG STOCK
+                    <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-[9px] font-semibold">{itemCounts?.ALL || 0}</span>
+                </button>
+                {companies.map(c => {
+                    const active = activeCompany === c;
+                    const count = itemCounts?.[c] || 0;
+                    return (
+                        <button key={c} onClick={() => onTabChange(c)}
+                            className={`flex-shrink-0 flex items-center gap-1 px-3 text-[11px] font-semibold border-r border-neutral-300 whitespace-nowrap transition-all
+                                ${active ? 'bg-white text-neutral-900 border-b-2 border-b-green-500 shadow-sm' : 'text-neutral-500 hover:text-neutral-800 hover:bg-white/60'}`}>
+                            {c}
+                            <span className={`text-[9px] font-medium px-1 py-0.5 rounded-full ${active ? 'bg-green-100 text-green-700' : 'bg-neutral-200 text-neutral-500'}`}>{count}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Right Scroll Button */}
+            <button
+                onClick={() => scroll('right')}
+                className="flex items-center justify-center bg-white/50 hover:bg-white text-neutral-500 px-1 border-l border-neutral-300 z-10 shrink-0 shadow-[-4px_0_10px_rgba(0,0,0,0.05)] transition-colors"
+                title="Scroll Right"
+            >
+                <ChevronRight className="w-4 h-4" />
+            </button>
         </div>
     );
 }
