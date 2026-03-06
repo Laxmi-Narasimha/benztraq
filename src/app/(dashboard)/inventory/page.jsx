@@ -14,96 +14,50 @@ import {
     Boxes, Plus, Table2, TrendingUp, Users, Weight, ArrowDownCircle,
     ArrowUpCircle, Ban
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import AddProductModal from '@/components/inventory/AddProductModal';
 
-// ============================================================
-// Pyle-Style Premium Pie Chart — exploded slices, hover pull-out
-// Chart left, info panel right
-// ============================================================
+const ExplodedPieChart = dynamic(
+    () => import('@/components/inventory/ExplodedPieChart'),
+    { ssr: false, loading: () => <div className="w-full h-[280px] flex items-center justify-center text-neutral-400 text-sm">Loading chart...</div> }
+);
+
 const PIE_COLORS = [
-    '#8b5cf6', '#ec4899', '#6366f1', '#a855f7', '#f43f5e',
-    '#d946ef', '#f97316', '#22c55e', '#06b6d4', '#eab308'
+    '#7c3aed', '#ec4899', '#6366f1', '#a855f7', '#f43f5e',
+    '#d946ef', '#f97316', '#10b981', '#06b6d4', '#eab308',
 ];
 
+// ============================================================
+// Pie Chart Section — ECharts exploded pie + info panel
+// ============================================================
 function PieChartSection({ data, stats }) {
+    const [hoveredCompany, setHoveredCompany] = useState(null);
     const [hoveredIdx, setHoveredIdx] = useState(null);
+
+    const total = (data || []).reduce((sum, d) => sum + d.weight, 0);
+
+    const handleHover = (company, idx) => {
+        setHoveredCompany(company);
+        setHoveredIdx(idx);
+    };
 
     if (!data || data.length === 0) return <div className="text-sm text-neutral-400 text-center py-12">No data</div>;
 
-    const total = data.reduce((sum, d) => sum + d.weight, 0);
-    if (total === 0) return <div className="text-sm text-neutral-400 text-center py-12">No weight data</div>;
-
-    let cumAngle = 0;
-    const slices = data.map((d, i) => {
-        const pct = d.weight / total;
-        const startAngle = cumAngle;
-        cumAngle += pct * 360;
-        const endAngle = cumAngle;
-        return { ...d, pct, startAngle, endAngle, color: PIE_COLORS[i % PIE_COLORS.length] };
-    });
-
-    // All slices are slightly exploded by default, hovered one pops out more
-    const cx = 150, cy = 150, r = 110;
-    const baseGap = 6;
-    const hoverGap = 22;
-    const toRad = (deg) => (deg - 90) * Math.PI / 180;
-
-    const getSlicePath = (start, end, dist) => {
-        const midAngle = (start + end) / 2;
-        const dx = dist * Math.cos(toRad(midAngle));
-        const dy = dist * Math.sin(toRad(midAngle));
-        const scx = cx + dx;
-        const scy = cy + dy;
-
-        if (end - start >= 359.99) {
-            return `M ${scx} ${scy - r} A ${r} ${r} 0 1 1 ${scx - 0.001} ${scy - r} A ${r} ${r} 0 1 1 ${scx} ${scy - r}`;
-        }
-        const x1 = scx + r * Math.cos(toRad(start));
-        const y1 = scy + r * Math.sin(toRad(start));
-        const x2 = scx + r * Math.cos(toRad(end));
-        const y2 = scy + r * Math.sin(toRad(end));
-        const large = end - start > 180 ? 1 : 0;
-        return `M ${scx} ${scy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
-    };
-
-    const hovered = hoveredIdx !== null ? slices[hoveredIdx] : null;
-
     return (
-        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
-            {/* Left: Pie */}
-            <div className="flex flex-col items-center flex-shrink-0">
-                <svg viewBox="0 0 300 300" className="w-56 h-56 lg:w-[270px] lg:h-[270px]"
-                    style={{ filter: 'drop-shadow(0 8px 24px rgba(99,102,241,0.12))' }}
-                    onMouseLeave={() => setHoveredIdx(null)}>
-                    {slices.map((s, i) => {
-                        const isActive = hoveredIdx === i;
-                        const dist = isActive ? hoverGap : baseGap;
-                        return (
-                            <path key={i}
-                                d={getSlicePath(s.startAngle, s.endAngle, dist)}
-                                fill={s.color}
-                                style={{
-                                    transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                    filter: isActive
-                                        ? 'drop-shadow(0 6px 16px rgba(0,0,0,0.3)) brightness(1.05)'
-                                        : hoveredIdx !== null ? 'brightness(0.85) saturate(0.7)' : 'none',
-                                    cursor: 'pointer',
-                                }}
-                                onMouseEnter={() => setHoveredIdx(i)}
-                            />
-                        );
-                    })}
-                </svg>
+        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-5">
+            {/* Left: ECharts Pie */}
+            <div className="w-full lg:w-[300px] flex-shrink-0">
+                <ExplodedPieChart data={data} onHover={handleHover} />
                 {/* Legend */}
-                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-3 max-w-[300px]">
-                    {slices.map((s, i) => (
+                <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-1">
+                    {data.map((d, i) => (
                         <div key={i}
                             className="flex items-center gap-1.5 cursor-pointer group"
-                            onMouseEnter={() => setHoveredIdx(i)}
-                            onMouseLeave={() => setHoveredIdx(null)}
+                            onMouseEnter={() => handleHover(d, i)}
+                            onMouseLeave={() => handleHover(null, null)}
                             style={{ opacity: hoveredIdx !== null && hoveredIdx !== i ? 0.3 : 1, transition: 'opacity 0.2s' }}>
-                            <span className="w-2.5 h-2.5 rounded-[3px] flex-shrink-0" style={{ backgroundColor: s.color }} />
-                            <span className="text-[10px] text-neutral-500 group-hover:text-neutral-800 transition-colors font-medium">{s.name}</span>
+                            <span className="w-2.5 h-2.5 rounded-[3px] flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                            <span className="text-[10px] text-neutral-500 group-hover:text-neutral-800 transition-colors font-medium">{d.name}</span>
                         </div>
                     ))}
                 </div>
@@ -111,27 +65,39 @@ function PieChartSection({ data, stats }) {
 
             {/* Right: Info Panel */}
             <div className="flex-1 min-w-0 w-full">
-                {hovered ? (
+                {hoveredCompany && hoveredIdx !== null ? (
                     <div key={hoveredIdx}>
                         <div className="flex items-center gap-2.5 mb-4">
-                            <span className="w-5 h-5 rounded-md shadow-sm" style={{ backgroundColor: hovered.color }} />
-                            <h4 className="font-bold text-xl text-neutral-900 dark:text-white tracking-tight">{hovered.name}</h4>
+                            <span className="w-5 h-5 rounded-md shadow-sm" style={{ backgroundColor: PIE_COLORS[hoveredIdx % PIE_COLORS.length] }} />
+                            <h4 className="font-bold text-xl text-neutral-900 dark:text-white tracking-tight">{hoveredCompany.name}</h4>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            <InfoTile label="Stock Weight" value={`${(hovered.weight / 1000).toFixed(2)}T`} sub={`${(hovered.pct * 100).toFixed(1)}% of total weight`} color={hovered.color} icon="📦" />
-                            <InfoTile label="Rank" value={`#${hoveredIdx + 1}`} sub={`of ${slices.length} top companies`} color={hovered.color} icon="🏆" />
-                            <InfoTile label="#1 Product" value={hovered.topProduct || '—'} sub={`${(hovered.topBalance || 0).toLocaleString()} pcs in stock`} color={hovered.color} icon="⭐" small />
-                            <InfoTile label="Total SKUs" value={hovered.itemCount || 0} sub="product variants" color={hovered.color} icon="📋" />
+                            <InfoTile label="Stock Weight" value={`${(hoveredCompany.weight / 1000).toFixed(2)}T`}
+                                sub={`${total > 0 ? ((hoveredCompany.weight / total) * 100).toFixed(1) : 0}% of total weight`}
+                                color={PIE_COLORS[hoveredIdx % PIE_COLORS.length]} icon="📦" />
+                            <InfoTile label="Rank" value={`#${hoveredIdx + 1}`}
+                                sub={`of ${data.length} top companies`}
+                                color={PIE_COLORS[hoveredIdx % PIE_COLORS.length]} icon="🏆" />
+                            <InfoTile label="#1 Product" value={hoveredCompany.topProduct || '—'}
+                                sub={`${(hoveredCompany.topBalance || 0).toLocaleString()} pcs in stock`}
+                                color={PIE_COLORS[hoveredIdx % PIE_COLORS.length]} icon="⭐" small />
+                            <InfoTile label="Total SKUs" value={hoveredCompany.itemCount || 0}
+                                sub="product variants"
+                                color={PIE_COLORS[hoveredIdx % PIE_COLORS.length]} icon="📋" />
                         </div>
                     </div>
                 ) : (
                     <div>
                         <h4 className="font-semibold text-xs text-neutral-400 uppercase tracking-widest mb-4">Stock Overview</h4>
                         <div className="grid grid-cols-2 gap-3">
-                            <InfoTile label="Total Weight" value={`${((stats?.totalStockKg || 0) / 1000).toFixed(1)}T`} sub={`${Math.round(stats?.totalStockKg || 0).toLocaleString()} KG across all`} color="#6366f1" icon="⚖️" />
-                            <InfoTile label="Active Items" value={stats?.inStockItems || 0} sub={`of ${stats?.totalItems || 0} total in system`} color="#22c55e" icon="📦" />
-                            <InfoTile label="#1 Product Overall" value={stats?.overallTopProduct || '—'} sub={`${(stats?.overallTopBalance || 0).toLocaleString()} pcs balance`} color="#8b5cf6" icon="⭐" small />
-                            <InfoTile label="Most Dispatched" value={stats?.mostDispatched || '—'} sub={`${(stats?.mostDispatchedQty || 0).toLocaleString()} pcs total`} color="#f43f5e" icon="🚚" small />
+                            <InfoTile label="Total Weight" value={`${((stats?.totalStockKg || 0) / 1000).toFixed(1)}T`}
+                                sub={`${Math.round(stats?.totalStockKg || 0).toLocaleString()} KG across all`} color="#6366f1" icon="⚖️" />
+                            <InfoTile label="Active Items" value={stats?.inStockItems || 0}
+                                sub={`of ${stats?.totalItems || 0} total in system`} color="#10b981" icon="📦" />
+                            <InfoTile label="#1 Product Overall" value={stats?.overallTopProduct || '—'}
+                                sub={`${(stats?.overallTopBalance || 0).toLocaleString()} pcs balance`} color="#8b5cf6" icon="⭐" small />
+                            <InfoTile label="Most Dispatched" value={stats?.mostDispatched || '—'}
+                                sub={`${(stats?.mostDispatchedQty || 0).toLocaleString()} pcs total`} color="#f43f5e" icon="🚚" small />
                         </div>
                     </div>
                 )}
