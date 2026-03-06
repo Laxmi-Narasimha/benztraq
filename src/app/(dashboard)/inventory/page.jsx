@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/providers/auth-provider';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     Search, Package, Clock, ChevronRight, BarChart3, AlertTriangle,
@@ -16,7 +17,7 @@ import {
 import AddProductModal from '@/components/inventory/AddProductModal';
 
 // ============================================================
-// Pyle-Style Solid Pie Chart — filled slices, no donut hole
+// Exploded Pie Chart — slices pulled outward from center
 // ============================================================
 const PIE_COLORS = [
     '#8b5cf6', '#ec4899', '#6366f1', '#a855f7', '#f43f5e',
@@ -38,28 +39,39 @@ function PieChart({ data }) {
         return { ...d, pct, startAngle, endAngle, color: PIE_COLORS[i % PIE_COLORS.length] };
     });
 
-    const cx = 130, cy = 130, r = 115;
+    const cx = 150, cy = 150, r = 120;
+    const explodeDistance = 8;
     const toRad = (deg) => (deg - 90) * Math.PI / 180;
 
-    const arcPath = (start, end) => {
+    const getSlicePath = (start, end) => {
+        // Calculate midpoint angle for explosion direction
+        const midAngle = (start + end) / 2;
+        const dx = explodeDistance * Math.cos(toRad(midAngle));
+        const dy = explodeDistance * Math.sin(toRad(midAngle));
+        const scx = cx + dx;
+        const scy = cy + dy;
+
         if (end - start >= 359.99) {
-            return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.001} ${cy - r} A ${r} ${r} 0 1 1 ${cx} ${cy - r}`;
+            return `M ${scx} ${scy - r} A ${r} ${r} 0 1 1 ${scx - 0.001} ${scy - r} A ${r} ${r} 0 1 1 ${scx} ${scy - r}`;
         }
-        const x1 = cx + r * Math.cos(toRad(start));
-        const y1 = cy + r * Math.sin(toRad(start));
-        const x2 = cx + r * Math.cos(toRad(end));
-        const y2 = cy + r * Math.sin(toRad(end));
+        const x1 = scx + r * Math.cos(toRad(start));
+        const y1 = scy + r * Math.sin(toRad(start));
+        const x2 = scx + r * Math.cos(toRad(end));
+        const y2 = scy + r * Math.sin(toRad(end));
         const large = end - start > 180 ? 1 : 0;
-        return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+        return `M ${scx} ${scy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
     };
 
     return (
         <div className="flex flex-col items-center">
-            <svg viewBox="0 0 260 260" className="w-56 h-56 mb-5 drop-shadow-md">
+            <svg viewBox="0 0 300 300" className="w-60 h-60 mb-5" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }}>
                 {slices.map((s, i) => (
-                    <path key={i} d={arcPath(s.startAngle, s.endAngle)} fill={s.color}
-                        className="hover:opacity-80 transition-opacity cursor-pointer"
-                        strokeWidth="2" stroke="white" />
+                    <path key={i} d={getSlicePath(s.startAngle, s.endAngle)} fill={s.color}
+                        className="transition-all duration-200 cursor-pointer"
+                        style={{ filter: 'brightness(1)' }}
+                        onMouseEnter={e => e.target.style.filter = 'brightness(0.85)'}
+                        onMouseLeave={e => e.target.style.filter = 'brightness(1)'}
+                    />
                 ))}
             </svg>
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
@@ -145,8 +157,14 @@ function TodayTransactions({ transactions, count }) {
 // ============================================================
 function StockAlertsPanel({ lowStockAlerts, zeroStockList }) {
     const [tab, setTab] = useState('low');
+    const router = useRouter();
 
     const alerts = tab === 'low' ? lowStockAlerts : zeroStockList;
+
+    const handleRowClick = (item) => {
+        const company = encodeURIComponent(item.customer_name);
+        router.push(`/inventory/sheet?company=${company}`);
+    };
 
     return (
         <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
@@ -159,16 +177,16 @@ function StockAlertsPanel({ lowStockAlerts, zeroStockList }) {
                 <div className="ml-auto flex items-center bg-neutral-100 rounded-lg p-0.5 gap-0.5">
                     <button onClick={() => setTab('low')}
                         className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${tab === 'low'
-                                ? 'bg-amber-500 text-white shadow-sm'
-                                : 'text-neutral-500 hover:text-neutral-700'
+                            ? 'bg-amber-500 text-white shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-700'
                             }`}>
                         ⚠️ Low Stock
                         <span className="ml-1 text-[10px]">({(lowStockAlerts || []).length})</span>
                     </button>
                     <button onClick={() => setTab('zero')}
                         className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${tab === 'zero'
-                                ? 'bg-red-500 text-white shadow-sm'
-                                : 'text-neutral-500 hover:text-neutral-700'
+                            ? 'bg-red-500 text-white shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-700'
                             }`}>
                         🚫 Zero Stock
                         <span className="ml-1 text-[10px]">({(zeroStockList || []).length})</span>
@@ -206,14 +224,17 @@ function StockAlertsPanel({ lowStockAlerts, zeroStockList }) {
                                     : (i % 2 === 0 ? 'bg-red-50/30' : 'bg-white');
 
                                 return (
-                                    <tr key={item.id || i} className={`border-b border-neutral-100 ${rowBg}`}>
-                                        <td className="py-2 px-3 font-medium text-neutral-800 text-[13px]">{item.customer_name}</td>
+                                    <tr key={item.id || i}
+                                        onClick={() => handleRowClick(item)}
+                                        className={`border-b border-neutral-100 ${rowBg} cursor-pointer hover:bg-blue-50 transition-colors`}
+                                        title={`View ${item.customer_name} in Sheet View`}>
+                                        <td className="py-2 px-3 font-medium text-neutral-800 text-[13px] hover:text-blue-600 transition-colors">{item.customer_name}</td>
                                         <td className="py-2 px-3 text-neutral-600 text-[13px]">{item.material_type || '—'}</td>
                                         <td className="py-2 px-3 text-neutral-500 text-[13px]">{item.part_size || '—'}</td>
                                         <td className="py-2 px-3 text-center text-neutral-500 text-[12px]">{item.uom}</td>
                                         <td className={`py-2 px-3 text-right font-bold font-mono text-[13px] ${isLow
-                                                ? (isCritical ? 'text-red-600' : 'text-amber-600')
-                                                : 'text-red-500'
+                                            ? (isCritical ? 'text-red-600' : 'text-amber-600')
+                                            : 'text-red-500'
                                             }`}>
                                             {isLow
                                                 ? bal.toLocaleString()

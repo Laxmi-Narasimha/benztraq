@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/providers/auth-provider';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Search, RefreshCw, X, Check, Plus, LayoutGrid, Loader2,
@@ -176,6 +177,7 @@ function CompanyTabs({ companies, activeCompany, onTabChange, itemCounts }) {
 // ============================================================
 export default function InventorySheetPage() {
     const { profile } = useAuth();
+    const searchParams = useSearchParams();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [companies, setCompanies] = useState([]);
@@ -184,6 +186,7 @@ export default function InventorySheetPage() {
     const [refreshing, setRefreshing] = useState(false);
     const [txnSuccess, setTxnSuccess] = useState(null);
     const [materialFilter, setMaterialFilter] = useState('ALL');
+    const [initialCompanySet, setInitialCompanySet] = useState(false);
 
     // Only store_manager can do inward/outward — all others are view-only
     const canWrite = profile?.role === 'store_manager';
@@ -199,13 +202,22 @@ export default function InventorySheetPage() {
             // Extract unique companies
             const companySet = [...new Set(allItems.map(i => i.customer_name))].sort();
             setCompanies(companySet);
+
+            // Auto-select company from URL ?company= param (only on first load)
+            if (!initialCompanySet) {
+                const companyParam = searchParams.get('company');
+                if (companyParam && companySet.includes(companyParam)) {
+                    setActiveCompany(companyParam);
+                }
+                setInitialCompanySet(true);
+            }
         } catch (err) {
             console.error('Failed to fetch:', err);
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [initialCompanySet, searchParams]);
 
     useEffect(() => { fetchAll(); }, [fetchAll]);
 
