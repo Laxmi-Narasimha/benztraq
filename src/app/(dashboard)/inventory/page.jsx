@@ -1,9 +1,8 @@
 'use client';
 
 /**
- * Inventory Dashboard — Company Grid View
- * Shows all companies as cards with item counts and stock summary.
- * QR code on each rack links to /inventory/company/[slug].
+ * Inventory Dashboard — Pyle-Inspired
+ * Features: Stat cards, pie chart, bar chart, stock alerts, company grid, activity feed
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -11,10 +10,159 @@ import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
 import {
     Search, Package, ArrowDownCircle, ArrowUpCircle,
-    Clock, ChevronRight, BarChart3, AlertTriangle, Boxes, Plus, Table2
+    Clock, ChevronRight, BarChart3, AlertTriangle, Boxes, Plus, Table2,
+    TrendingUp, Users, Weight
 } from 'lucide-react';
 import AddProductModal from '@/components/inventory/AddProductModal';
 
+// ============================================================
+// SVG Pie Chart — Top companies by weight
+// ============================================================
+const CHART_COLORS = [
+    '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+    '#f43f5e', '#f97316', '#eab308', '#22c55e', '#06b6d4'
+];
+
+function PieChart({ data }) {
+    if (!data || data.length === 0) return <div className="text-sm text-neutral-400 text-center py-8">No data</div>;
+
+    const total = data.reduce((sum, d) => sum + d.weight, 0);
+    if (total === 0) return <div className="text-sm text-neutral-400 text-center py-8">No weight data</div>;
+
+    let cumAngle = 0;
+    const slices = data.map((d, i) => {
+        const pct = d.weight / total;
+        const startAngle = cumAngle;
+        cumAngle += pct * 360;
+        const endAngle = cumAngle;
+        return { ...d, pct, startAngle, endAngle, color: CHART_COLORS[i % CHART_COLORS.length] };
+    });
+
+    const cx = 100, cy = 100, r = 80;
+    const toRad = (deg) => (deg - 90) * Math.PI / 180;
+    const arcPath = (start, end) => {
+        if (end - start >= 359.99) {
+            return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.001} ${cy - r} A ${r} ${r} 0 1 1 ${cx} ${cy - r}`;
+        }
+        const x1 = cx + r * Math.cos(toRad(start));
+        const y1 = cy + r * Math.sin(toRad(start));
+        const x2 = cx + r * Math.cos(toRad(end));
+        const y2 = cy + r * Math.sin(toRad(end));
+        const large = end - start > 180 ? 1 : 0;
+        return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+    };
+
+    return (
+        <div className="flex items-start gap-4">
+            <svg viewBox="0 0 200 200" className="w-36 h-36 flex-shrink-0">
+                {slices.map((s, i) => (
+                    <path key={i} d={arcPath(s.startAngle, s.endAngle)} fill={s.color}
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                        strokeWidth="1" stroke="white" />
+                ))}
+                <circle cx={cx} cy={cy} r={35} fill="white" />
+                <text x={cx} y={cy - 4} textAnchor="middle" className="text-[10px] fill-neutral-400 font-medium">Total</text>
+                <text x={cx} y={cy + 10} textAnchor="middle" className="text-[11px] fill-neutral-800 font-bold">
+                    {(total / 1000).toFixed(1)}T
+                </text>
+            </svg>
+            <div className="flex-1 space-y-1 min-w-0 pt-1">
+                {slices.map((s, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: s.color }} />
+                        <span className="truncate text-neutral-700 flex-1">{s.name}</span>
+                        <span className="font-mono text-neutral-500 tabular-nums">{(s.pct * 100).toFixed(0)}%</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// Horizontal Bar Chart — Material type distribution
+// ============================================================
+function BarChart({ data }) {
+    if (!data || data.length === 0) return <div className="text-sm text-neutral-400 text-center py-8">No data</div>;
+
+    const maxCount = Math.max(...data.map(d => d.count));
+
+    return (
+        <div className="space-y-2">
+            {data.slice(0, 8).map((d, i) => {
+                const pct = maxCount > 0 ? (d.count / maxCount) * 100 : 0;
+                return (
+                    <div key={i} className="flex items-center gap-2">
+                        <span className="text-[11px] text-neutral-600 w-28 truncate flex-shrink-0">{d.name || 'Other'}</span>
+                        <div className="flex-1 bg-neutral-100 rounded-full h-5 relative overflow-hidden">
+                            <div
+                                className="h-full rounded-full transition-all duration-700 ease-out"
+                                style={{
+                                    width: `${Math.max(pct, 2)}%`,
+                                    background: `linear-gradient(90deg, ${CHART_COLORS[i % CHART_COLORS.length]}cc, ${CHART_COLORS[i % CHART_COLORS.length]})`
+                                }}
+                            />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-500">
+                                {d.count}
+                            </span>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+// ============================================================
+// Stock Alerts Table
+// ============================================================
+function StockAlerts({ alerts }) {
+    if (!alerts || alerts.length === 0) {
+        return (
+            <div className="text-center py-6 text-neutral-400 text-sm">
+                <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                All items have healthy stock levels
+            </div>
+        );
+    }
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="border-b border-neutral-200">
+                        <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Customer</th>
+                        <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Material</th>
+                        <th className="text-left py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Part Size</th>
+                        <th className="text-center py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">UOM</th>
+                        <th className="text-right py-2 px-3 text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {alerts.map((item, i) => {
+                        const bal = parseFloat(item.balance_qty) || 0;
+                        const isCritical = bal <= 10;
+                        return (
+                            <tr key={item.id || i} className={`border-b border-neutral-100 ${isCritical ? 'bg-red-50' : 'bg-amber-50/40'}`}>
+                                <td className="py-2 px-3 font-medium text-neutral-800 text-[13px]">{item.customer_name}</td>
+                                <td className="py-2 px-3 text-neutral-600 text-[13px]">{item.material_type || '—'}</td>
+                                <td className="py-2 px-3 text-neutral-500 text-[13px]">{item.part_size || '—'}</td>
+                                <td className="py-2 px-3 text-center text-neutral-500 text-[12px]">{item.uom}</td>
+                                <td className={`py-2 px-3 text-right font-bold font-mono text-[13px] ${isCritical ? 'text-red-600' : 'text-amber-600'}`}>
+                                    {bal.toLocaleString()}
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+// ============================================================
+// Main Dashboard
+// ============================================================
 export default function InventoryDashboard() {
     const { profile } = useAuth();
     const [stats, setStats] = useState(null);
@@ -76,15 +224,51 @@ export default function InventoryDashboard() {
                 </div>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     <StatCard label="Total Items" value={stats?.totalItems || 0} icon={<Boxes className="w-4 h-4" />} />
                     <StatCard label="In Stock" value={stats?.inStockItems || 0} color="text-emerald-600" icon={<Package className="w-4 h-4" />} />
                     <StatCard label="Zero Stock" value={stats?.zeroStockItems || 0} color="text-red-600" icon={<AlertTriangle className="w-4 h-4" />} />
-                    <StatCard label="Stock Weight" value={`${((stats?.totalStockKg || 0) / 1000).toFixed(1)}T`} icon={<BarChart3 className="w-4 h-4" />} />
+                    <StatCard label="Stock Weight" value={`${((stats?.totalStockKg || 0) / 1000).toFixed(1)}T`} icon={<Weight className="w-4 h-4" />} />
+                    <StatCard label="Companies" value={stats?.uniqueCustomers || 0} icon={<Users className="w-4 h-4" />} />
                 </div>
             </div>
 
             <div className="p-6">
+                {/* Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* Pie Chart */}
+                    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <TrendingUp className="w-4 h-4 text-indigo-500" />
+                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Top Companies by Stock Weight</h3>
+                        </div>
+                        <PieChart data={stats?.topCompanies || []} />
+                    </div>
+
+                    {/* Bar Chart */}
+                    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <BarChart3 className="w-4 h-4 text-purple-500" />
+                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Items by Material Type</h3>
+                        </div>
+                        <BarChart data={stats?.materialBreakdown || []} />
+                    </div>
+                </div>
+
+                {/* Stock Alerts */}
+                {(stats?.stockAlerts?.length > 0) && (
+                    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden mb-6">
+                        <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-500" />
+                            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Low Stock Alerts</h3>
+                            <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                {stats.stockAlerts.length} items
+                            </span>
+                        </div>
+                        <StockAlerts alerts={stats.stockAlerts} />
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Left: Company Grid */}
                     <div className="lg:col-span-3">

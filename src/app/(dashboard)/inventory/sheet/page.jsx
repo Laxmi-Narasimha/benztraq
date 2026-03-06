@@ -12,7 +12,8 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
 import {
-    Search, RefreshCw, X, Check, Plus, LayoutGrid, Loader2
+    Search, RefreshCw, X, Check, Plus, LayoutGrid, Loader2,
+    Download, FileSpreadsheet, Filter, Printer
 } from 'lucide-react';
 
 // ============================================================
@@ -182,6 +183,7 @@ export default function InventorySheetPage() {
     const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [txnSuccess, setTxnSuccess] = useState(null);
+    const [materialFilter, setMaterialFilter] = useState('ALL');
 
     // Only store_manager can do inward/outward — all others are view-only
     const canWrite = profile?.role === 'store_manager';
@@ -216,11 +218,19 @@ export default function InventorySheetPage() {
         return counts;
     }, [items]);
 
+    // Unique material types for filter
+    const materialTypes = useMemo(() => {
+        return [...new Set(items.map(i => i.material_type).filter(Boolean))].sort();
+    }, [items]);
+
     // Filtered items
     const visible = useMemo(() => {
         let result = items;
         if (activeCompany !== 'ALL') {
             result = result.filter(i => i.customer_name === activeCompany);
+        }
+        if (materialFilter !== 'ALL') {
+            result = result.filter(i => i.material_type === materialFilter);
         }
         if (search.trim()) {
             const q = search.toLowerCase();
@@ -232,7 +242,35 @@ export default function InventorySheetPage() {
             );
         }
         return result;
-    }, [items, activeCompany, search]);
+    }, [items, activeCompany, materialFilter, search]);
+
+    // Export visible data as CSV
+    const exportCSV = (asExcel = false) => {
+        const headers = ['SR NO', 'CUSTOMER NAME', 'MATERIAL TYPE', 'PART SIZE', 'PART CODE', 'UOM', 'RECEIVED QTY', 'DISPATCH QTY', 'BALANCE', 'STOCK IN KG'];
+        const csvRows = [headers.join(',')];
+        visible.forEach((item, idx) => {
+            const row = [
+                item.sr_no || idx + 1,
+                `"${(item.customer_name || '').replace(/"/g, '""')}"`,
+                `"${(item.material_type || '').replace(/"/g, '""')}"`,
+                `"${(item.part_size || '').replace(/"/g, '""')}"`,
+                `"${(item.customer_part_code || '').replace(/"/g, '""')}"`,
+                item.uom || 'PCS',
+                item.total_received || 0,
+                item.total_dispatched || 0,
+                parseFloat(item.balance_qty || 0),
+                parseFloat(item.stock_in_kg || 0).toFixed(2)
+            ];
+            csvRows.push(row.join(','));
+        });
+        const blob = new Blob([csvRows.join('\n')], { type: asExcel ? 'application/vnd.ms-excel' : 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `FG_STOCK_${activeCompany === 'ALL' ? 'All' : activeCompany}_${new Date().toISOString().split('T')[0]}.${asExcel ? 'xls' : 'csv'}`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const handleTransaction = async (itemId, type, quantity) => {
         try {
@@ -275,11 +313,34 @@ export default function InventorySheetPage() {
                         <p className="text-[10px] text-neutral-400">{visible.length} item{visible.length !== 1 ? 's' : ''}{activeCompany !== 'ALL' ? ` • ${activeCompany}` : ` • ${companies.length} companies`}</p>
                     </div>
                     <div className="flex items-center gap-1.5">
+                        {/* Material Type Filter */}
+                        <div className="relative">
+                            <select value={materialFilter} onChange={e => setMaterialFilter(e.target.value)}
+                                className="appearance-none pl-6 pr-2 py-1 text-xs border border-neutral-300 rounded bg-neutral-50 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer text-neutral-600">
+                                <option value="ALL">All Materials</option>
+                                {materialTypes.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                            <Filter className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-400 pointer-events-none" />
+                        </div>
                         <div className="relative">
                             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-400" />
                             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
                                 className="pl-7 pr-2 py-1 text-xs border border-neutral-300 rounded bg-neutral-50 w-28 sm:w-36 focus:w-44 transition-all focus:outline-none focus:ring-1 focus:ring-blue-400" />
                         </div>
+                        {/* Export Buttons */}
+                        <button onClick={() => exportCSV(true)}
+                            className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
+                            <FileSpreadsheet className="w-3 h-3" /> Excel
+                        </button>
+                        <button onClick={() => exportCSV(false)}
+                            className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded border border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors">
+                            <Download className="w-3 h-3" /> CSV
+                        </button>
+                        <button onClick={() => window.print()}
+                            className="flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">
+                            <Printer className="w-3 h-3" /> Print
+                        </button>
+                        <div className="w-px h-5 bg-neutral-300" />
                         <button onClick={() => fetchAll(true)} disabled={refreshing}
                             className="p-1.5 border border-neutral-300 rounded bg-white hover:bg-neutral-50 disabled:opacity-50">
                             <RefreshCw className={`w-3.5 h-3.5 text-neutral-500 ${refreshing ? 'animate-spin' : ''}`} />

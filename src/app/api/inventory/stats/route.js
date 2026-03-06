@@ -48,11 +48,46 @@ export async function GET() {
         // Unique customers
         const { data: customerData } = await supabase
             .from('inventory_items')
-            .select('customer_name')
+            .select('customer_name, stock_in_kg, balance_qty, material_type')
             .eq('is_active', true)
             .gt('balance_qty', 0);
 
         const uniqueCustomers = new Set((customerData || []).map(d => d.customer_name)).size;
+
+        // Top companies by stock weight (for pie chart)
+        const companyWeights = {};
+        (customerData || []).forEach(item => {
+            const name = item.customer_name;
+            const kg = parseFloat(item.stock_in_kg) || 0;
+            companyWeights[name] = (companyWeights[name] || 0) + kg;
+        });
+        const topCompanies = Object.entries(companyWeights)
+            .map(([name, weight]) => ({ name, weight: Math.round(weight * 100) / 100 }))
+            .sort((a, b) => b.weight - a.weight)
+            .slice(0, 10);
+
+        // Material type breakdown (for bar chart)
+        const materialMap = {};
+        (customerData || []).forEach(item => {
+            const mat = item.material_type || 'Other';
+            if (!materialMap[mat]) materialMap[mat] = { count: 0, totalBalance: 0 };
+            materialMap[mat].count++;
+            materialMap[mat].totalBalance += parseFloat(item.balance_qty) || 0;
+        });
+        const materialBreakdown = Object.entries(materialMap)
+            .map(([name, data]) => ({ name, count: data.count, totalBalance: Math.round(data.totalBalance) }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 12);
+
+        // Stock alerts — items with very low balance (0 < balance ≤ 50)
+        const { data: alertItems } = await supabase
+            .from('inventory_items')
+            .select('id, customer_name, material_type, part_size, uom, balance_qty')
+            .eq('is_active', true)
+            .gt('balance_qty', 0)
+            .lte('balance_qty', 50)
+            .order('balance_qty', { ascending: true })
+            .limit(20);
 
         // Warehouse breakdown
         const { data: warehouseData } = await supabase
@@ -101,6 +136,9 @@ export async function GET() {
             zeroStockItems: zeroStockItems || 0,
             totalStockKg: Math.round(totalStockKg * 100) / 100,
             uniqueCustomers,
+            topCompanies,
+            materialBreakdown,
+            stockAlerts: alertItems || [],
             warehouseBreakdown,
             recentActivity,
             todayTransactions: todayTxnCount || 0,
