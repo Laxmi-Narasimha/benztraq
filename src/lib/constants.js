@@ -270,28 +270,28 @@ export const MONTHS_IN_YEAR = 12;
 export const NAVIGATION_ITEMS = Object.freeze([
     {
         title: 'Overview',
-        excludeRoles: ['store_manager', 'asm'],
+        roles: ['developer', 'director', 'head_of_sales', 'asm'],
         items: [
             { title: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
         ],
     },
     {
         title: 'Documents',
-        roles: ['director', 'developer', 'vp', 'head_of_sales'],
+        roles: ['developer', 'director', 'head_of_sales', 'asm', 'crm'],
         items: [
             { title: 'Document Center', href: '/documents', icon: 'FileText' },
         ],
     },
     {
         title: 'Tasks',
-        excludeRoles: ['store_manager'],
+        roles: ['developer', 'director', 'head_of_sales', 'asm', 'crm'],
         items: [
             { title: 'Task Manager', href: '/tasks', icon: 'ClipboardList' },
         ],
     },
     {
         title: 'CRM',
-        roles: ['director', 'developer', 'vp', 'head_of_sales'],
+        roles: ['developer', 'director', 'crm'],
         items: [
             { title: 'Pipeline', href: '/crm/pipeline', icon: 'GitCompare' },
             { title: 'Customers', href: '/customers', icon: 'Users' },
@@ -299,31 +299,37 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Analytics',
-        roles: ['director', 'developer', 'vp', 'head_of_sales'],
+        roles: ['developer', 'director'],
         items: [
             { title: 'Analytics Dashboard', href: '/analytics', icon: 'BarChart3' },
             { title: 'Quote Comparison', href: '/comparison', icon: 'GitCompare' },
-            { title: 'Products', href: '/products', icon: 'Package' },
             { title: 'Regions', href: '/regions', icon: 'MapPin' },
         ],
     },
     {
+        title: 'Products Portfolio',
+        roles: ['developer', 'director', 'crm'],
+        items: [
+            { title: 'Products', href: '/products', icon: 'Package' },
+        ],
+    },
+    {
         title: 'Performance',
-        excludeRoles: ['store_manager'],
+        roles: ['developer', 'director', 'head_of_sales', 'asm'],
         items: [
             { title: 'Sales Performance', href: '/performance', icon: 'Trophy' },
         ],
     },
     {
         title: 'Store',
-        emails: INVENTORY_ACCESS_EMAILS,
+        roles: ['developer', 'director', 'store_manager'],
         items: [
             { title: 'Inventory', href: '/inventory', icon: 'Warehouse' },
         ],
     },
     {
         title: 'Management',
-        roles: ['director', 'developer', 'vp', 'head_of_sales'],
+        roles: ['developer', 'director', 'head_of_sales', 'asm'],
         items: [
             { title: 'Targets', href: '/targets', icon: 'Target' },
             { title: 'Reports', href: '/reports', icon: 'BarChart3' },
@@ -331,19 +337,19 @@ export const NAVIGATION_ITEMS = Object.freeze([
     },
     {
         title: 'Admin',
-        roles: ['director', 'developer', 'vp'],
+        roles: ['developer', 'director'],
         items: [
-            { title: 'Director Dashboard', href: '/admin/dashboard', icon: 'LayoutDashboard', roles: [USER_ROLES.VP, USER_ROLES.DIRECTOR] },
-            { title: 'Admin Panel', href: '/admin', icon: 'Shield', roles: [USER_ROLES.VP] },
-            { title: 'Manage Users', href: '/admin/users', icon: 'Users', roles: [USER_ROLES.VP] },
-            { title: 'Roles & Permissions', href: '/admin/roles', icon: 'Settings', roles: [USER_ROLES.VP] },
+            { title: 'Director Dashboard', href: '/admin/dashboard', icon: 'LayoutDashboard' },
+            { title: 'Manage Users', href: '/admin/users', icon: 'Users' },
+            { title: 'Roles & Permissions', href: '/admin/roles', icon: 'Settings' },
+            { title: 'Admin Panel', href: '/admin', icon: 'Shield', roles: ['developer'] },
         ],
     },
     {
         title: 'Settings',
-        excludeRoles: ['store_manager'],
+        roles: ['developer', 'director', 'head_of_sales', 'asm', 'crm'],
         items: [
-            { title: 'Settings', href: '/settings', icon: 'Settings', roles: MANAGER_ROLES },
+            { title: 'Settings', href: '/settings', icon: 'Settings' },
         ],
     },
 ]);

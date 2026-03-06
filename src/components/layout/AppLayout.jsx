@@ -187,7 +187,7 @@ export function AppLayout({ children, title, actions }) {
         return (
             <div className="flex flex-col h-screen overflow-hidden bg-background">
                 <DirectorTopBar />
-                <main className={cn("flex-1 overflow-hidden", !isFullWidthPage && "overflow-y-auto")}>
+                <main className="flex-1 overflow-x-hidden overflow-y-auto">
                     {isFullWidthPage ? (
                         children
                     ) : (
@@ -221,7 +221,7 @@ export function AppLayout({ children, title, actions }) {
             />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <TopBar title={title} actions={actions} />
-                <main className={cn("flex-1 overflow-hidden", !isFullWidthPage && "overflow-y-auto")}>
+                <main className="flex-1 overflow-x-hidden overflow-y-auto">
                     {isFullWidthPage ? (
                         children
                     ) : (

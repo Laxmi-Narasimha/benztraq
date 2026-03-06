@@ -12,6 +12,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/utils/session';
+import { isManager, isHeadOfSales, canSetTargets } from '@/lib/utils/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,18 +25,6 @@ const VALID_ASM_REGIONS = [
     'Rajasthan',
     'West Zone'
 ];
-
-// Manager roles that can set targets
-const MANAGER_ROLES = ['developer', 'director', 'head_of_sales', 'head of sales', 'vp'];
-
-function isManager(role) {
-    if (!role) return false;
-    return MANAGER_ROLES.includes(role.toLowerCase());
-}
-
-function canSetTargets(role) {
-    return isManager(role);
-}
 
 // ============================================================================
 // GET HANDLER
@@ -57,7 +46,9 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const year = parseInt(searchParams.get('year')) || new Date().getFullYear();
-        const userIsManager = isManager(currentUser.role);
+        const userIsGlobalManager = isManager(currentUser.role);
+        const userIsHeadOfSales = isHeadOfSales(currentUser.role);
+        const canViewAllTargets = userIsGlobalManager || userIsHeadOfSales;
         const userCanSetTargets = canSetTargets(currentUser.role);
 
         const supabase = createAdminClient();
@@ -160,7 +151,7 @@ export async function GET(request) {
                     }));
 
                     // Non-managers can only see their own targets
-                    if (!userIsManager) {
+                    if (!canViewAllTargets) {
                         targets = targets.filter(t => t.salespersonId === currentUser.id);
                     }
                 }
@@ -175,7 +166,8 @@ export async function GET(request) {
             availableSalespeople,
             canSetTargets: userCanSetTargets,
             year,
-            isManager: userIsManager,
+            isManager: userIsGlobalManager,
+            canViewAllTargets,
         });
 
     } catch (error) {
@@ -392,7 +384,9 @@ export async function PATCH(request) {
         }
 
         const supabase = createAdminClient();
-        const userIsManager = isManager(currentUser.role);
+        const userIsGlobalManager = isManager(currentUser.role);
+        const userIsHeadOfSales = isHeadOfSales(currentUser.role);
+        const canViewAllTargets = userIsGlobalManager || userIsHeadOfSales;
 
         let query = supabase
             .from('target_logs')
@@ -401,7 +395,7 @@ export async function PATCH(request) {
             .limit(100);
 
         // Non-managers can only see their own logs
-        if (!userIsManager) {
+        if (!canViewAllTargets) {
             query = query.eq('salesperson_user_id', currentUser.id);
         }
 

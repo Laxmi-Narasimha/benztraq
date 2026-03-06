@@ -11,7 +11,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/utils/session';
-import { isManager, isASM, normalizeRole } from '@/lib/utils/rbac';
+import { isManager, isHeadOfSales, normalizeRole } from '@/lib/utils/rbac';
 
 /**
  * GET /api/documents
@@ -61,8 +61,19 @@ export async function GET(request) {
             .order('doc_date', { ascending: false })
             .range(offset, offset + limit - 1);
 
-        // RBAC: ASM can only see their own documents
-        if (isASM(currentUser.role)) {
+        // RBAC Data Isolation
+        if (isManager(currentUser.role)) {
+            // Developers and Directors see all documents, no filter needed
+        } else if (isHeadOfSales(currentUser.role)) {
+            // Head of Sales sees their own documents + documents created by ASMs
+            const { data: asmProfiles } = await supabase.from('profiles').select('user_id').eq('role', 'asm');
+            const allowedIds = asmProfiles ? asmProfiles.map(p => p.user_id) : [];
+            allowedIds.push(currentUser.id); // Also include their own
+            if (allowedIds.length > 0) {
+                query = query.in('salesperson_user_id', allowedIds);
+            }
+        } else {
+            // ASMs and CRMs can ONLY see their own documents
             query = query.eq('salesperson_user_id', currentUser.id);
         }
 

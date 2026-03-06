@@ -350,15 +350,25 @@ export async function GET(request) {
                 query = query.lte('doc_date', toDate);
             }
 
-            // Apply user-based filtering
-            if (!userIsManager) {
-                // ASMs only see their own data
-                query = query.eq('salesperson_user_id', currentUser.id);
+            // Apply user-based filtering based on centralized RBAC dataFilter
+            if (dataFilter.isHeadOfSales) {
+                // Head of Sales sees all ASM data. We fetch ASM IDs.
+                const { data: asmProfiles } = await supabase.from('profiles').select('user_id').eq('role', 'asm');
+                const allowedIds = asmProfiles ? asmProfiles.map(p => p.user_id) : [];
+                allowedIds.push(currentUser.id);
+                if (selectedUsers.length > 0) {
+                    query = query.in('salesperson_user_id', selectedUsers.filter(id => allowedIds.includes(id)));
+                } else if (allowedIds.length > 0) {
+                    query = query.in('salesperson_user_id', allowedIds);
+                }
+            } else if (dataFilter.filterByUser) {
+                // ASMs/CRMs only see their own data
+                query = query.eq('salesperson_user_id', dataFilter.userId);
             } else if (selectedUsers.length > 0) {
-                // Managers filtering by specific salespeople
+                // Global Managers filtering by specific salespeople
                 query = query.in('salesperson_user_id', selectedUsers);
             }
-            // If manager with no selection, they see all data
+            // If manager with no selection, they see all data natively
 
             const { data, error } = await query;
 

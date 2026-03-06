@@ -57,14 +57,19 @@ export const SYSTEM_USERS = {
 export const ASM_NAMES = SYSTEM_USERS.ASMS.map(asm => asm.name);
 
 /**
- * All manager roles that can see all data and set targets
+ * All manager roles that can see all data natively across the DB (Admins)
  */
-export const MANAGER_ROLES = ['developer', 'director', 'head_of_sales', 'head of sales', 'vp'];
+export const MANAGER_ROLES = ['developer', 'director', 'vp'];
 
 /**
  * ASM role names
  */
 export const ASM_ROLES = ['asm', 'area_sales_manager'];
+
+/**
+ * CRM role names
+ */
+export const CRM_ROLES = ['crm'];
 
 // ============================================================================
 // ROLE DETECTION FUNCTIONS
@@ -119,8 +124,27 @@ export function isASM(role) {
 }
 
 /**
- * Check if user is a manager (can see all data, set targets)
- * Includes: Developer, Director, Head of Sales, VP
+ * Check if user is a CRM
+ * @param {string} role - User's role
+ * @returns {boolean}
+ */
+export function isCRM(role) {
+    const normalized = normalizeRole(role);
+    return CRM_ROLES.includes(normalized);
+}
+
+/**
+ * Check if user is a Store Manager
+ * @param {string} role - User's role
+ * @returns {boolean}
+ */
+export function isStoreManager(role) {
+    return normalizeRole(role) === 'store_manager';
+}
+
+/**
+ * Check if user is a global manager (can see all data across company)
+ * Includes: Developer, Director, VP
  * @param {string} role - User's role
  * @returns {boolean}
  */
@@ -135,12 +159,12 @@ export function isManager(role) {
 
 /**
  * Check if user can set targets
- * Only managers can set targets
  * @param {string} role - User's role
  * @returns {boolean}
  */
 export function canSetTargets(role) {
-    return isManager(role);
+    // Developers, Directors and Head of Sales can view/set targets
+    return isManager(role) || isHeadOfSales(role);
 }
 
 /**
@@ -225,7 +249,7 @@ export function getASMsForFilter(allProfiles) {
  */
 export function getDataAccessFilter(role, userId, userName) {
     if (isManager(role)) {
-        // Managers see all data
+        // Global Managers (Director/Dev) see all data
         return {
             filterByUser: false,
             filterByRegion: false,
@@ -234,12 +258,24 @@ export function getDataAccessFilter(role, userId, userName) {
         };
     }
 
-    // ASMs only see their own data
+    if (isHeadOfSales(role)) {
+        // Head of Sales specific logic will be handled by the API itself,
+        // but typically they don't filter to just themselves for pure sales data.
+        return {
+            filterByUser: false,
+            filterByRegion: false,
+            userId: null,
+            regionName: null,
+            isHeadOfSales: true
+        };
+    }
+
+    // ASMs, CRMs only see their own data typically
     return {
         filterByUser: true,
         filterByRegion: true,
         userId: userId,
-        regionName: userName // For ASMs, their name IS the region
+        regionName: userName
     };
 }
 
@@ -352,6 +388,8 @@ export default {
     isDirector,
     isHeadOfSales,
     isASM,
+    isCRM,
+    isStoreManager,
     isManager,
 
     // Permissions

@@ -10,7 +10,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/utils/session';
-import { isManager, SYSTEM_USERS } from '@/lib/utils/rbac';
+import { isManager, isHeadOfSales, SYSTEM_USERS } from '@/lib/utils/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,8 +137,10 @@ export async function GET(request) {
         });
         const asmProfiles = Object.values(profileMap);
 
-        // If ASM, only show own data
-        const targetProfiles = userIsManager
+        // If ASM, only show own data. Managers and Head of Sales see all ASMs.
+        const canSeeAllASMs = userIsManager || isHeadOfSales(currentUser.role);
+
+        const targetProfiles = canSeeAllASMs
             ? (selectedUserId ? asmProfiles.filter(p => p.user_id === selectedUserId) : asmProfiles)
             : asmProfiles.filter(p => p.user_id === currentUser.id);
 
@@ -155,6 +157,7 @@ export async function GET(request) {
                 asmData: [],
                 availableAsms: asmProfiles.map(p => ({ id: p.user_id, name: p.full_name })),
                 isManager: userIsManager,
+                canSeeAllASMs,
                 year,
             });
         }
@@ -494,6 +497,7 @@ export async function GET(request) {
             totals,
             availableAsms: asmProfiles.map(p => ({ id: p.user_id, name: p.region || p.full_name })),
             isManager: userIsManager,
+            canSeeAllASMs,
             year,
             currentMonth,
         });
