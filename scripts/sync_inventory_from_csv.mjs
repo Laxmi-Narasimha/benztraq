@@ -90,6 +90,34 @@ function parseCsv(text) {
         // Skip header-like rows
         if (customerName === 'CUSTOMER NAME') continue;
 
+        /**
+         * KEY FIX: Correct the phantom weight caused by bad CSV data.
+         *
+         * Root cause: Many PCS items in the CSV have kg_per_piece = 1 (a data entry error)
+         * which makes stock_in_kg = balance_qty (e.g. 24000 PCS × 1 kg = 24000 kg for tiny bags).
+         * The Google Sheet has since corrected these. We detect this by checking if stockKg == balanceQty.
+         *
+         * Rules:
+         * - KGS items: kg_per_piece = 1 always (weight IS the quantity)
+         * - PCS items where stockKg < balanceQty and stockKg > 0: derive kg_per_piece = stockKg/balanceQty ✓
+         * - PCS items where stockKg = balanceQty (phantom 1kg-per-piece error): set kg_per_piece = 0
+         * - PCS items where balance = 0 but rawKgPerPiece is reasonable (< 0.5): use rawKgPerPiece
+         */
+        let computedKgPerPiece = 0;
+        if (uom === 'KGS') {
+            // KGS items: weight IS the quantity
+            computedKgPerPiece = 1;
+        } else if (balanceQty > 0 && stockKg > 0 && Math.abs(stockKg - balanceQty) > 0.001) {
+            // PCS items: stockKg ≠ balanceQty → valid computed weight, derive kg_per_piece
+            computedKgPerPiece = stockKg / balanceQty;
+        } else if (balanceQty > 0 && stockKg > 0 && Math.abs(stockKg - balanceQty) <= 0.001) {
+            // PCS items: stockKg = balanceQty → kg_per_piece=1 error in CSV → treat as 0
+            computedKgPerPiece = 0;
+        } else if (balanceQty === 0 && kgPerPiece > 0 && kgPerPiece < 0.5 && uom !== 'KGS') {
+            // Zero-balance PCS items: use raw column only if it's a realistic fractional weight
+            computedKgPerPiece = kgPerPiece;
+        }
+
         rows.push({
             sr_no: srNo ? parseInt(srNo) || null : null,
             customer_name: customerName,
@@ -100,8 +128,8 @@ function parseCsv(text) {
             total_received: receivedQty,
             total_dispatched: dispatchQty,
             // balance_qty is GENERATED ALWAYS AS (total_received - total_dispatched) STORED — do NOT insert
-            // stock_in_kg is GENERATED ALWAYS AS (...) STORED — do NOT insert
-            kg_per_piece: kgPerPiece,
+            // stock_in_kg is GENERATED ALWAYS AS (balance_qty * kg_per_piece) STORED — do NOT insert
+            kg_per_piece: computedKgPerPiece,
             warehouse: 'FG STOCK',
             is_active: true,
         });
