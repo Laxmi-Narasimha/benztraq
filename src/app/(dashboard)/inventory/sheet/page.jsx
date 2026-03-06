@@ -148,7 +148,7 @@ function CompanyTabs({ companies, activeCompany, onTabChange, itemCounts }) {
     const scrollRef = useRef(null);
     return (
         <div ref={scrollRef}
-            className="flex items-stretch bg-[#e8ecf1] border-b border-neutral-300 overflow-x-auto flex-shrink-0 select-none scrollbar-hide"
+            className="w-full max-w-full min-w-0 flex items-stretch bg-[#e8ecf1] border-b border-neutral-300 overflow-x-auto flex-shrink-0 select-none scrollbar-hide"
             style={{ minHeight: 36, WebkitOverflowScrolling: 'touch' }}>
             <button onClick={() => onTabChange('ALL')}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 text-[11px] font-bold tracking-wide border-r border-neutral-300 whitespace-nowrap transition-all
