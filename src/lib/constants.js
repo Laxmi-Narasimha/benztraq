@@ -293,6 +293,7 @@ export const NAVIGATION_ITEMS = Object.freeze([
         title: 'CRM',
         roles: ['developer', 'director', 'crm'],
         items: [
+            { title: 'Leads', href: '/crm/leads', icon: 'Sparkles' },
             { title: 'Pipeline', href: '/crm/pipeline', icon: 'GitCompare' },
             { title: 'Customers', href: '/customers', icon: 'Users' },
         ],
